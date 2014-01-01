@@ -73,7 +73,6 @@ public class SwingAppenderUI {
 	 * @return An instance of SwingAppenderUI
 	 */
 	public static SwingAppenderUI getInstance() {
-		System.out.println("getting UI Instance");
 		if (instance == null) {
 			synchronized (SwingAppenderUI.class) {
 				if (instance == null) {
@@ -126,7 +125,6 @@ public class SwingAppenderUI {
 			try {
 				StyledDocument sDoc = logMessagesDisp.getStyledDocument();
 				if (!logBuffer.isEmpty()) {
-					System.out.println("flushing buffer");
 					Iterator iter = logBuffer.iterator();
 					while (iter.hasNext()) {
 						sDoc.insertString(0, (String) iter.next(),
@@ -136,7 +134,7 @@ public class SwingAppenderUI {
 				}
 				sDoc.insertString(0, log, sDoc.getStyle(STYLE_REGULAR));
 			} catch (BadLocationException ble) {
-				System.out.println("Bad Location Exception : "
+				System.err.println("Bad Location Exception : "
 						+ ble.getMessage());
 			}
 		} else if (appState == PAUSED) {
@@ -231,7 +229,7 @@ public class SwingAppenderUI {
 			if (!"Search".equals(srcButton.getText())) {
 				return;
 			}
-			System.out.println("Highlighting search results");
+			System.err.println("Highlighting search results");
 			String searchTerm = searchField.getText();
 			String allLogText = logMessagesDisp.getText();
 			int startIndex = 0;
@@ -250,7 +248,7 @@ public class SwingAppenderUI {
 							(selectionIndex + searchTerm.length() - newLines),
 							highlightPainter);
 				} catch (BadLocationException ble) {
-					System.out.println("Bad Location Exception: "
+					System.err.println("Bad Location Exception: "
 							+ ble.getMessage());
 				}
 			}

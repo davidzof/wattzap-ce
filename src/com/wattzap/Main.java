@@ -7,12 +7,11 @@ import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.io.IOException;
 
-import javax.swing.JButton;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
@@ -27,6 +26,8 @@ import org.apache.log4j.PatternLayout;
 
 import com.omniscient.log4jcontrib.swingappender.SwingAppender;
 import com.sun.jna.NativeLibrary;
+import com.wattzap.controller.MenuItem;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
 import com.wattzap.model.ant.Ant;
@@ -34,6 +35,7 @@ import com.wattzap.model.ant.DummySpeedCadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
 import com.wattzap.utils.TcxWriter;
 import com.wattzap.view.AboutPanel;
+import com.wattzap.view.ControlPanel;
 import com.wattzap.view.MainFrame;
 import com.wattzap.view.Map;
 import com.wattzap.view.Odometer;
@@ -45,20 +47,27 @@ import com.wattzap.view.training.TrainingAnalysis;
 import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
+/**
+ * (c) 2013 David George / Wattzap.com
+ * 
+ * 
+ * @author David George
+ * @date 11 June 2013
+ */
 public class Main implements Runnable {
-	private static Logger logger = LogManager.getLogger(Main.class.getName());
+	private static Logger logger = LogManager.getLogger("Main");
 
 	public static void main(String[] args) {
 		// Debug
-
+		Level level = setLogLevel();
 		NativeLibrary.addSearchPath("libvlc", "C:/usr/vlc-2.0.6/");
 		// configure the appender
 		String PATTERN = "%r [%t] %p %c %x %m%n";
-		String logFile = UserPreferences.INSTANCE.getAppData() + "/logfile.txt";
+		String logFile = UserPreferences.INSTANCE.getWD() + "/logfile.txt";
 		FileAppender fileAppender;
 		try {
 			fileAppender = new FileAppender(new PatternLayout(PATTERN), logFile);
-			fileAppender.setThreshold(Level.DEBUG);
+			fileAppender.setThreshold(level);
 			fileAppender.activateOptions();
 			// add appender to any Logger (here is root)
 			Logger.getRootLogger().addAppender(fileAppender);
@@ -68,16 +77,21 @@ public class Main implements Runnable {
 		} // create appender
 
 		// Turn on Debug window
-		if (UserPreferences.INSTANCE.INSTANCE.isDebug()) {
+		if (UserPreferences.INSTANCE.isDebug()) {
 			SwingAppender appender = new SwingAppender(); // create appender
 			// configure the appender
 
 			appender.setLayout(new PatternLayout(PATTERN));
-			appender.setThreshold(Level.DEBUG);
+			appender.setThreshold(level);
 			appender.activateOptions();
 			// add appender to any Logger (here is root)
 			Logger.getRootLogger().addAppender(appender);
 		}
+
+		logger.info("Setting log level => " + level.toString());
+
+		logger.info("Database Version "
+				+ UserPreferences.INSTANCE.getDBVersion());
 		try {
 			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 				if ("Nimbus".equals(info.getName())) {
@@ -100,7 +114,7 @@ public class Main implements Runnable {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
 		// frame.setSize(screenSize.width, screenSize.height-100);
-		frame.setBounds(0, 0, 1200, 650);
+		frame.setBounds(UserPreferences.INSTANCE.getMainBounds());
 
 		// Performs an isregister check, be careful if we move below AboutPanel
 		Odometer odo = new Odometer();
@@ -125,15 +139,7 @@ public class Main implements Runnable {
 		Profile profile = new Profile(screenSize, frame);
 		profile.setVisible(false);
 
-		JButton stopButton = new JButton("Stop");
-		stopButton.setActionCommand("stop");
-		JButton startButton = new JButton("Start");
-		startButton.setActionCommand("start");
-		JButton resetButton = new JButton("Reset");
-		resetButton.setActionCommand("reset");
-		
 		TrainingDisplay trainingDisplay = new TrainingDisplay(screenSize);
-		startButton.addActionListener(trainingDisplay);
 
 		// Menu Bar
 		JMenuBar menuBar = new JMenuBar();
@@ -165,11 +171,11 @@ public class Main implements Runnable {
 		RouteFilePicker picker = new RouteFilePicker(frame);
 		openMenuItem.addActionListener(picker);
 
-		JMenuItem closeMenuItem = new JMenuItem("Close");
+		MenuItem closeMenuItem = new MenuItem(Messages.CLOSE, "Close");
 		fileMenu.add(closeMenuItem);
-		closeMenuItem.addActionListener(map);
-		closeMenuItem.addActionListener(profile);
-		closeMenuItem.addActionListener(frame);
+
+		closeMenuItem.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 
 		// Submenu: Training
 		JMenu trainingMenu = new JMenu("Training");
@@ -188,85 +194,65 @@ public class Main implements Runnable {
 		TrainingAnalysis analysis = new TrainingAnalysis(trainingDisplay);
 		analMenuItem.addActionListener(analysis);
 
+		JMenuItem recoverMenuItem = new JMenuItem("Recover Data");
+		trainingMenu.add(recoverMenuItem);
+
 		JMenuItem saveMenuItem = new JMenuItem("Save as TCX");
 		trainingMenu.add(saveMenuItem);
 
 		TcxWriter tcxWriter = new TcxWriter(frame, trainingDisplay);
 		saveMenuItem.addActionListener(tcxWriter);
-
+		recoverMenuItem.addActionListener(tcxWriter);
 		// JMenuItem csvMenuItem = new JMenuItem("Save as CSV");
 		// trainingMenu.add(csvMenuItem);
 
 		frame.setJMenuBar(menuBar);
 		// End Menu
 
-		Ant antDevice = null;
 		AdvancedSpeedCadenceListener scListener = null;
 		try {
 			scListener = new AdvancedSpeedCadenceListener();
-			antDevice = new Ant(scListener, new HeartRateListener());
-
-			if (videoPlayer != null) {
-				scListener.addChangeListener(videoPlayer);
-				stopButton.addActionListener(videoPlayer);
-			}
-			scListener.addChangeListener(odo);
-			scListener.addChangeListener(map);
-			scListener.addChangeListener(profile);
-			scListener.addChangeListener(trainingDisplay);
-
-			stopButton.addActionListener(antDevice);
-			startButton.addActionListener(antDevice);
-			stopButton.addActionListener(scListener);
-			startButton.addActionListener(scListener);
-			
-			
-			picker.addOpenListener(scListener);
-			closeMenuItem.addActionListener(antDevice);
+			Ant antDevice = new Ant(scListener, new HeartRateListener());
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
 					"Error", JOptionPane.ERROR_MESSAGE);
 			logger.error("ANT+ " + e.getMessage());
 			DummySpeedCadenceListener dummyListener = new DummySpeedCadenceListener();
-			if (videoPlayer != null) {
-				dummyListener.addChangeListener(videoPlayer);
-				stopButton.addActionListener(videoPlayer);
-			}
-			dummyListener.addChangeListener(odo);
-			dummyListener.addChangeListener(trainingDisplay);
-			dummyListener.addChangeListener(map);
-			dummyListener.addChangeListener(profile);
-
-			stopButton.addActionListener(dummyListener);
-			startButton.addActionListener(dummyListener);
-
-			picker.addOpenListener(dummyListener);
 		}
 
-		picker.addOpenListener(tcxWriter);
-		picker.addOpenListener(profile);
-		picker.addOpenListener(odo);
-		picker.addOpenListener(map);
-		picker.addOpenListener(trainingDisplay);
-		if (videoPlayer != null) {
-			picker.addOpenListener(videoPlayer);
-		}
-
-		tPicker.addOpenListener(trainingDisplay);
 		frame.add(trainingDisplay, "cell 0 0");
 		frame.add(profile, "cell 0 1, grow");
 		// by default add to telemetry frame
 		frame.add(odo, "cell 0 2, grow");
 
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setBackground(Color.black);
-		buttonPanel.add(startButton, "span");
-		buttonPanel.add(stopButton/*, "span"*/);
-		//buttonPanel.add(resetButton);
-		frame.add(buttonPanel, "cell 0 3");
+		ControlPanel cp = new ControlPanel();
+		frame.add(cp, "cell 0 3");
 
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
+	}
+
+	private static Level setLogLevel() {
+		final String LOGGER_PREFIX = "log4j.logger.";
+
+		for (String propertyName : System.getProperties().stringPropertyNames()) {
+			if (propertyName.startsWith(LOGGER_PREFIX)) {
+				String loggerName = propertyName.substring(LOGGER_PREFIX
+						.length());
+				String levelName = System.getProperty(propertyName, "");
+				Level level = Level.toLevel(levelName); // defaults to DEBUG
+				if (!"".equals(levelName)
+						&& !levelName.toUpperCase().equals(level.toString())) {
+					logger.error("Skipping unrecognized log4j log level "
+							+ levelName + ": -D" + propertyName + "="
+							+ levelName);
+					continue;
+				}
+				return level;
+
+			}
+		}
+		return Level.ERROR;
 	}
 }

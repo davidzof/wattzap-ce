@@ -1,7 +1,10 @@
 package com.wattzap.model.dto;
 
-import java.util.Date;
 
+/* 
+* @author David George (c) Copyright 2013
+* @date 19 June 2013
+*/
 public class Point {
 	private double latitude;
 	private double longitude;
@@ -9,7 +12,7 @@ public class Point {
 	private double distanceFromStart;
 	private double gradient;
 	private double speed;
-	private double level;
+	//private double level;
 	private long time;
 
 	public double getSpeed() {
@@ -18,14 +21,6 @@ public class Point {
 	
 	public void setSpeed(double speed) {
 		this.speed = speed;
-	}
-	
-	public double getLevel() {
-		return level;
-	}
-	
-	public void setLevel(double level) {
-		this.level = level;
 	}
 	
 	public long getTime() {
@@ -70,6 +65,6 @@ public class Point {
 		return "Point [latitude=" + latitude + ", longitude=" + longitude
 				+ ", elevation=" + elevation + ", distanceFromStart="
 				+ distanceFromStart + ", gradient=" + gradient + ", speed="
-				+ speed + ", level=" + level + ", time=" + time + "]";
+				+ speed + ", time=" + time + "]";
 	}
 }

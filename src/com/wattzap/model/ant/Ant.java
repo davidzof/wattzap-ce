@@ -1,7 +1,5 @@
 package com.wattzap.model.ant;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -22,6 +20,9 @@ import org.cowboycoders.ant.messages.commands.ChannelRequestMessage.Request;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 import org.cowboycoders.ant.messages.responses.ChannelIdResponse;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 
 /**
@@ -30,7 +31,7 @@ import com.wattzap.model.UserPreferences;
  * @author David George
  * @date 30 May 2013
  */
-public class Ant implements ActionListener {
+public class Ant implements MessageCallback {
 	private Channel scChannel = null;
 	private Channel hrChannel = null;
 
@@ -46,7 +47,7 @@ public class Ant implements ActionListener {
 	private static final int ANT_SPORT_SPEED_PERIOD = 8086;
 	private static final int ANT_SPORT_FREQ = 57; // 0x39
 
-	private static Logger logger = LogManager.getLogger(Ant.class.getName());
+	private static Logger logger = LogManager.getLogger("Ant");
 
 	/*
 	 * This should match the device you are connecting with. Some devices are
@@ -104,6 +105,9 @@ public class Ant implements ActionListener {
 		// ANT+ key
 		key = new NetworkKey(0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45);
 		key.setName("N:ANT+");
+		
+		MessageBus.INSTANCE.register(Messages.START, this);
+		MessageBus.INSTANCE.register(Messages.STOP, this);
 	}
 
 	public static void setupLogging() {
@@ -182,24 +186,22 @@ public class Ant implements ActionListener {
 
 	public void close() {
 		// stop listening
-		// TODO: check if we are stopped already
-		System.out.println(">>> node " + node.isRunning());
+		if (!scChannel.isFree()) {
+			logger.debug("Stopping ANT device");
+			scChannel.close();
+			hrChannel.close();
 
-		logger.debug("Stopping ANT device");
-		scChannel.close();
-		hrChannel.close();
+			// resets channel configuration
+			scChannel.unassign();
+			hrChannel.unassign();
 
-		// resets channel configuration
-		scChannel.unassign();
-		hrChannel.unassign();
+			// return the channel to the pool of available channels
+			node.freeChannel(scChannel);
+			node.freeChannel(hrChannel);
 
-		// return the channel to the pool of available channels
-		node.freeChannel(scChannel);
-		node.freeChannel(hrChannel);
-
-		// cleans up : gives up control of usb device etc.
-		node.stop();
-
+			// cleans up : gives up control of usb device etc.
+			node.stop();
+		}
 	}
 
 	public void open(int scID, int hrmID) {
@@ -284,16 +286,16 @@ public class Ant implements ActionListener {
 		// start listening
 		hrChannel.open();
 	}
-
+	
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		String command = e.getActionCommand();
-		logger.debug("Ant " + command);
-		if ("stop".equals(command)) {
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case STOP:
 			close();
-		} else if ("start".equals(command)) {
+			break;
+		case START:
 			open(userPrefs.getSCId(), userPrefs.getHRMId());
+			break;
 		}
-
 	}
 }

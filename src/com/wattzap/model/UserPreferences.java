@@ -1,9 +1,9 @@
 package com.wattzap.model;
 
+import java.awt.Rectangle;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.UUID;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import com.wattzap.model.power.Power;
 import com.wattzap.model.power.PowerProfiles;
@@ -16,18 +16,71 @@ import com.wattzap.model.power.PowerProfiles;
  */
 public enum UserPreferences {
 	INSTANCE;
-	Power powerProfile;
+	private Power powerProfile;
 	String user;
-	DataStore ds;
-	private static int evalTime = 600;
+	private final DataStore ds;
+	private static int evalTime = 480;
+	private static String workingDirectory = null;
+	private static String userDataDirectory = null;
+	private static final String cryptKey = "afghanistanbananastan";
+	public ResourceBundle messages;
 
 	UserPreferences() {
-
 		user = System.getProperty("user.name");
 		String wd = getWD();
-		ds = new DataStore(wd);
+		ds = new DataStore(wd, cryptKey);
+
+		Locale currentLocale;
+
+		currentLocale = Locale.getDefault();
+		messages = ResourceBundle.getBundle("MessageBundle", currentLocale);
+
 	}
 
+	public String getDBVersion() {
+		return get("", "dbVersion", "1.2");
+	}
+
+	public void setDBVersion(String v) {
+		set("", "dbVersion", v);
+	}
+
+	public Rectangle getMainBounds() {
+		int width = getInt("", "mainWidth", 1200);
+		int height = getInt("", "mainHeight", 650);
+		int x = getInt("", "mainX", 0);
+		int y = getInt("", "mainY", 0);
+
+		Rectangle r = new Rectangle(x, y, width, height);
+		return r;
+	}
+
+	public void setMainBounds(Rectangle r) {
+		setInt("", "mainHeight", r.height);
+		setInt("", "mainWidth", r.width);
+		setInt("", "mainX", r.x);
+		setInt("", "mainY", r.y);
+
+	}
+
+	public Rectangle getVideoBounds() {
+		int width = getInt("", "videoWidth", 800);
+		int height = getInt("", "videoHeight", 600);
+		int x = getInt("", "videoX", 0);
+		int y = getInt("", "videoY", 650);
+
+		Rectangle r = new Rectangle(x, y, width, height);
+		return r;
+	}
+
+	public void setVideoBounds(Rectangle r) {
+		setInt("", "videoHeight", r.height);
+		setInt("", "videoWidth", r.width);
+		setInt("", "videoX", r.x);
+		setInt("", "videoY", r.y);
+
+	}
+	
 	public double getWeight() {
 		return getDouble("weight", 80.0);
 	}
@@ -92,8 +145,7 @@ public enum UserPreferences {
 	public void setDebug(boolean value) {
 		setBoolean("debug", value);
 	}
-	
-	
+
 	public boolean isVirtualPower() {
 		return getBoolean("virtualPower", false);
 	}
@@ -174,19 +226,27 @@ public enum UserPreferences {
 	}
 
 	public int getEvalTime() {
-		return getInt("", "evalTime", evalTime);
+		return getIntCrypt("", "evalTime", evalTime);
 	}
 
 	public void setEvalTime(int t) {
-		setInt("", "evalTime", t);
+		setIntCrypt("", "evalTime", t);
 	}
 
 	public String getRouteDir() {
-		return get("", "videoLocation", this.getAppData() + "/Routes");
+		return get("", "videoLocation", this.getWD() + "/Routes");
 	}
 
 	public void setRouteDir(String s) {
 		set("", "videoLocation", s);
+	}
+
+	public String getTrainingDir() {
+		return get("", "trainingLocation", this.getWD() + "/Trainings");
+	}
+
+	public void setTrainingDir(String s) {
+		set("", "trainingLocation", s);
 	}
 
 	// Data Access Functions
@@ -221,8 +281,25 @@ public enum UserPreferences {
 		return i;
 	}
 
+	private int getIntCrypt(String user, String key, int i) {
+		String v = ds.getPropCrypt(user, key);
+		if (v != null) {
+			try {
+				i = Integer.parseInt(v);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		return i;
+	}
+
 	private void setInt(String user, String key, int i) {
 		ds.insertProp(user, key, Integer.toString(i));
+	}
+
+	private void setIntCrypt(String user, String key, int i) {
+		ds.insertPropCrypt(user, key, Integer.toString(i));
 	}
 
 	private boolean getBoolean(String key, boolean b) {
@@ -257,42 +334,67 @@ public enum UserPreferences {
 
 	public void shutDown() {
 		ds.close();
-
 	}
 
+	/*
+	 * Stores common data files: database logfile Videos Trainings
+	 * 
+	 * These directories are created by the Windows/Unix installer
+	 * 
+	 * On Windows 7: C:\ProgramData\Wattzap On Windows XP: C:\Documents and
+	 * Settings\All Users\Application Data\Wattzap On Unix: ??? $home/.wattzap
+	 */
 	public String getWD() {
-		String workingDirectory;
-		// here, we assign the name of the OS, according to Java, to a
-		// variable...
-		String OS = (System.getProperty("os.name")).toUpperCase();
-		// to determine what the workingDirectory is.
-		// if it is some version of Windows
-		if (OS.contains("WIN")) {
-			// it is simply the location of the "AppData" folder
-			workingDirectory = System.getenv("ALLUSERSPROFILE") + "/Wattzap";
-		} else {
-			// in either case, we would start in the user's home directory
-			workingDirectory = System.getProperty("user.home") + "/.wattzap";
-		}
+		if (workingDirectory == null) {
+			// here, we assign the name of the OS, according to Java, to a
+			// variable...
+			String OS = (System.getProperty("os.name")).toUpperCase();
+			// to determine what the workingDirectory is.
+			// if it is some version of Windows
 
+			if (OS.contains("WIN")) {
+				// it is simply the location of the "AppData" folder
+				workingDirectory = System.getenv("ALLUSERSPROFILE");
+
+				if (OS.contains("WINDOWS XP")) {
+					workingDirectory += "/Application Data/Wattzap";
+				} else {
+					workingDirectory += "/Wattzap";
+
+				}
+			} else {
+				// in either case, we would start in the user's home directory
+				workingDirectory = System.getProperty("user.home")
+						+ "/.wattzap";
+			}
+		}
 		return workingDirectory;
 	}
 
-	public String getAppData() {
-		String workingDirectory;
-		// here, we assign the name of the OS, according to Java, to a
-		// variable...
-		String OS = (System.getProperty("os.name")).toUpperCase();
-		// to determine what the workingDirectory is.
-		// if it is some version of Windows
-		if (OS.contains("WIN")) {
-			// it is simply the location of the "AppData" folder
-			workingDirectory = System.getenv("APPDATA") + "/Wattzap";
-		} else {
-			// in either case, we would start in the user's home directory
-			workingDirectory = System.getProperty("user.home") + "/wattzap";
-		}
+	/*
+	 * Stores User dependent data Workouts
+	 * 
+	 * On Windows 7: C:\Users\$user\AppData\Roaming\Wattzap On Windows XP:
+	 * C:\Documents & Settings\$user\AppData\Wattzap On Unix: ??? $home/.wattzap
+	 */
+	public String getUserDataDirectory() {
 
-		return workingDirectory;
+		if (userDataDirectory == null) {
+			// here, we assign the name of the OS, according to Java, to a
+			// variable...
+			String OS = (System.getProperty("os.name")).toUpperCase();
+
+			// to determine what the workingDirectory is.
+			// if it is some version of Windows
+			if (OS.contains("WIN")) {
+				// it is simply the location of the "AppData" folder
+				userDataDirectory = System.getenv("APPDATA") + "/Wattzap";
+			} else {
+				// in either case, we would start in the user's home directory
+				userDataDirectory = System.getProperty("user.home")
+						+ "/wattzap";
+			}
+		}
+		return userDataDirectory;
 	}
 }

@@ -19,9 +19,8 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import com.wattzap.Main;
-import com.wattzap.model.GPXData;
+import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
-import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.view.training.TrainingDisplay;
 
@@ -33,6 +32,7 @@ import com.wattzap.view.training.TrainingDisplay;
  * Garmin Training Center 3.5.3.
  * 
  * @author Sandor Dornbush
+ * @author David George
  */
 public class TcxWriter /* implements TrackWriter */implements ActionListener {
 	protected static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -42,7 +42,7 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 	// of type Sport_t.
 	private static final String TCX_SPORT_BIKING = "Biking";
 
-	GPXData gpxData;
+	RouteReader routeData;
 
 	// Values for fields of type Build_t/Type.
 	private static final String TCX_TYPE_RELEASE = "Release";
@@ -55,7 +55,7 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 	private final JFrame mainFrame;
 	private final TrainingDisplay tData;
 
-	private static Logger logger = LogManager.getLogger(Main.class.getName());
+	private static Logger logger = LogManager.getLogger("TCX Writer");
 
 	public TcxWriter(JFrame frame, TrainingDisplay tData) {
 		mainFrame = frame;
@@ -274,9 +274,16 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 			String workoutName = fileTSFormatter.format(new Date(firstPoint
 					.getTime()));
 
-			File file = new File(UserPreferences.INSTANCE.getAppData() + "/Workouts/"
-					+ workoutName + ".tcx");
+			File file = new File(
+					UserPreferences.INSTANCE.getUserDataDirectory()
+							+ "/Workouts/" + workoutName + ".tcx");
+
 			try {
+				// make sure parent directory exists
+				File parent = file.getParentFile();
+				if (!parent.exists()) {
+					parent.mkdirs();
+				}
 				file.createNewFile();
 
 				pw = new PrintWriter(file);
@@ -290,9 +297,6 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 					if (t.getLatitude() == 0 && t.getLongitude() == 0) {
 						// No GPS data to save
 						writeLocation(t, 1);
-						System.out.println("total Distance "
-								+ (t.getDistance() * 1000) + " total time "
-								+ t.getTime());
 					} else {
 						if (gpsData == 0 && last != null
 								&& last.getLatitude() == t.getLatitude()
@@ -303,9 +307,6 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 							continue;
 						} else {
 							writeLocation(t, gpsData);
-							System.out.println("total Distance "
-									+ (t.getDistance() * 1000) + " total time "
-									+ t.getTime());
 						}
 					}
 					last = t;
@@ -319,11 +320,15 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 				logger.error(e1.getLocalizedMessage() + " "
 						+ file.getAbsolutePath());
 			} catch (IOException e1) {
-				logger.error(e1.getLocalizedMessage() + " " + file.getAbsolutePath());
+				logger.error(e1.getLocalizedMessage() + " "
+						+ file.getAbsolutePath());
 			} finally {
 				close();
 			}
 
+		} else {
+			// recover data
+			tData.loadJournal();
 		}
 	}
 }

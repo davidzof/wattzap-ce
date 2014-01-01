@@ -1,6 +1,6 @@
 package com.wattzap.model;
 
-import com.wattzap.model.GPXData;
+import com.wattzap.model.GPXReader;
 
 public class GPXDataTest {
 
@@ -8,7 +8,8 @@ public class GPXDataTest {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		GPXData gpxData = new GPXData("multiseg.gpx");
+		GPXReader gpxData = new GPXReader();
+		gpxData.load("multiseg.gpx");
 	}
 
 }

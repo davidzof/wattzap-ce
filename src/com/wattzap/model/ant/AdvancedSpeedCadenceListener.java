@@ -1,24 +1,20 @@
 package com.wattzap.model.ant;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
-import com.wattzap.model.GPXData;
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
+import com.wattzap.model.RLVReader;
+import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.power.Power;
 
 /**
- * (c) 2013 David George / TrainingLoops.com
+ * (c) 2013 David George / Wattzap.com
  * 
  * Speed and Cadence ANT+ processor.
  * 
@@ -26,11 +22,10 @@ import com.wattzap.model.power.Power;
  * @date 11 June 2013
  */
 public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
-		implements BroadcastListener<BroadcastDataMessage>, ActionListener {
-	private List<ChangeListener> listeners = new ArrayList<ChangeListener>();
+		implements BroadcastListener<BroadcastDataMessage>, MessageCallback {
 
-	private static int lastTs = 0;
-	private static int lastTc = 0;
+	private static int lastTs = -1;
+	private static int lastTc = -1;
 	private static int sRR = 0; // previous speed rotation measurement
 	private static int cRR = 0; // previous cadence rotation measurement
 	private static int sCount = 0;
@@ -40,12 +35,19 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 	private double distance = 0.0;
 	private int cadence;
 
-	GPXData gpxData;
+	RouteReader routeData;
 	private double mass;
 	private double wheelSize;
 	private int resistance;
 	private Power power;
-	private boolean virtualPower;
+	private boolean simulSpeed;
+	private boolean firstValue;
+
+	public AdvancedSpeedCadenceListener() {
+		MessageBus.INSTANCE.register(Messages.START, this);
+		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
+		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
+	}
 
 	/**
 	 * Speed and cadence data is contained in the 8 byte data payload in the
@@ -74,8 +76,6 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 	 */
 	@Override
 	public void receiveMessage(BroadcastDataMessage message) {
-		// super.receiveMessage(message);
-
 		int[] data = message.getUnsignedData();
 		Telemetry t = new Telemetry();
 
@@ -93,121 +93,164 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		// Bytes 6 and 7: speed rotation count.
 		int sR = data[6] + (data[7] << 8);
 
-		System.out
-				.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR);
-
-		if (lastTs == 0 || lastTc == 0) {
-			// first time through, initialize counters and return
-			lastTs = tS;
-			lastTc = tC;
-			sRR = sR;
-			cRR = cR;
-			elapsedTime = System.currentTimeMillis();
-			return;
+		System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
+				+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
+				+ " cRR " + cRR);
+		
+		if (firstValue) {
+			if (lastTs == -1) {
+				// first time through, initialize counters and return
+				System.out.println("initialize counters and return");
+				lastTs = tS;
+				lastTc = tC;
+				sRR = sR;
+				cRR = cR;
+				return;
+			} else if (tS != lastTs) {
+				System.out.println("First change in counters, setup and return");
+				lastTs = tS;
+				lastTc = tC;
+				sRR = sR;
+				cRR = cR;
+				firstValue = false;
+			} else {
+				System.out.println("Warmup counters");
+				return;
+			}
 		}
-
+		
 		int tD; // time delta
 		if (tS < lastTs) {
 			// we have rolled over
-
 			tD = tS + (65536 - lastTs);
-
-			System.out.println("rollover tD " + tD);
-			if (tD > 10000) {
-				// Time delta more than 10 seconds is almost certainly bogus,
-				// update lastTs and return
-				lastTs = tS; // reset lastTs
+			if (tD > 5000) {
+				// Time delta more than 5 seconds is almost certainly bogus,
+				// just drop it
+				// update initial values, if this is first bogus reading
+				// if (firstValue) {
+				// lastTs = tS;
+				// sRR = sR;
+				// lastTc = tC;
+				// cRR = cR;
+				// firstValue = false;
+				// }
 				return;
 			}
-			// System.out.println("*** Roll over tS " + tS + " lastTs " + lastTs
-			// + " td " + tD);
 		} else {
 			tD = tS - lastTs;
-			// System.out.println("no roll over tS " + tS + " lastTs " + lastTs
-			// + " td " + tD);
-			System.out.println("no rollover tD " + tD);
 		}
 
 		int sRD; // speed rotation delta
 		if (sR < sRR) {
 			// we have rolled over
 			sRD = sR + (65536 - sRR);
-			// System.out.println("+++ Roll over sR " + sR + " sRR " + sRR);
 		} else {
 			sRD = sR - sRR;
-			// System.out.println(" sR " + sR + " sRR " + sRR);
 		}
 
+		System.out.println(" sRD " + sRD + " tD " + tD);
+		double distanceKM = 0;
 		if (tD > 0) {
-			// ok we have a time value and rotation value, lets calculate the
+			// We have a time value and rotation value, lets calculate the
 			// speed
-
-			// System.out.println(" sRD " + sRD + " wheelSize " + wheelSize);
-			double distanceKM = (sRD * wheelSize) / 100000;
-			double timeS = ((double) tD) / 1024.0;
+			distanceKM = (sRD * wheelSize) / 100000;
+			double timeS = ((double) tD) / 1024;
 			elapsedTime += (int) (timeS * 1000);
-			t.setTime(elapsedTime);
 
-			double speed = distanceKM / (timeS / (60.0 * 60.0));
+			double speed = distanceKM / (timeS / (3600));
 			int powerWatts = power.getPower(speed, resistance);
+			System.out.println("Speed " + speed + " distanceKM " + distanceKM
+					+ " timeS " + timeS);
+
 			t.setPower(powerWatts);
 
 			// if we have GPX Data and Simulspeed is enabled calculate speed
 			// based on power and gradient using magic sauce
-			if (virtualPower && gpxData != null) {
-				Point p = gpxData.getCoords(distance);
-				double realSpeed = power.getRealSpeed(mass,
-						p.getGradient() / 100, powerWatts);
-				realSpeed = (realSpeed * 3600) / 1000;
-				distanceKM = (realSpeed / speed) * distanceKM;
-				speed = realSpeed;
+			if (simulSpeed && routeData != null) {
+				System.out.println("gettng point at distance " + distance);
+				Point p = routeData.getPoint(distance);
+				if (routeData.routeType() == RLVReader.SLOPE) {
+					if (p == null) {
+						// end of the road
+						distance = 0.0;
+						return;
+					}
+					double realSpeed = power.getRealSpeed(mass,
+							p.getGradient() / 100, powerWatts);
+					realSpeed = (realSpeed * 3600) / 1000;
+					distanceKM = (realSpeed / speed) * distanceKM;
+					speed = realSpeed;
+
+				} else {
+					double ratio = (powerWatts / p.getGradient());
+					// speed is video speed * power ratio
+					speed = p.getSpeed() * ratio;
+					distanceKM = (speed / 3600) * timeS;
+					
+					System.out.println("speed " + speed + " powerWatts "
+							+ powerWatts + " video Power " + p.getGradient() + " distanceKM " + distanceKM);
+				}
 			}
+
 			t.setSpeed(speed);
-			distance += distanceKM;
-			t.setDistance(distance);
-			if (gpxData != null) {
-				Point p = gpxData.getCoords(t.getDistance());
-				t.setElevation(p.getElevation());
-				t.setGradient(p.getGradient());
-				t.setLatitude(p.getLatitude());
-				t.setLongitude(p.getLongitude());
-			}
-			t.setHeartRate(HeartRateListener.heartRate);
-			t.setCadence(cadence);
 
 			sCount = 0;
 		} else if (sCount < 12) {
+			// speed reading is zero, ignore the first 12 of these as sometimes
+			// readings don't change with every message
 			sCount++;
-			System.out.println("ACSL sCount " + sCount);
+			// System.out.println("ACSL sCount " + sCount);
 			t.setSpeed(-1.0);
 		}
+
+		t.setDistance(distance);
+		if (routeData != null) {
+			Point p = routeData.getPoint(t.getDistance());
+			if (p == null) {
+				// end of the road
+				distance = 0.0;
+				return;
+			}
+			t.setElevation(p.getElevation());
+			t.setGradient(p.getGradient());
+			t.setLatitude(p.getLatitude());
+			t.setLongitude(p.getLongitude());
+		}
+		t.setTime(elapsedTime);
+		t.setHeartRate(HeartRateListener.heartRate);
+		t.setCadence(cadence);
 
 		int cTD; // cadence time delta
 		if (tC < lastTc) {
 			// we have rolled over
 			cTD = tC + (65536 - lastTc);
-			
-			System.out.println("rollover ctD " + cTD);
+
+			// System.out.println("rollover ctD " + cTD);
 		} else {
 			cTD = tC - lastTc;
 		}
 
-		int cRD; // cadence rotation delta
-		if (cR < cRR) {
-			// we have rolled over
-			cRD = cR + (65536 - cRR);
-		} else {
-			cRD = cR - cRR;
-		}
+		System.out.println(" cR " + cR + " tC " + tC);
 
-		if (cRD > 0) {
-			double timeC = ((double) cTD) / 1024.0;
-			System.out.println("timeC" + timeC);
-			cadence = ((int) (cRD * ((1 / timeC) * 60.0)));
-			cCount = 0;
-		} else if (cCount < 12) {
-			// System.out.println("ACSL cCount " + cCount);
-			cCount++;
+		if (cTD < 5000) {
+			// Time deltas of > 5 seconds are bogus
+			int cRD; // cadence rotation delta
+			if (cR < cRR) {
+				// we have rolled over
+				cRD = cR + (65536 - cRR);
+			} else {
+				cRD = cR - cRR;
+			}
+
+			if (cRD > 0) {
+				double timeC = ((double) cTD) / 1024.0;
+				// System.out.println("timeC" + timeC);
+				cadence = ((int) (cRD * ((1 / timeC) * 60.0)));
+				cCount = 0;
+			} else if (cCount < 12) {
+				// System.out.println("ACSL cCount " + cCount);
+				cCount++;
+			}
 		}
 
 		lastTs = tS;
@@ -216,26 +259,34 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		sRR = sR;
 
 		if (t.getSpeed() >= 0.0) {
-			notifyListeners(t);
+			System.out.println(t);
+			MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
+			distance += distanceKM;
 		}
 	}
 
-	public void actionPerformed(ActionEvent e) {
-		String command = e.getActionCommand();
-		// System.out.println("ASCL " + command);
-		if ("gpxload".equals(command)) {
-			this.gpxData = (GPXData) e.getSource();
-			distance = 0.0;
-		}
-		if ("stop".equals(command)) {
-
-		} else if ("start".equals(command)) {
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case START:
 			// get up to date values
 			mass = UserPreferences.INSTANCE.getTotalWeight();
 			wheelSize = UserPreferences.INSTANCE.getWheelSizeCM();
 			resistance = UserPreferences.INSTANCE.getResistance();
 			power = UserPreferences.INSTANCE.getPowerProfile();
-			virtualPower = UserPreferences.INSTANCE.isVirtualPower();
+			simulSpeed = UserPreferences.INSTANCE.isVirtualPower();
+			elapsedTime = System.currentTimeMillis();
+			lastTs = -1;
+			lastTc = -1;
+			firstValue = true;
+			break;
+		case STARTPOS:
+			distance = (Double) o;
+			break;
+		case GPXLOAD:
+			this.routeData = (RouteReader) o;
+			distance = 0.0;
+			break;
 		}
 	}
 }

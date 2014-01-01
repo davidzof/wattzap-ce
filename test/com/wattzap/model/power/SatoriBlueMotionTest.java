@@ -17,7 +17,7 @@ public class SatoriBlueMotionTest {
 	public void checkPower() {
 		System.out.println("speed,power");
 
-		for (int speed = 10; speed < 50; speed++) {
+		for (int speed = 0; speed < 60; speed++) {
 			for (int resistance = 1; resistance <= p.getResitanceLevels(); resistance++) {
 				if (resistance == 1) {
 					System.out.printf("%d", speed);

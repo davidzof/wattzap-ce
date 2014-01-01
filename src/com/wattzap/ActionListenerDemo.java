@@ -48,8 +48,7 @@ public class ActionListenerDemo {
 	class MyView implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("action event " + e.getActionCommand() + " "
-					+ ((MyModel) e.getSource()).getSpeed());
+
 
 		}
 

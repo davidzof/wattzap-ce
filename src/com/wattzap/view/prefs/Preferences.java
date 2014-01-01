@@ -38,7 +38,7 @@ public class Preferences extends JFrame implements ActionListener {
 	JLabel weightLabel;
 	JLabel bikeWeightLabel;
 
-	TrainerPanel trainerPanel;
+	TurboPanel trainerPanel;
 	AntPanel antPanel;
 	UserPreferences userPrefs = UserPreferences.INSTANCE;
 
@@ -64,7 +64,7 @@ public class Preferences extends JFrame implements ActionListener {
 		antPanel = new AntPanel();
 
 		// Trainer Profiles
-		trainerPanel = new TrainerPanel();
+		trainerPanel = new TurboPanel();
 
 		jtp.addTab("Personal Data", userPanel);
 		jtp.addTab("Trainer", trainerPanel);
@@ -118,14 +118,14 @@ public class Preferences extends JFrame implements ActionListener {
 		tab.add(wheelSize, "span");
 
 		JLabel hrLabel = new JLabel();
-		hrLabel.setText("Max Heart Rate");
+		hrLabel.setText("FT Heart Rate");
 		tab.add(hrLabel);
 		maxHR = new JTextField(20);
 		maxHR.setText("" + userPrefs.getMaxHR());
 		tab.add(maxHR, "span");
 
 		JLabel pwrLabel = new JLabel();
-		pwrLabel.setText("Max Power");
+		pwrLabel.setText("FT Power");
 		tab.add(pwrLabel);
 		maxPwr = new JTextField(20);
 		maxPwr.setText("" + userPrefs.getMaxPower());

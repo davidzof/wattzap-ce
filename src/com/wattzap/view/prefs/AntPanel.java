@@ -36,11 +36,18 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 	private int scID;
 
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
+	AdvancedSpeedCadenceListener scListener;
+	HeartRateListener hrListener;
 
 	public AntPanel() {
 		super();
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
+
+		scListener = new AdvancedSpeedCadenceListener();
+		hrListener = new HeartRateListener();
+		hrListener.addChangeListener(this);
+		scListener.addChangeListener(this);
 
 		JLabel label1 = new JLabel();
 		label1.setText("Speed and Cadence ID");
@@ -72,8 +79,9 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 
 		JButton pairButton = new JButton("Pair");
 		pairButton.setPreferredSize(new Dimension(60, 30));
-		pairButton.setActionCommand("pair");
+		pairButton.setActionCommand("start");
 		pairButton.addActionListener(this);
+
 		JButton stopButton = new JButton("Stop");
 		stopButton.setPreferredSize(new Dimension(60, 30));
 		stopButton.setActionCommand("stop");
@@ -101,12 +109,7 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 
-		AdvancedSpeedCadenceListener scListener = new AdvancedSpeedCadenceListener();
-		HeartRateListener hrListener = new HeartRateListener();
-		hrListener.addChangeListener(this);
-		scListener.addChangeListener(this);
-
-		if ("pair".equals(command)) {
+		if ("start".equals(command)) {
 			antDevice = new Ant(scListener, hrListener);
 			antDevice.open(0, 0); // 0 is wildcard id
 			status.setText("Attempting pairing...");
@@ -115,9 +118,15 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 			status.setText("Pairing complete...");
 			hrmID = antDevice.getHRMChannelId();
 			hrmIdField.setText("" + hrmID);
-
+			//if (hrmID > 0) {
+			//	userPrefs.setHRMId(hrmID);
+			//}
 			scID = antDevice.getSCChannelId();
+			
 			sandcField.setText("" + scID);
+			//if (scID > 0) {
+			//	userPrefs.setSCId(scID);
+			//}
 			antDevice.close();
 
 		}

@@ -48,6 +48,7 @@ public enum PowerProfiles {
 	public Power getProfile(String description) {
 		for (Power p : profiles) {
 			if (description.equals(p.description())) {
+				
 				return p;
 			}
 		}
@@ -62,11 +63,11 @@ public enum PowerProfiles {
 		URL packageURL;
 
 		packageName = packageName.replace(".", "/");
-		logger.info("packageName " + packageName);
+		logger.info("Package Name " + packageName);
 
 		packageURL = classLoader.getResource(packageName);
-
 		if (packageURL.getProtocol().equals("jar")) {
+			logger.debug("Scanning Jar");
 			String jarFileName;
 			JarFile jf;
 			Enumeration<JarEntry> jarEntries;
@@ -78,9 +79,7 @@ public enum PowerProfiles {
 			jf = new JarFile(jarFileName);
 			jarEntries = jf.entries();
 			while (jarEntries.hasMoreElements()) {
-
 				entryName = jarEntries.nextElement().getName();
-
 				// only check class names
 				if (entryName.startsWith(packageName)
 						&& entryName.length() > (packageName.length() + 5)) {
@@ -90,6 +89,7 @@ public enum PowerProfiles {
 					entryName = entryName.replace("/", ".");
 
 					Class c = Class.forName(entryName);
+					
 					Annotation[] annotations = c.getAnnotations();
 					for (Annotation a : annotations) {
 						if (a instanceof PowerAnnotation) {
@@ -103,6 +103,7 @@ public enum PowerProfiles {
 
 			// loop through files in classpath
 		} else {
+			logger.debug("Scanning classpath");
 			URI uri = new URI(packageURL.toString());
 			File folder = new File(uri.getPath());
 			// won't work with path which contains blank (%20)

@@ -47,8 +47,7 @@ import org.cowboycoders.ant.utils.UsbUtils;
 
 public class AntTransceiver extends AbstractAntTransceiver {
 
-	public final static Logger LOGGER = Logger.getLogger(AntTransceiver.class
-			.getName());
+	public final static Logger LOGGER = Logger.getLogger("Ant Transceiver");
 
 	public static final Level LOG_LEVEL = Level.ALL;
 

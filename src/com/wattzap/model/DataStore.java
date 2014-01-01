@@ -8,29 +8,64 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESKeySpec;
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+/**
+ * (c) 2013 David George / Wattzap.com
+ * 
+ * 
+ * @author David George
+ * @date 11 June 2013
+ * 
+ * create table metrics (id integer primary key autoincrement, "
+                         "filename varchar,"
+                         "ride_date date,"
+                         "ride_time double, "
+                         "average_cad double,"
+                         "workout_time double, "
+                         "total_distance double,"
+                         "x_power double,"
+                         "average_speed double,"
+                         "total_work double,"
+                         "average_power double,"
+                         "average_hr double,"
+                         "relative_intensity double,"
+                         "bike_score double)");
+ */
 public class DataStore {
 	private String framework = "embedded";
 	private String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 	private String protocol = "jdbc:derby:";
 	Connection conn = null;
+	private static Cipher cipher = null; // in javax.crypto
+	SecretKey secretKey = null;
 
-	private Logger logger = LogManager.getLogger(DataStore.class.getName());
+	private Logger logger = LogManager.getLogger("DataStore");
 
-	public static void main(String[] args) {
-		DataStore ds = new DataStore(".");
-		String user = System.getProperty("user.name");
-		System.out.println(ds.getProp(user, "weight"));
-		ds.insertProp(user, "weight", "69.0");
-		System.out.println(ds.getProp(user, "weight"));
+	
 
-		ds.close();
-		System.out.println("SimpleApp finished");
-	}
+	public DataStore(String wd, String key) {
+		SecretKeyFactory keyGenerator;
+		try {
+			keyGenerator = SecretKeyFactory.getInstance("DES");
 
-	public DataStore(String wd) {
+			// keyGenerator.init(168);
+			DESKeySpec keySpec = new DESKeySpec(
+					key.getBytes("UTF8"));
+			secretKey = keyGenerator.generateSecret(keySpec);
+
+			cipher = Cipher.getInstance("DES");
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+		}
+
 		try {
 			Class.forName(driver).newInstance();
 		} catch (Exception e) {
@@ -69,6 +104,28 @@ public class DataStore {
 		}
 	}
 
+	/**
+	 * Encrypts values before writing to database using DES. If there is an
+	 * exception nothing is written.
+	 * 
+	 * @param user
+	 * @param k
+	 * @param v
+	 */
+	public void insertPropCrypt(String user, String k, String v) {
+		byte[] clearTextBytes;
+		try {
+			clearTextBytes = v.getBytes("UTF8");
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+			byte[] cipherBytes = cipher.doFinal(clearTextBytes);
+			v = toHexString(cipherBytes);
+			insertProp(user, k, v);
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+		}
+
+	}
+
 	public void insertProp(String user, String k, String v) {
 		PreparedStatement psInsert = null;
 		try {
@@ -99,6 +156,20 @@ public class DataStore {
 				logger.error(e.getLocalizedMessage());
 			}
 		}
+	}
+
+	public String getPropCrypt(String user, String k) {
+		String v = getProp(user, k);
+		try {
+			byte[] cipherBytes = toByteArray(v);
+			cipher.init(Cipher.DECRYPT_MODE, secretKey);
+			byte[] decryptedBytes = cipher.doFinal(cipherBytes);
+			v = new String(decryptedBytes, "UTF8");
+
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+		}
+		return v;
 	}
 
 	public String getProp(String user, String k) {
@@ -227,5 +298,13 @@ public class DataStore {
 			// e.printStackTrace(System.err);
 			e = e.getNextException();
 		}
+	}
+	
+	private static String toHexString(byte[] array) {
+	    return DatatypeConverter.printHexBinary(array);
+	}
+
+	private static byte[] toByteArray(String s) {
+	    return DatatypeConverter.parseHexBinary(s);
 	}
 }

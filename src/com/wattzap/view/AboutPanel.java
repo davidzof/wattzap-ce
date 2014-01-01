@@ -7,9 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -23,6 +21,7 @@ import org.apache.log4j.Logger;
 
 import com.wattzap.model.UserPreferences;
 import com.wattzap.utils.Registration;
+import com.wattzap.utils.StringXORer;
 
 /*
  * Registration Process View Object.
@@ -37,19 +36,43 @@ public class AboutPanel extends JFrame implements ActionListener {
 	JTextField regKey;
 	UserPreferences userPrefs = UserPreferences.INSTANCE;
 	StringBuilder serial = new StringBuilder();
-	int minutes = UserPreferences.INSTANCE.getEvalTime();
+	/*
+	 * Strings - encoded. This is some anti-piracy stuff to stop hackers easily
+	 * string grepping for the obsfucated About dialog. Won't hold them long.
+	 */
+	private static final String decodeKey = "CAFEBABE";
+	// <html>WattzAp Virtual Turbo Trainer<br/><br/>Version: 1.0.0 beta
+	// 1<br/>Date: 24th October 2013<br/>(c) 2013, All rights reserved<br/>
+	private static final String blurb = "fykyKC5/FSQ3NTwEMmEULDE1MyQuYRYwMSMpZRYzIywtJDR5IDNte38jNGp8Fyc3MCgpK3hhc2tyb3ZlICQ2JGNyeicwbnwBIjUjf2JzdzErYQgqNCQvJyYzZndycHF5ITNpe2oia2VxcXd2bmEDKS9hNCwlKTY2YzMjNiczNCAnfSQ3bX8=";
+	// Your software is registered
+	private static final String registered = "Gi4zN2IyLSM3Nic3J2ErNmMzIyIrMjYgMSQi";
+	// Incorrect registration key
+	private static final String incorrectKey = "Ci8lKjAzJyY3YTQgJSgxMTEgMiwtL2IuJjg=";
+	// Your software is not registered
+	private static final String notRegistered = "Gi4zN2IyLSM3Nic3J2ErNmMvKTFiMyciKjIyIDAkJg==";
+	// Error in registration key
+	private static final String keyError = "BjM0KjBhKytjMyMiKzI2NyI1LyosYSkgOg==";
+	// "Your software has been registered successfully"
+	private static final String successMsg = "Gi4zN2IyLSM3Nic3J2EqJDBhJCAnL2I3JiYvNjYkMCAnYTUwISInNjAnMykuOA==";
+	// You have %d minutes left to evaluate this software<br/>
+	private static final String evalMsg = "Gi4zZSogNCBjZCJlLygsMDckNWUuJCQxYzUpZSc3Iyk2IDIgYjUqLDBhNSokNTUkMSR6JzBufA==";
+	// About WattzAp
+	private static final String aboutTitle = "AiMpMDZhFSQ3NTwEMg==";
+	// Register
+	private static final String registerMsg = "ESQhLDE1Jzc=";
+	// Debug
+	private static final String debugMsg = "ByQkMCU=";
+	// "Serial Number: "
+	private static final String serialMsg = "ECQ0LCMtYgs2LCQgMHti";
 
-	private static Logger logger = LogManager.getLogger(AboutPanel.class
-			.getName());
+	private static Logger logger = LogManager.getLogger("About");
 
 	public AboutPanel() {
-		setTitle("About");
+		setTitle(StringXORer.decode(aboutTitle, decodeKey));
 		ImageIcon img = new ImageIcon("icons/preferences.jpg");
 		setIconImage(img.getImage());
 		Container contentPane = getContentPane();
 		contentPane.setLayout(new FlowLayout());
-		minutes -= 120; // Dock 2 hours from the run time
-		UserPreferences.INSTANCE.setEvalTime(minutes);
 
 		try {
 			byte[] bytesOfMessage = userPrefs.getSerial().getBytes("UTF-8");
@@ -78,7 +101,8 @@ public class AboutPanel extends JFrame implements ActionListener {
 		serialNo.setBackground(null); // this is the same as a JLabel
 		serialNo.setBorder(null); // remove the border
 
-		serialNo.setText("Serial Number: " + serial.toString().toUpperCase());
+		serialNo.setText(StringXORer.decode(serialMsg, decodeKey)
+				+ serial.toString().toUpperCase());
 		add(about);
 		add(serialNo);
 
@@ -91,42 +115,48 @@ public class AboutPanel extends JFrame implements ActionListener {
 			String key = userPrefs.getRegistrationKey();
 			try {
 				if (Registration.register(key, serial.toString())) {
-					message.setText("Your software is registered");
+					message.setText(StringXORer.decode(registered, decodeKey));
 				} else {
-					message.setText("Incorrect registration key");
+					message.setText(StringXORer.decode(incorrectKey, decodeKey));
 					isRegistered = false;
 				}
 
 			} catch (Exception e) {
-				logger.info("Error in registration key "
+				logger.info(StringXORer.decode(keyError, decodeKey) + " "
 						+ e.getLocalizedMessage());
-				message.setText("Error in registration key");
+				message.setText(StringXORer.decode(keyError, decodeKey));
 				isRegistered = false;
 			}
 
 		} else {
-			message.setText("Your software is not registered");
+			message.setText(StringXORer.decode(notRegistered, decodeKey));
 		}
-		String blurb = "<html>Virtual Turbo<br/><br/>Version: beta.1<br/>Date: 16th September 2013<br/>(c) 2013, All rights reserved<br/>";
+
 		if (!isRegistered) {
-			blurb += "You have " + minutes
-					+ " minutes left to evaluate this software<br/>";
+			int minutes = UserPreferences.INSTANCE.getEvalTime();
+			about.setText(StringXORer.decode(blurb, decodeKey)
+					+ String.format(StringXORer.decode(evalMsg, decodeKey),
+							minutes));
+		} else {
+			about.setText(StringXORer.decode(blurb, decodeKey));
 		}
-		about.setText(blurb);
+
 		add(message);
 
 		if (!isRegistered) {
 			regKey = new JTextField(45);
 			add(regKey);
 
-			JButton registrationButton = new JButton("Register");
+			JButton registrationButton = new JButton(StringXORer.decode(
+					registerMsg, decodeKey));
 			registrationButton.setPreferredSize(new Dimension(120, 30));
-			registrationButton.setActionCommand("register");
+			registrationButton.setActionCommand(StringXORer.decode(registerMsg,
+					decodeKey));
 			registrationButton.addActionListener(this);
 			add(registrationButton);
 		}
 
-		debug = new JCheckBox("Debug");
+		debug = new JCheckBox(StringXORer.decode(debugMsg, decodeKey));
 		if (userPrefs.isDebug()) {
 			debug.setSelected(true);
 		} else {
@@ -143,27 +173,36 @@ public class AboutPanel extends JFrame implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		System.out.println("command " + command);
-		if ("register".equals(command)) {
+		logger.debug(command);
+		if (StringXORer.decode(registerMsg, decodeKey).equals(command)) {
 			String key = regKey.getText();
 			try {
 				if (!key.isEmpty()
 						&& Registration.register(key, serial.toString().trim())) {
 
 					userPrefs.setRegistrationKey(key);
-					message.setText("Your software has been registered successfully");
+					message.setText(StringXORer.decode(successMsg, decodeKey));
 				} else {
-					message.setText("Incorrect registration key");
+					message.setText(StringXORer.decode(incorrectKey, decodeKey));
 				}
 
 			} catch (Exception ex) {
-				logger.info("Error in registration key "
+				logger.info(StringXORer.decode(keyError, decodeKey) + " "
 						+ ex.getLocalizedMessage());
-				message.setText("Error in registration key, please check");
+				message.setText(StringXORer.decode(keyError, decodeKey));
 
 			}
-		} else if ("Debug".equals(command)) {
+		} else if (StringXORer.decode(debugMsg, decodeKey).equals(command)) {
 			userPrefs.setDebug(debug.isSelected());
+		}
+
+		if (!userPrefs.isRegistered()) {
+			int minutes = UserPreferences.INSTANCE.getEvalTime();
+			about.setText(StringXORer.decode(blurb, decodeKey)
+					+ String.format(StringXORer.decode(evalMsg, decodeKey),
+							minutes));
+		} else {
+			about.setText(StringXORer.decode(blurb, decodeKey));
 		}
 
 		revalidate();

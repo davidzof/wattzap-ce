@@ -56,21 +56,5 @@ public class RollingTime {
 		}
 	}
 
-	public static void main(String[] args) {
-		RollingTime rt = new RollingTime(30);
-		rt.add(10, 1);
-		rt.add(10, 12);
-		rt.add(15, 17);
-		System.out.println("ave1 " + rt.getAverage());
-		rt.add(10,25);
-		rt.add(10,31);
-		System.out.println("ave2 " + rt.getAverage());
-		rt.add(20,33);
-		rt.add(15,40);
-		System.out.println("ave3 " + rt.getAverage());
-		rt.add(15,42);
-		System.out.println("ave4 " + rt.getAverage());
-		rt.add(15,45);
-		System.out.println("ave5 " + rt.getAverage());
-	}
+
 }

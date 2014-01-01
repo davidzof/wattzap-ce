@@ -62,7 +62,7 @@ public class Registration {
 			0, 0, 15, 1, -48, 59, -57, 109, 85, 80, 29, 87, -12, 82, -55, 87,
 			-82, 64 };
 
-	private static Logger logger = LogManager.getLogger(Registration.class.getName());
+	private static Logger logger = LogManager.getLogger("Registration");
 
 	public static boolean register(String key, String serial)
 			throws IOException, InsecureCurveException,

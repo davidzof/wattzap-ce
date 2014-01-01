@@ -1,7 +1,12 @@
 package com.wattzap.model.dto;
 
+import java.io.Serializable;
 
-public class Telemetry {
+/* 
+* @author David George (c) Copyright 2013
+* @date 19 June 2013
+*/
+public class Telemetry implements Serializable {
 	private double speed;
 	private int cadence;
 	private double distance = 0.0;
@@ -95,7 +100,7 @@ public class Telemetry {
 				+ ", distance=" + distance + ", power=" + power
 				+ ", elevation=" + elevation + ", gradient=" + gradient
 				+ ", latitude=" + latitude + ", longitude=" + longitude
-				+ ", heartRate=" + heartRate + "]";
+				+ ", heartRate=" + heartRate + ", time=" + time/1000 + "]";
 	}
 
 	public double getDistance() {

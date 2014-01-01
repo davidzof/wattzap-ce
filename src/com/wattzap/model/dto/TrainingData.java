@@ -2,9 +2,12 @@ package com.wattzap.model.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
+/* 
+* @author David George (c) Copyright 2013
+* @date 19 August 2013
+*/
 public class TrainingData {
-	Collection<TrainingItem> training = new ArrayList<TrainingItem>();
+	ArrayList<TrainingItem> training = new ArrayList<TrainingItem>();
 	boolean hr = false;
 	boolean pwr  = false;
 	boolean cdc = false;
@@ -40,6 +43,10 @@ public class TrainingData {
 
 	public Collection<TrainingItem> getTraining() {
 		return training;
+	}
+	
+	public TrainingItem getPreviousItem() {
+		return training.get(training.size()-1);
 	}
 
 }

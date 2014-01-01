@@ -12,6 +12,13 @@ import com.wattzap.view.training.TrainingAnalysis;
 import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
+/**
+ * (c) 2013 David George / Wattzap.com
+ * 
+ * 
+ * @author David George
+ * @date 11 June 2013
+ */
 public class MenuBar extends JMenuBar {
 	private static final long serialVersionUID = 8868201635857315675L;
 	private MainFrame frame;
