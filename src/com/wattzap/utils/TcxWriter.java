@@ -1,28 +1,23 @@
 package com.wattzap.utils;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import com.wattzap.Main;
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
-import com.wattzap.view.training.TrainingDisplay;
 
 /**
  * Write out a a track in the Garmin training center database, tcx format. As
@@ -34,9 +29,9 @@ import com.wattzap.view.training.TrainingDisplay;
  * @author Sandor Dornbush
  * @author David George
  */
-public class TcxWriter /* implements TrackWriter */implements ActionListener {
+public class TcxWriter /* implements TrackWriter */{
 	protected static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-	protected static final String FILE_TIMESTAMP_FORMAT = "yyyyMMdd-HHmmss";
+	protected static final String FILE_TIMESTAMP_FORMAT = "yyyyMMMdd-HHmmss";
 
 	// These are the only sports allowed by the TCX v2 specification for fields
 	// of type Sport_t.
@@ -49,19 +44,15 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 	private static final String TCX_TYPE_INTERNAL = "Internal";
 
 	private final SimpleDateFormat timestampFormatter;
-	private final SimpleDateFormat fileTSFormatter;
+	private final static SimpleDateFormat fileTSFormatter = new SimpleDateFormat(
+			FILE_TIMESTAMP_FORMAT);
 
 	private PrintWriter pw = null;
-	private final JFrame mainFrame;
-	private final TrainingDisplay tData;
 
 	private static Logger logger = LogManager.getLogger("TCX Writer");
 
-	public TcxWriter(JFrame frame, TrainingDisplay tData) {
-		mainFrame = frame;
-		this.tData = tData;
+	public TcxWriter() {
 		timestampFormatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-		fileTSFormatter = new SimpleDateFormat(FILE_TIMESTAMP_FORMAT);
 		timestampFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
@@ -138,11 +129,14 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 			pw.println("</LongitudeDegrees>");
 
 			pw.println("          </Position>");
-			pw.print("          <AltitudeMeters>");
-			pw.print(t.getElevation());
-			pw.println("</AltitudeMeters>");
-		}
 
+		}
+		pw.print("          <AltitudeMeters>");
+		pw.print(t.getElevation());
+		pw.println("</AltitudeMeters>");
+		pw.print("          <DistanceMeters>");
+		pw.print(t.getDistance() * 1000);
+		pw.println("</DistanceMeters>");
 		pw.print("          <HeartRateBpm>");
 		pw.print("<Value>");
 		pw.print(t.getHeartRate());
@@ -156,6 +150,9 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 		pw.print("<Watts>");
 		pw.print(t.getPower());
 		pw.print("</Watts>");
+		pw.print("<Speed>");
+		pw.print(t.getSpeed());
+		pw.print("</Speed>");
 		pw.println("</TPX></Extensions>");
 		pw.println("        </Trackpoint>");
 	}
@@ -212,13 +209,9 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 	}
 
 	/*
-	 * 
-	 * 
-	 * 
 	 * @Override public String getExtension() { return
 	 * TrackFileFormat.TCX.getExtension(); }
 	 */
-
 	private void writeVersion() {
 		if (pw == null) {
 			return;
@@ -251,84 +244,87 @@ public class TcxWriter /* implements TrackWriter */implements ActionListener {
 		pw.println("</Version>");
 	}
 
-	public void actionPerformed(ActionEvent e) {
-		String command = e.getActionCommand();
-		if ("Save as TCX".equals(command)) {
-			// note, if no gpx points
-			ArrayList<Telemetry> data = tData.getData();
-
-			if (data == null || data.size() == 0) {
-				logger.info("No training data to save");
-				return;
-			}
-
-			Telemetry firstPoint = data.get(0);
-			Telemetry lastPoint = data.get(data.size() - 1);
-
-			int dialogButton = JOptionPane.YES_NO_OPTION;
-			// gpsData == 0 is Yes
-			int gpsData = JOptionPane.showConfirmDialog(mainFrame,
-					"Save with GPS and Altitude data?", "GPS Data",
-					dialogButton);
-
-			String workoutName = fileTSFormatter.format(new Date(firstPoint
-					.getTime()));
-
-			File file = new File(
-					UserPreferences.INSTANCE.getUserDataDirectory()
-							+ "/Workouts/" + workoutName + ".tcx");
-
-			try {
-				// make sure parent directory exists
-				File parent = file.getParentFile();
-				if (!parent.exists()) {
-					parent.mkdirs();
-				}
-				file.createNewFile();
-
-				pw = new PrintWriter(file);
-
-				writeHeader();
-				writeStartTrack(firstPoint, lastPoint);
-				writeOpenSegment();
-
-				Telemetry last = null;
-				for (Telemetry t : data) {
-					if (t.getLatitude() == 0 && t.getLongitude() == 0) {
-						// No GPS data to save
-						writeLocation(t, 1);
-					} else {
-						if (gpsData == 0 && last != null
-								&& last.getLatitude() == t.getLatitude()
-								&& last.getLongitude() == t.getLongitude()) {
-							// Same GPS Point and we are saving GPS Data, drop
-							// this
-							// value
-							continue;
-						} else {
-							writeLocation(t, gpsData);
-						}
-					}
-					last = t;
-				}
-
-				writeCloseSegment();
-				writeEndTrack();
-				writeFooter();
-				pw.flush();
-			} catch (FileNotFoundException e1) {
-				logger.error(e1.getLocalizedMessage() + " "
-						+ file.getAbsolutePath());
-			} catch (IOException e1) {
-				logger.error(e1.getLocalizedMessage() + " "
-						+ file.getAbsolutePath());
-			} finally {
-				close();
-			}
-
-		} else {
-			// recover data
-			tData.loadJournal();
+	/**
+	 * 
+	 * @param data
+	 * @param gpsData
+	 *            0 - save GPS data, 1 - drop GPS data
+	 * @return
+	 */
+	public String save(ArrayList<Telemetry> data, int gpsData) {
+		String fileName = null;
+		if (data == null || data.size() == 0) {
+			logger.info("No training data to save");
+			return fileName;
 		}
+
+		Telemetry firstPoint = data.get(0);
+		Telemetry lastPoint = data.get(data.size() - 1);
+
+		fileName = getWorkoutName(firstPoint
+				.getTime());
+		File file = new File(UserPreferences.INSTANCE.getUserDataDirectory()
+				+ "/Workouts/" + fileName);
+
+		try {
+			// make sure parent directory exists
+			File parent = file.getParentFile();
+			if (!parent.exists()) {
+				parent.mkdirs();
+			}
+			file.createNewFile();
+
+			pw = new PrintWriter(file);
+
+			writeHeader();
+			writeStartTrack(firstPoint, lastPoint);
+			writeOpenSegment();
+
+			Telemetry last = null;
+			for (Telemetry t : data) {
+				// hmmm need to think about this should be -91?
+				if (t.getLatitude() == 0 && t.getLongitude() == 0) {
+					// No GPS data to save
+					writeLocation(t, 1);
+				} else {
+					if (gpsData == 0 && last != null
+							&& last.getLatitude() == t.getLatitude()
+							&& last.getLongitude() == t.getLongitude()) {
+						// Same GPS Point and we are saving GPS Data, drop
+						// this
+						// value
+						continue;
+					} else {
+						writeLocation(t, gpsData);
+					}
+				}
+				last = t;
+			}
+
+			writeCloseSegment();
+			writeEndTrack();
+			writeFooter();
+			pw.flush();
+		} catch (FileNotFoundException e1) {
+			logger.error(e1.getLocalizedMessage() + " "
+					+ file.getAbsolutePath());
+		} catch (IOException e1) {
+			logger.error(e1.getLocalizedMessage() + " "
+					+ file.getAbsolutePath());
+		} finally {
+			close();
+		}
+
+		return fileName;
+	}
+
+	public static String getWorkoutName(long time) {
+		Calendar date = (new GregorianCalendar());
+		date.setTimeInMillis(time);
+		int season = date.get(Calendar.YEAR);
+
+		String workoutName = fileTSFormatter.format(new Date(time));
+
+		return season + "/" + workoutName + ".tcx";
 	}
 }

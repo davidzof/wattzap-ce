@@ -55,7 +55,6 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 		File file = getSelectedFile();
 		try {
 			if (retVal == JFileChooser.APPROVE_OPTION) {
-
 				UserPreferences.INSTANCE.setRouteDir(file.getParent());
 				RouteReader track;
 				if (file.getName().endsWith(".gpx")) {
@@ -64,7 +63,6 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 					track = new RLVReader();
 				}
 				track.load(file.getAbsolutePath());
-
 				MessageBus.INSTANCE.send(Messages.GPXLOAD, track);
 			} else {
 				logger.info("Open command cancelled by user.");
@@ -82,7 +80,6 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 		JSlider source = (JSlider) e.getSource();
 		if (!source.getValueIsAdjusting()) {
 			int fps = (int) source.getValue();
-			System.out.println("len " + fps);
 		}
 	}
 }

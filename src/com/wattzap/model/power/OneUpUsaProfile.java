@@ -27,7 +27,6 @@ public class OneUpUsaProfile extends Power {
 		case 3:
 		}
 
-		System.out.println("Mag Elite power " + power);
 
 		return (int) power;
 	}
@@ -39,5 +38,11 @@ public class OneUpUsaProfile extends Power {
 	@Override
 	public int getResitanceLevels() {
 		return 3;
+	}
+
+	@Override
+	public double getSpeed(int power, int resistance) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

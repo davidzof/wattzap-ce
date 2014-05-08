@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -50,17 +51,18 @@ MessageCallback {
 	RouteReader routeData;
 	long len;
 	float fps;
-	Odometer odo;
+	JPanel odo;
 	JFrame mainFrame;
 	boolean videoLoaded;
 	Rolling rSpeed;
+	Rolling rRate;
 	float diff;
 	float lastRate;
 	float lastCent;
 
 	private static Logger logger = LogManager.getLogger("Video Player");
 
-	public VideoPlayer(JFrame main, Odometer odo) {
+	public VideoPlayer(JFrame main, JPanel odo) {
 		super();
 
 		this.odo = odo;
@@ -96,7 +98,6 @@ MessageCallback {
 	}
 
 	private void setSpeed(Telemetry t) {
-
 		Point p = routeData.getPoint(t.getDistance());
 
 		if (startTime == 0) {
@@ -107,6 +108,7 @@ MessageCallback {
 			mPlayer.mute();
 			fps = mPlayer.getFps();
 			len = mPlayer.getLength();
+
 			diff = 1.0f;
 			float time = len / fps;
 			// s = d / t
@@ -126,13 +128,12 @@ MessageCallback {
 			// sets position to between 0 - 1 (end)
 			if (mapStartTime > 0) {
 				float pos = (float) mapStartTime / len;
-				System.out.println("start time " + mapStartTime
-						+ " total time " + len + " pos " + pos);
 				mPlayer.setPosition(pos);
-
 			}
+
 			mPlayer.setRate((float) rate); // initial rate
-			mapStartTime -= p.getTime();
+			// mapStartTime -= p.getTime();
+			// mapStartTime = 0;
 			lastMapTime = 0 + mapStartTime;
 			lastCent = 1.0f;
 			return;
@@ -144,7 +145,7 @@ MessageCallback {
 			mPlayer.pause();
 		}
 
-		long mapTime = p.getTime() - mapStartTime;
+		long mapTime = p.getTime() /*- mapStartTime*/;
 
 		long videoTime = (int) (len * mPlayer.getPosition());
 		if (videoTime == 0) {
@@ -158,12 +159,12 @@ MessageCallback {
 			if (mapTime > videoTime + 250) {
 				perCent = ((float) videoTime / mapTime);
 				// map too fast
-				System.out.println("map too fast, speed up video");
+				// System.out.println("map too fast, speed up video");
 				if (perCent > lastCent) {
-					System.out.println("rate of change decreasing");
+					// System.out.println("rate of change decreasing");
 					diff -= 0.01f;
 				} else {
-					System.out.println("rate of change increasing");
+					// System.out.println("rate of change increasing");
 					// rate of change is increasing
 					if (perCent < 0.9 || perCent > 1.1) {
 						diff += 0.06f;
@@ -174,23 +175,23 @@ MessageCallback {
 			} else if (videoTime > mapTime + 250) {
 				perCent = ((float) mapTime / videoTime);
 
-				System.out.println("video too fast, speed up map");
+				// System.out.println("video too fast, speed up map");
 				if (perCent < lastCent) {
-					System.out.println("rate of change increasing");
+					// System.out.println("rate of change increasing");
 					if (perCent < 0.9 || perCent > 1.1) {
 						diff -= 0.06f;
 					} else {
 						diff -= 0.03f;
 					}
 				} else {
-					System.out.println("rate of change decreasing");
+					// System.out.println("rate of change decreasing");
 
 					diff += 0.01f;
 				}
 			}
 
-			if (diff > 1.2) {
-				diff = 1.2f;
+			if (diff > 1.25) {
+				diff = 1.25f;
 			} else if (diff < 0.8) {
 				diff = 0.8f;
 			}
@@ -212,6 +213,8 @@ MessageCallback {
 		BigDecimal bd = new BigDecimal(rate).setScale(2, RoundingMode.HALF_UP);
 		if (lastRate != bd.floatValue()) {
 			lastRate = bd.floatValue();
+			rRate.add(lastRate);
+			lastRate = (float) rRate.getAverage();
 			logger.debug(String.format(
 					"Position %f, Diff %.2f Rate %.2f Video-rate %.2f ",
 					mPlayer.getPosition(), diff, lastRate, mPlayer.getRate()));
@@ -236,11 +239,11 @@ MessageCallback {
 			break;
 		case STOP:
 			if (mPlayer != null) {
-				// mPlayer.stop();
-				logger.debug("Pausing video player");
-				mPlayer.pause();
 
-				// mPlayer.setRate(0.0f);
+				if (mPlayer.isPlaying()) {
+					logger.debug("Pausing video player");
+					mPlayer.pause();
+				}
 			}
 			break;
 		case START:
@@ -250,22 +253,30 @@ MessageCallback {
 			if (routeData == null) {
 				return;
 			}
-			Point p = routeData.getPoint(startDistance);
+
+			Point p = routeData.getAbsolutePoint(startDistance);
 			mapStartTime = p.getTime();
-			System.out
-					.println("Map start time " + mapStartTime + " Point " + p);
+			if (mapStartTime > 0 && len > 0) {
+				float pos = (float) mapStartTime / len;
+				mPlayer.setPosition(pos);
+			}
+			// mapStartTime = 0;
 			break;
 		case CLOSE:
 			// by default add to telemetry frame
 			remove(odo);
 			mainFrame.add(odo, "cell 0 2, grow");
-			
+
 			Rectangle r = getBounds();
 			UserPreferences.INSTANCE.setVideoBounds(r);
 			revalidate();
 			mainFrame.revalidate();
 			setVisible(false);
 			mapStartTime = 0;
+			if (routeData != null) {
+				routeData.close();
+				len = 0;
+			}
 			break;
 		case GPXLOAD:
 			routeData = (RouteReader) o;
@@ -276,17 +287,14 @@ MessageCallback {
 			} else {
 				rSpeed = new Rolling(1);
 			}
+			rRate = new Rolling(5);
 
 			String videoFile = routeData.getFilename();
-			// videoFile = videoFile.substring(0, videoFile.lastIndexOf('.'));
-			// mPlayer = mediaPlayerComponent.getMediaPlayer();
 			videoFile += ".avi";
-
-			System.out.println("video file " + videoFile);
 
 			if ((new File(videoFile)).exists()) {
 				mainFrame.remove(odo);
-				mainFrame.revalidate();
+				mainFrame.repaint();
 				mPlayer.enableOverlay(false);
 				mPlayer.prepareMedia(videoFile);
 
@@ -297,6 +305,7 @@ MessageCallback {
 			} else {
 				videoLoaded = false;
 				remove(odo);
+				mainFrame.revalidate();
 				mainFrame.add(odo, "cell 0 2, grow");
 				revalidate();
 				mainFrame.revalidate();

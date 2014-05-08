@@ -1,32 +1,43 @@
 package com.wattzap.model.power;
 
-
-/*
+/* CycleOps JetFluidPro
+ * (c) 2013 David George / Wattzap.com
+ * 
+ * @author David George
+ * @date 11 November 2013
+ * 
  * CycleOps power curve for this trainer (the Jet Fluid Pro
  * http://www.e-scape.co.uk/e-scape-blogs/jason-stratford/creating-a-virtual-power-meter/
- * Joe Meir: -0.46095+2.4455x+0.2232x^2+0.01844x^3
  * 
- * http://thebikegeek.blogspot.fr/2009/12/while-we-wait-for-better-and-better.html
+ *  Jason Stratford (MPG
+ * -0.46095 + 2.4455x + 0.2232x^2 + 0.01844x^3
  * 
- *  Armann: Power = 1.5981 x + 0.006942 x^3
- *  
- *  y = 0.0115x3 - 0.0137x2 + 8.9788x
- *  p = 0.00276x3 - 0.0052896x2 + 5.579x
- *  mph to kmh = 1.60934, 2.5899752356, 4.168150745660504
- *  
- *  
- *  
+ * mph to kmh = 1.60934, 2.5899752356, 4.168150745660504
+ * 
+ * -0.2864 + 1.5196 + 0,0862 + 0.004424
+ * 
+ * http://www.powercurvesensor.com/cycling-trainer-power-curves/
+ * 
+ * 
  */
+@PowerAnnotation
 public class CyclopsJetFluidPro extends Power {
-	public int getPower(double speed, int resistance) {
+	private static final double a = 0.004424;
+	private static final double b = 0.0862;
+	private static final double c = 1.5196;
+	private static final double d = -0.2864;
+	private static final Cubic cubic = new Cubic();
 
-		//double power = -0.46095 + (2.4455 * speed) + (0.2232 * speed * speed)
-		//		+ (0.01844 * speed * speed * speed);
-		
-		double power =  (5.579 * speed) + (-0.0052896 * speed * speed)
-				+ (0.00276 * speed * speed * speed);
-		
+	public int getPower(double speed, int resistance) {
+		double power = (c * speed) + (b * speed * speed)
+				+ (a * speed * speed * speed);
+
 		return (int) power;
+	}
+
+	public double getSpeed(int power, int resistance) {
+		cubic.solve(a, b, c, d - power);
+		return cubic.x1;
 	}
 
 	public String description() {

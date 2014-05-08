@@ -1,7 +1,25 @@
+/**
+ *     Copyright (c) 2013, Will Szumski
+ *
+ *     This file is part of formicidae.
+ *
+ *     formicidae is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     formicidae is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with formicidae.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.cowboycoders.ant.interfaces;
 
 /**
- *     Copyright (c) 2012, Will Szumski
+ *     Copyright (c) 2012-2013, Will Szumski, David George
  *
  *     This file is part of formicidae.
  *
@@ -22,7 +40,6 @@ package org.cowboycoders.ant.interfaces;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +52,7 @@ import javax.usb.UsbException;
 import javax.usb.UsbHostManager;
 import javax.usb.UsbHub;
 import javax.usb.UsbInterface;
+import javax.usb.UsbInterfacePolicy;
 import javax.usb.UsbNotActiveException;
 import javax.usb.UsbNotOpenException;
 import javax.usb.UsbPipe;
@@ -47,17 +65,14 @@ import org.cowboycoders.ant.utils.UsbUtils;
 
 public class AntTransceiver extends AbstractAntTransceiver {
 
-	public final static Logger LOGGER = Logger.getLogger("Ant Transceiver");
+	public final static Logger LOGGER = Logger.getLogger(AntTransceiver.class
+			.getName());
 
-	public static final Level LOG_LEVEL = Level.ALL;
+	public static final Level LOG_LEVEL = Level.SEVERE;
 
 	static {
 		// set logging level
 		AntTransceiver.LOGGER.setLevel(LOG_LEVEL);
-		ConsoleHandler handler = new ConsoleHandler();
-		// PUBLISH this level
-		handler.setLevel(LOG_LEVEL);
-		AntTransceiver.LOGGER.addHandler(handler);
 	}
 
 	/**
@@ -325,7 +340,9 @@ public class AntTransceiver extends AbstractAntTransceiver {
 							len = inPipe.syncSubmit(data);
 							// System.out.println("received " + len);
 						} catch (UsbException e) {
-							// carry on regardless
+							// Timeouts are expected in some implementations - these manifest
+							// themselves as UsbExceptions. We should continue, but log the error
+							// in case it indicates something more serious.
 							LOGGER.warning(e.getMessage());
 							continue;
 						} finally {
@@ -379,7 +396,14 @@ public class AntTransceiver extends AbstractAntTransceiver {
 		try {
 			interfaceLock.lock();
 			if (claim) {
-				_interface.claim();
+				//_interface.claim();
+				_interface.claim(new UsbInterfacePolicy() {
+					  @Override
+					  public boolean forceClaim(UsbInterface usbInterface) {
+						  System.out.println(">>> forcing claim");
+					    return true;
+					  }
+					});
 			} else {
 				if (_interface.isClaimed()) {
 					_interface.release();

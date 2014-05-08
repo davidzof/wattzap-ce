@@ -2,10 +2,12 @@ package com.wattzap.model.dto;
 
 import java.io.Serializable;
 
-/* 
-* @author David George (c) Copyright 2013
-* @date 19 June 2013
-*/
+/**
+ * Data object for telemetry coming from the ANT Speed, Cadence and Heart Rate Sensors
+ * 
+ * @author David George (c) Copyright 2013
+ * @date 19 June 2013
+ */
 public class Telemetry implements Serializable {
 	private double speed;
 	private int cadence;
@@ -13,7 +15,7 @@ public class Telemetry implements Serializable {
 	private int power;
 	private double elevation;
 	private double gradient;
-	private double latitude;
+	private double latitude = 91;
 	private double longitude;
 	private int heartRate = -1;
 	private long time;
@@ -94,13 +96,33 @@ public class Telemetry implements Serializable {
 		return cadence;
 	}
 
+	// for player only mode
+	public void setVirtualSpeed(double v) {
+		cadence = (int) v;
+
+	}
+
+	public double getTrainerSpeed() {
+		return cadence;
+	}
+	
+	// for player only mode
+	public void setResistance(int v) {
+		heartRate =  v;
+
+	}
+
+	public int getResistance() {
+		return heartRate;
+	}
+
 	@Override
 	public String toString() {
 		return "Telemetry [speed=" + speed + ", cadence=" + cadence
 				+ ", distance=" + distance + ", power=" + power
 				+ ", elevation=" + elevation + ", gradient=" + gradient
 				+ ", latitude=" + latitude + ", longitude=" + longitude
-				+ ", heartRate=" + heartRate + ", time=" + time/1000 + "]";
+				+ ", heartRate=" + heartRate + " tt " + heartRate + ", time=" + time / 1000 + "]";
 	}
 
 	public double getDistance() {

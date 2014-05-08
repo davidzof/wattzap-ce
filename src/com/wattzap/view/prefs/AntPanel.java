@@ -8,11 +8,12 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
 import com.wattzap.model.ant.Ant;
@@ -25,7 +26,8 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 25th August 2013
  */
-public class AntPanel extends JPanel implements ActionListener, ChangeListener {
+public class AntPanel extends JPanel implements ActionListener, MessageCallback {
+	private static final long serialVersionUID = 1L;
 	private JTextField sandcField;
 	private JTextField hrmIdField;
 	private JLabel speedLabel;
@@ -44,10 +46,9 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
 
+		System.out.println("SCID " + userPrefs.getSCId());
 		scListener = new AdvancedSpeedCadenceListener();
 		hrListener = new HeartRateListener();
-		hrListener.addChangeListener(this);
-		scListener.addChangeListener(this);
 
 		JLabel label1 = new JLabel();
 		label1.setText("Speed and Cadence ID");
@@ -57,7 +58,7 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 		add(sandcField, "wrap");
 
 		JLabel label3 = new JLabel();
-		label3.setText("Speed");
+		label3.setText(userPrefs.messages.getString("speed"));
 		speedLabel = new JLabel();
 		speedLabel.setText("0 km/h");
 		add(label3);
@@ -71,7 +72,7 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 		add(hrmIdField, "wrap");
 
 		JLabel label4 = new JLabel();
-		label4.setText("Heart Rate");
+		label4.setText(userPrefs.messages.getString("heartrate"));
 		hrm = new JLabel();
 		hrm.setText("0 bpm");
 		add(label4);
@@ -82,7 +83,7 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 		pairButton.setActionCommand("start");
 		pairButton.addActionListener(this);
 
-		JButton stopButton = new JButton("Stop");
+		JButton stopButton = new JButton(userPrefs.messages.getString("stop"));
 		stopButton.setPreferredSize(new Dimension(60, 30));
 		stopButton.setActionCommand("stop");
 		stopButton.addActionListener(this);
@@ -92,16 +93,18 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 		status = new JLabel();
 		status.setText("");
 		add(status, "span");
+
+		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
 	}
 
-	public void stateChanged(ChangeEvent e) {
-		Telemetry t = (Telemetry) e.getSource();
-
+	@Override
+	public void callback(Messages message, Object o) {
+		Telemetry t = (Telemetry) o;
 		int hr = t.getHeartRate();
 		if (hr != -1) {
 			hrm.setText(Integer.toString(hr) + " bpm");
 		}
-		speedLabel.setText(Double.toString(t.getSpeed()) + " km/h");
+		speedLabel.setText(String.format("%.1f", t.getSpeed()) + " km/h");
 
 	}
 
@@ -113,23 +116,25 @@ public class AntPanel extends JPanel implements ActionListener, ChangeListener {
 			antDevice = new Ant(scListener, hrListener);
 			antDevice.open(0, 0); // 0 is wildcard id
 			status.setText("Attempting pairing...");
+			// MessageBus.INSTANCE.send(Messages.START, new Double(0));
 
 		} else {
 			status.setText("Pairing complete...");
+			// MessageBus.INSTANCE.send(Messages.STOP, null);
 			hrmID = antDevice.getHRMChannelId();
 			hrmIdField.setText("" + hrmID);
-			//if (hrmID > 0) {
-			//	userPrefs.setHRMId(hrmID);
-			//}
 			scID = antDevice.getSCChannelId();
-			
 			sandcField.setText("" + scID);
-			//if (scID > 0) {
-			//	userPrefs.setSCId(scID);
-			//}
 			antDevice.close();
 
 		}
+
+	}
+
+	public void close() {
+		status.setText("");
+		speedLabel.setText("");
+		hrm.setText("");
 
 	}
 

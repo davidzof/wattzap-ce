@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
@@ -22,7 +23,6 @@ import com.wattzap.model.RLVReader;
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
-import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.power.Power;
 
 /* 
@@ -31,32 +31,41 @@ import com.wattzap.model.power.Power;
  */
 public class Odometer extends JPanel implements MessageCallback {
 	private static final long serialVersionUID = -7939830514817673972L;
+	private JLabel speedText;
+	private JLabel distText;
+	private JLabel slopeText;
+	private JLabel levelText;
+	private JLabel resistanceText;
+
 	private JLabel speedLabel;
+	private JLabel vspeedLabel;
 	private JLabel distanceLabel;
 	private JLabel elevationLabel;
 	private JLabel slopeLabel;
-	private JLabel cadenceLabel;
-	private JLabel hrLabel;
-	private JLabel powerLabel;
 	private JLabel resistanceLabel;
-	private JLabel slopeText;
-	int type = RLVReader.SLOPE;
-	TrainingItem current;
+
+	private JLabel powerLabel;
+	private JLabel chronoLabel;
+
+	private int type = RLVReader.SLOPE;
+
 	private static Logger logger = LogManager.getLogger("Odometer");
 
+	private final Color textColor = new Color(240, 244, 112);
+	private DateFormat timeFormat;
+	private long startTime = 0;
+	private double totalDistance = 0;
+
 	Power power;
-	Color skyBlue = new Color(0, 154, 237);
-	Color textColor = new Color(240, 244, 112);
-	DateFormat timeFormat;
-	long startTime = 0;
+
+	private static final double KMTOMILES = 1.609344;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	public Odometer() {
 		super();
 
 		timeFormat = new SimpleDateFormat("HH:mm:ss");
 		timeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-		power = UserPreferences.INSTANCE.getPowerProfile();
 		setBackground(Color.BLACK);
 
 		int style1 = Font.CENTER_BASELINE;
@@ -67,117 +76,140 @@ public class Odometer extends JPanel implements MessageCallback {
 		MigLayout layout = new MigLayout("fillx", "[center]", "[][shrink 0]");
 		this.setLayout(layout);
 
-		JLabel speedText = new JLabel();
+		// Current Speed #1
+		speedText = new JLabel();
 		speedText.setFont(font1);
-		speedText.setText(UserPreferences.INSTANCE.messages.getString("speed")
-				+ " (km/h)");
-
 		speedText.setForeground(textColor);
 		add(speedText);
 
-		JLabel distText = new JLabel();
+		if (userPrefs.INSTANCE.isVirtualPower()) {
+			// Virtual Speed #1
+			JLabel vspeedText = new JLabel();
+			vspeedText.setFont(font1);
+			vspeedText.setForeground(textColor);
+			vspeedText.setText(userPrefs.messages.getString("trainer_speed"));
+			add(vspeedText);
+		}
+
+		// Distance #2
+		distText = new JLabel();
 		distText.setFont(font1);
-		distText.setText("Distance (km)");
 		distText.setForeground(textColor);
 		add(distText);
 
-		JLabel cadText = new JLabel();
-		cadText.setFont(font1);
-		cadText.setText("Cadence");
-		cadText.setForeground(textColor);
-		add(cadText);
-
-		JLabel hrText = new JLabel();
-		hrText.setFont(font1);
-		hrText.setText("Heart Rate");
-		hrText.setForeground(textColor);
-		add(hrText);
-
+		// Power #3
 		JLabel pwrText = new JLabel();
 		pwrText.setFont(font1);
-		pwrText.setText("Power");
+		pwrText.setText(userPrefs.messages.getString("power"));
 		pwrText.setForeground(textColor);
 		add(pwrText);
 
+		// Roller Resistance #4
+		resistanceText = new JLabel();
+		resistanceText.setFont(font1);
+		resistanceText.setText(userPrefs.messages.getString("resistance"));
+		resistanceText.setForeground(textColor);
+		add(resistanceText);
+
+		// Slope #5
 		slopeText = new JLabel();
 		slopeText.setFont(font1);
-		slopeText.setText("Slope %");
+		slopeText.setText(userPrefs.messages.getString("slope") + " %");
 		slopeText.setForeground(textColor);
 		add(slopeText);
 
-		JLabel levelText = new JLabel();
+		// Altitude #6
+		levelText = new JLabel();
 		levelText.setFont(font1);
-		levelText.setText("Altitude");
+		levelText.setText(userPrefs.messages.getString("altitude"));
 		levelText.setForeground(textColor);
 		add(levelText);
 
-		JLabel resistanceText = new JLabel();
-		resistanceText.setFont(font1);
-		resistanceText.setText("Stopwatch");
-		resistanceText.setForeground(textColor);
-		add(resistanceText, "Wrap");
+		// Chrono #7
+		JLabel chronoText = new JLabel();
+		chronoText.setFont(font1);
+		chronoText.setText(userPrefs.messages.getString("stopwatch"));
+		chronoText.setForeground(textColor);
+		add(chronoText, "Wrap");
 
+		// Variables
+		// #1
 		speedLabel = new JLabel();
 		speedLabel.setFont(font);
 		speedLabel.setText("0.0");
 		speedLabel.setForeground(Color.WHITE);
 		add(speedLabel);
 
+		if (userPrefs.INSTANCE.isVirtualPower()) {
+			// #2
+			vspeedLabel = new JLabel();
+			vspeedLabel.setFont(font);
+			vspeedLabel.setText("0");
+			vspeedLabel.setForeground(Color.WHITE);
+			add(vspeedLabel);
+		}
+
+		// #3
 		distanceLabel = new JLabel();
 		distanceLabel.setFont(font);
 		distanceLabel.setText("0.0");
 		distanceLabel.setForeground(Color.WHITE);
 		add(distanceLabel);
 
-		cadenceLabel = new JLabel();
-		cadenceLabel.setFont(font);
-		cadenceLabel.setText("0");
-		cadenceLabel.setForeground(Color.WHITE);
-
-		add(cadenceLabel);
-
-		hrLabel = new JLabel();
-		hrLabel.setFont(font);
-		hrLabel.setText("0");
-		hrLabel.setForeground(Color.WHITE);
-		add(hrLabel);
-
+		// #4
 		powerLabel = new JLabel();
 		powerLabel.setFont(font);
 		powerLabel.setText("0");
 		powerLabel.setForeground(Color.WHITE);
 		add(powerLabel);
 
+		// #5
+		resistanceLabel = new JLabel();
+		resistanceLabel.setFont(font);
+		resistanceLabel.setText("0");
+		resistanceLabel.setForeground(Color.WHITE);
+		add(resistanceLabel);
+
+		// #6
 		slopeLabel = new JLabel();
 		slopeLabel.setFont(font);
 		slopeLabel.setText("0.0");
 		slopeLabel.setForeground(Color.WHITE);
 		add(slopeLabel);
 
+		// #7
 		elevationLabel = new JLabel();
 		elevationLabel.setFont(font);
 		elevationLabel.setForeground(Color.WHITE);
 		elevationLabel.setText("0");
 		add(elevationLabel);
 
-		resistanceLabel = new JLabel();
-		resistanceLabel.setFont(font);
-		resistanceLabel.setForeground(Color.WHITE);
-		add(resistanceLabel);
-		resistanceLabel.setText("00:00:00");
+		// #8
+		chronoLabel = new JLabel();
+		chronoLabel.setFont(font);
+		chronoLabel.setForeground(Color.WHITE);
+		add(chronoLabel);
+		chronoLabel.setText("00:00:00");
 
-		// code to see if we are registered
-		if (!UserPreferences.INSTANCE.isRegistered()
-				&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-			logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
-			UserPreferences.INSTANCE.shutDown();
-			System.exit(0);
-		}
 
-		MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
+		initLabels(userPrefs.isMetric());
+
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
-		MessageBus.INSTANCE.register(Messages.CLOSE, this);
+		MessageBus.INSTANCE.register(Messages.START, this);
+	}
+
+	private void initLabels(boolean metric) {
+		if (metric) {
+			speedText
+					.setText(userPrefs.messages.getString("speed") + " (km/h)");
+			distText.setText(userPrefs.messages.getString("distance") + " (km)");
+		} else {
+			speedText.setText(userPrefs.messages.getString("speed") + " (mph)");
+			distText.setText(userPrefs.messages.getString("distance")
+					+ " (miles)");
+
+		}
 	}
 
 	@Override
@@ -190,79 +222,105 @@ public class Odometer extends JPanel implements MessageCallback {
 				startTime = t.getTime();
 			}
 
-			elevationLabel.setText(String.format("%.0f", t.getElevation()));
-			slopeLabel.setText(String.format("%.1f", t.getGradient()));
-			speedLabel.setText(String.format("%.1f", t.getSpeed()));
-			if (current != null) {
-				int i = current.isPowerInRange(t.getPower());
-				if (i < 0) {
-					powerLabel.setForeground(skyBlue);
-					powerLabel.setText("" + t.getPower());
-				} else if (i > 0) {
-					powerLabel.setForeground(Color.RED);
-					powerLabel.setText("" + t.getPower());
-				} else {
-					powerLabel.setForeground(Color.WHITE);
-					powerLabel.setText("" + t.getPower());
+			// Power
+			powerLabel.setText("" + t.getPower());
 
+			// Resistance
+			resistanceLabel.setText("" + t.getResistance());
+
+			// Speed & Distance
+			if (userPrefs.isMetric()) {
+				speedLabel.setText(String.format("%.1f", t.getSpeed()));
+				if (userPrefs.INSTANCE.isVirtualPower()) {
+					vspeedLabel.setText("" + t.getTrainerSpeed());
 				}
-				i = current.isCadenceInRange(t.getCadence());
-				if (i < 0) {
-					cadenceLabel.setForeground(skyBlue);
-					cadenceLabel.setText("" + t.getCadence());
-				} else if (i > 0) {
-					cadenceLabel.setForeground(Color.RED);
-					cadenceLabel.setText("" + t.getCadence());
-				} else {
-					cadenceLabel.setForeground(Color.WHITE);
-					cadenceLabel.setText("" + t.getCadence());
-				}
-				i = current.isHRInRange(t.getCadence());
-				if (i < 0) {
-					hrLabel.setForeground(skyBlue);
-					hrLabel.setText("" + t.getHeartRate());
-				} else if (i > 0) {
-					hrLabel.setForeground(Color.RED);
-					hrLabel.setText("" + t.getHeartRate());
-				} else {
-					hrLabel.setForeground(Color.WHITE);
-					hrLabel.setText("" + t.getHeartRate());
-				}
+				distanceLabel.setText(String.format("%.3f", t.getDistance()));
 			} else {
-				powerLabel.setText("" + t.getPower());
-				cadenceLabel.setText("" + t.getCadence());
-				hrLabel.setText(Integer.toString(t.getHeartRate()));
+				speedLabel.setText(String.format("%.1f", t.getSpeed()
+						/ KMTOMILES));
+				distanceLabel.setText(String.format("%.3f", t.getDistance()
+						/ KMTOMILES));
+				// need to round up or down
+				if (userPrefs.INSTANCE.isVirtualPower()) {
+					vspeedLabel.setText("" + t.getTrainerSpeed() / KMTOMILES);
+				}
 			}
-			distanceLabel.setText(String.format("%.3f", t.getDistance()));
-			resistanceLabel.setText(timeFormat.format(new Date(t.getTime()
+
+			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
 					- startTime)));
+			switch (type) {
+			case RLVReader.POWER:
+				if (userPrefs.isMetric()) {
+					elevationLabel.setText(String.format("%.1f",
+							(totalDistance / 1000) - t.getDistance()));
+				} else {
+					elevationLabel.setText(String.format("%.1f",
+							((totalDistance / 1000) - t.getDistance())
+									/ KMTOMILES));
+
+				}
+
+				break;
+			case RLVReader.SLOPE:
+				elevationLabel.setText(String.format("%.0f", t.getElevation()));
+				slopeLabel.setText(String.format("%.1f", t.getGradient()));
+
+				break;
+			}
+
+			if (type == RLVReader.SLOPE) {
+				break;
+			}
+
 			break;
 
-		case TRAININGITEM:
-			current = (TrainingItem) o;
-			System.out.println("odo " + current);
-			break;
 		case GPXLOAD:
 			RouteReader routeData = (RouteReader) o;
 			type = routeData.routeType();
 			switch (type) {
 			case RLVReader.POWER:
-				slopeText.setText("Target Power");
+				levelText
+						.setText(userPrefs.messages.getString("distance_left"));
+				slopeText.setVisible(false);
+				slopeLabel.setVisible(false);
 				break;
 			case RLVReader.SLOPE:
-				slopeText.setText("Slope %");
+				levelText.setText(userPrefs.messages.getString("altitude"));
+				slopeText.setVisible(true);
+				slopeLabel.setVisible(true);
 				break;
 			}
-			double totalDistance = routeData.getDistanceMeters();
-			break;
-		case CLOSE:
+
+			totalDistance = routeData.getDistanceMeters();
+
 			startTime = 0;
 			speedLabel.setText("0.0");
 			powerLabel.setText("0");
-			cadenceLabel.setText("0");
-			hrLabel.setText("0");
+			if (userPrefs.getResistance() == 0) {
+				resistanceLabel.setVisible(true);
+				resistanceText.setVisible(true);
+				resistanceLabel.setText("1");
+			} else {
+				resistanceLabel.setVisible(false);
+				resistanceText.setVisible(false);
+
+			}
+
 			distanceLabel.setText("0.0");
 			break;
+		case START:
+
+			// code to see if we are registered
+			if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
+				logger.info("Out of time " + userPrefs.getEvalTime());
+				JOptionPane.showMessageDialog(this, userPrefs.messages.getString("trial_expired"),
+						userPrefs.messages.getString("warning"),
+						JOptionPane.WARNING_MESSAGE);
+				userPrefs.shutDown();
+				System.exit(0);
+			}
+			
+			initLabels(userPrefs.isMetric());
 		}
 	}
 }

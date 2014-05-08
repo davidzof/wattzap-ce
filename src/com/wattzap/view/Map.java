@@ -3,6 +3,8 @@ package com.wattzap.view;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JOptionPane;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -26,6 +28,7 @@ public class Map extends GPXPanel implements MessageCallback {
 	private MainFrame frame;
 	private static long count = 0;
 	private int displayPeriod = 50;
+	GPXFile gpxFile;
 
 	private static Logger logger = LogManager.getLogger("Map");
 
@@ -42,14 +45,6 @@ public class Map extends GPXPanel implements MessageCallback {
 
 		this.frame = frame;
 		setVisible(false);
-
-		// code to see if we are registered
-		if (!UserPreferences.INSTANCE.isRegistered()
-				&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-			logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
-			UserPreferences.INSTANCE.shutDown();
-			System.exit(0);
-		}
 
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
@@ -84,15 +79,32 @@ public class Map extends GPXPanel implements MessageCallback {
 		case CLOSE:
 			if (this.isVisible()) {
 				frame.remove(this);
+				if (gpxFile != null) {
+					this.removeGPXFile(gpxFile);
+				}
 				setVisible(false);
 				frame.revalidate();
 			}
 			break;
 		case GPXLOAD:
+			// code to see if we are registered
+			if (!UserPreferences.INSTANCE.isRegistered()
+					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
+				logger.info("Out of time "
+						+ UserPreferences.INSTANCE.getEvalTime());
+				JOptionPane.showMessageDialog(this,
+						UserPreferences.INSTANCE.messages
+								.getString("trial_expired"),
+						UserPreferences.INSTANCE.messages.getString("warning"),
+						JOptionPane.WARNING_MESSAGE);
+				UserPreferences.INSTANCE.shutDown();
+				System.exit(0);
+			}
+
 			count = 0;
 			frame.remove(this);
 			RouteReader routeData = (RouteReader) o;
-			GPXFile gpxFile = routeData.getGpxFile();
+			gpxFile = routeData.getGpxFile();
 
 			// TODO - change load message: gpxload, rlvload?
 			if (gpxFile != null) {
@@ -102,7 +114,7 @@ public class Map extends GPXPanel implements MessageCallback {
 						+ (gpxFile.getMaxLat() - gpxFile.getMinLat()) / 2;
 				setDisplayPositionByLatLon(centerLat, centerLon, 12);
 
-				addGPXFile(gpxFile);
+				this.addGPXFile(gpxFile);
 				// setSize(400, 400);
 
 				frame.add(this, "cell 0 0");

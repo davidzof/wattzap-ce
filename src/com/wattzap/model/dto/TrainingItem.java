@@ -48,7 +48,7 @@ public class TrainingItem {
 	 * @return
 	 */
 	public int isHRInRange(int hr) {
-		if (hr > hrLow) {
+		if (hr >= hrLow) {
 			if (hr <= hrHigh || hrHigh == 0) {
 				return 0;
 			} else {
@@ -157,7 +157,7 @@ public class TrainingItem {
 	 * @return
 	 */
 	public int isPowerInRange(int power) {
-		if (power > powerLow) {
+		if (power >= powerLow) {
 			if (power <= powerHigh || powerHigh == 0) {
 				return 0;
 			} else {
@@ -297,7 +297,7 @@ public class TrainingItem {
 	 * @return
 	 */
 	public int isCadenceInRange(int c) {
-		if (c > cadenceLow) {
+		if (c >= cadenceLow) {
 			if (c <= cadenceHigh || cadenceHigh == 0) {
 				return 0;
 			} else {
@@ -349,7 +349,7 @@ public class TrainingItem {
 	public void setTimeMillis(long time) {
 		this.time = time;
 	}
-	
+
 	public double getDistance() {
 		return distance;
 	}
@@ -369,5 +369,55 @@ public class TrainingItem {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public static int getTrainingLevel(int power) {
+		// active recovery < 55%
+		int level1 = (int) ((double) UserPreferences.INSTANCE.getMaxPower() * 0.55);
+		// Endurance 56 - 75%
+		int level2 = (int) ((double) UserPreferences.INSTANCE.getMaxPower() * 0.75);
+		// Tempo 76 - 90%
+		int level3 = (int) ((double) UserPreferences.INSTANCE.getMaxPower() * 0.9);
+		// Lactate Threshold 91-105%
+		int level4 = (int) ((double) UserPreferences.INSTANCE.getMaxPower() * 1.05);
+		// VO2Max 106-120
+		int level5 = (int) ((double) UserPreferences.INSTANCE.getMaxPower() * 1.2);
+		// Anaerobic Capacity
+		int level6 = (int) ((double) UserPreferences.INSTANCE.getMaxPower() * 1.50);
+		// Neuromuscular
+
+		if (power >= 0 && power <= level1) {
+			return 1;
+		} else if (power > level1 && power <= level2) {
+			return 2;
+		} else if (power > level2 && power <= level3) {
+			return 3;
+		} else if (power > level3 && power <= level4) {
+			return 4;
+		} else if (power > level4 && power <= level5) {
+			return 5;
+		} else if (power > level5 && power <= level6) {
+			return 6;
+		}
+		return 7;
+	}
+
+	public static String getTrainingName(int level) {
+		switch (level) {
+		case 1:
+			return "Active Recovery";
+		case 2:
+			return "Endurance";
+		case 3:
+			return "Tempo";
+		case 4:
+			return "Lactate";
+		case 5:
+			return "VO2Max";
+		case 6:
+			return "Anaerobic";
+		}
+
+		return "Neuromuscular";
 	}
 }

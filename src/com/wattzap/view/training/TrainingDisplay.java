@@ -45,6 +45,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	int cadence;
 	long aggregateTime = 0;
 	long startTime;
+	long time;
 	Iterator<TrainingItem> training;
 	TrainingData tData;
 	TrainingItem current;
@@ -52,8 +53,11 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	int numElements;
 	JComponent chart = null;
 	ObjectOutputStream oos = null;
+	boolean antEnabled = true;
 
 	private static final long MILLISECSMINUTE = 60000;
+
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	private static Logger logger = LogManager.getLogger("Training Display");
 
@@ -67,6 +71,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		MessageBus.INSTANCE.register(Messages.STOP, this);
 		MessageBus.INSTANCE.register(Messages.TRAINING, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
+		antEnabled = userPrefs.isAntEnabled();
 	}
 
 	private void createModels(TrainingData tData) {
@@ -74,17 +79,24 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			remove(chart);
 			chart = null;
 		}
+
 		SimpleXYChartDescriptor descriptor = SimpleXYChartDescriptor.decimal(0,
 				200, 300, 1d, true, 600);
 
 		Color darkOrange = new Color(246, 46, 00);
-		descriptor.addItem("Power", darkOrange, 1.0f, Color.red, null, null);
+		descriptor.addItem(userPrefs.messages.getString("power"), darkOrange,
+				1.0f, Color.red, null, null);
+		numElements = 1;
 
-		Color green = new Color(28, 237, 00);
-		descriptor.addItem("Heartrate", green, 1.0f, Color.green, null, null);
-		descriptor.addItem("Cadence", Color.blue, 1.0f, Color.blue, null, null);
+		if (antEnabled) {
+			Color green = new Color(28, 237, 00);
+			descriptor.addItem(userPrefs.messages.getString("heartrate"),
+					green, 1.0f, Color.green, null, null);
+			descriptor.addItem(userPrefs.messages.getString("cadence"),
+					Color.blue, 1.0f, Color.blue, null, null);
+			numElements += 2;
+		}
 
-		numElements = 3;
 		if (tData != null) {
 			if (tData.isPwr()) {
 				Color lightOrange = new Color(255, 47, 19);
@@ -93,20 +105,21 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				numElements++;
 			}
 
-			if (tData.isHr()) {
-				Color darkGreen = new Color(0, 110, 8);
-				descriptor.addItem("Target Heartrate", darkGreen, 2.5f,
-						darkGreen, null, null);
-				numElements++;
-			}
+			if (antEnabled) {
+				if (tData.isHr()) {
+					Color darkGreen = new Color(0, 110, 8);
+					descriptor.addItem("Target Heartrate", darkGreen, 2.5f,
+							darkGreen, null, null);
+					numElements++;
+				}
 
-			if (tData.isCdc()) {
-				Color lightBlue = new Color(64, 96, 255);
-				descriptor.addItem("Target Cadence", lightBlue, 2.5f,
-						lightBlue, null, null);
-				numElements++;
+				if (tData.isCdc()) {
+					Color lightBlue = new Color(64, 96, 255);
+					descriptor.addItem("Target Cadence", lightBlue, 2.5f,
+							lightBlue, null, null);
+					numElements++;
+				}
 			}
-
 			descriptor
 					.setDetailsItems(new String[] { "<html><font size='+2'><b>Info" });
 		}
@@ -116,12 +129,15 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		add(chart, BorderLayout.CENTER);
 		chart.setVisible(true);
 		chart.revalidate();
-
 	}
 
 	private void update(Telemetry t) {
 
-		long time = t.getTime();
+		if (time == t.getTime()) {
+			// no change
+			return;
+		}
+		time = t.getTime();
 
 		if (startTime == 0) {
 			startTime = time; // start time
@@ -129,23 +145,24 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 		long[] values = new long[numElements];
 		values[0] = t.getPower();
-		values[1] = t.getHeartRate();
+		if (antEnabled) {
+			values[1] = t.getHeartRate();
 
-		if (t.getCadence() != -1) {
-			cadence = t.getCadence();
+			if (t.getCadence() != -1) {
+				cadence = t.getCadence();
+			}
+			values[2] = cadence;
 		}
-		values[2] = cadence;
 
 		// training
-		if (current != null) {
+		if (current != null && antEnabled) {
+
 			long ct = current.getTime();
 			if (ct > 0) {
 				if (aggregateTime + (time - startTime) > current.getTime()) {
 					if (training.hasNext()) {
 						current = training.next();
-						System.out.println("*** time based " + t.getTime()
 
-						+ " power " + current.getPower());
 						MessageBus.INSTANCE
 								.send(Messages.TRAININGITEM, current);
 						// Sound beep on training change
@@ -157,10 +174,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				if (t.getDistance() > current.getDistance()) {
 					if (training.hasNext()) {
 						current = training.next();
-						System.out.println("*** distance based "
-								+ t.getDistance() + " current "
-								+ current.getDistance() / 1000 + " power "
-								+ current.getPower());
 						MessageBus.INSTANCE
 								.send(Messages.TRAININGITEM, current);
 						// Sound beep on training change
@@ -170,22 +183,23 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 			}
 
-			int index = 3;
-			if (tData.isPwr()) {
-				values[index++] = current.getPower();
-			}
-			if (tData.isHr()) {
-				values[index++] = current.getHr();
-			}
-			if (tData.isCdc()) {
-				values[index] = current.getCadence();
-			}
+			if (tData != null) {
+				int index = 3;
+				if (tData.isPwr()) {
+					values[index++] = current.getPower();
+				}
+				if (tData.isHr()) {
+					values[index++] = current.getHr();
+				}
+				if (tData.isCdc()) {
+					values[index] = current.getCadence();
+				}
 
-			String[] details = { current.getDescription()
-					+ current.getPowerMsg() + current.getHRMsg()
-					+ current.getCadenceMsg() + "</b></font></html>" };
-			support.updateDetails(details);
-
+				String[] details = { current.getDescription()
+						+ current.getPowerMsg() + current.getHRMsg()
+						+ current.getCadenceMsg() + "</b></font></html>" };
+				support.updateDetails(details);
+			}
 		}
 
 		// use telemetry time
@@ -201,6 +215,10 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	 * @param t
 	 */
 	private void add(Telemetry t) {
+		if (data == null) {
+			// not yet initialized
+			return;
+		}
 		int index = data.size();
 		if (index == 0) {
 			// empty, first time through
@@ -229,16 +247,15 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		data = new ArrayList<Telemetry>();
 		Telemetry t = null;
 		try {
-			FileInputStream streamIn = new FileInputStream("journal.ser");
+			FileInputStream streamIn = new FileInputStream(userPrefs.getWD()
+					+ "/journal.ser");
 			objectinputstream = new ObjectInputStream(streamIn);
 
 			while ((t = (Telemetry) objectinputstream.readObject()) != null) {
-				System.out.println("t " + t);
 				data.add(t);
 			}// while
 
 		} catch (EOFException ex) {
-
 			logger.info("Journal file read " + data.size() + " records");
 		} catch (Exception e) {
 			// data = null;
@@ -274,12 +291,12 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 			break;
 		case STOP:
-			if (!data.isEmpty()) {
+			if (data != null && !data.isEmpty()) {
 				Telemetry lastPoint = data.get(data.size() - 1);
 				long split = lastPoint.getTime() - startTime;
-				int minutes = UserPreferences.INSTANCE.getEvalTime();
+				int minutes = userPrefs.getEvalTime();
 				minutes -= (split / MILLISECSMINUTE);
-				UserPreferences.INSTANCE.setEvalTime(minutes);
+				userPrefs.setEvalTime(minutes);
 				aggregateTime += split;
 			}
 			break;
@@ -291,8 +308,8 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				data = new ArrayList<Telemetry>();
 
 				try {
-					FileOutputStream fout = new FileOutputStream("journal.ser",
-							false);
+					FileOutputStream fout = new FileOutputStream(
+							userPrefs.getWD() + "/journal.ser", false);
 
 					oos = new ObjectOutputStream(fout);
 				} catch (Exception e) {
@@ -307,7 +324,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			break;
 		case STARTPOS:
 			double distance = (Double) o;
-			if (current != null && current.getTime() == 0) {
+			if (current != null && current.getTime() == 0 && tData != null) {
 				training = tData.getTraining().iterator();
 
 				// Power Program
@@ -317,7 +334,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 						current = training.next();
 					}
 					item = current;
-					System.out.print("item " + item.getDistance());
 				}
 				current = item;
 			}
@@ -338,6 +354,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			aggregateTime = 0;
 			break;
 		case CLOSE:
+			current = null;
 			if (chart != null) {
 				remove(chart);
 				chart = null;

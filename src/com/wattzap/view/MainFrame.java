@@ -20,6 +20,7 @@ import com.wattzap.model.UserPreferences;
  * Main Window, displays telemetry data and responds to close events
  * 
  * @author David George
+ * @date 31 July 2013
  */
 public class MainFrame extends JFrame implements ActionListener,
 		MessageCallback {
@@ -44,13 +45,6 @@ public class MainFrame extends JFrame implements ActionListener,
 				System.exit(0);
 			}
 		});
-
-		if (!UserPreferences.INSTANCE.isRegistered()
-				&& UserPreferences.INSTANCE.getEvalTime() <= 0) {
-			logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
-			UserPreferences.INSTANCE.shutDown();
-			System.exit(0);
-		}
 
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
 	}

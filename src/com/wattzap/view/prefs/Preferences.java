@@ -66,19 +66,22 @@ public class Preferences extends JFrame implements ActionListener {
 		// Trainer Profiles
 		trainerPanel = new TurboPanel();
 
-		jtp.addTab("Personal Data", userPanel);
+		jtp.addTab(UserPreferences.INSTANCE.messages
+				.getString("personal_data"), userPanel);
 		jtp.addTab("Trainer", trainerPanel);
 		jtp.addTab("ANT+", antPanel);
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
-		JButton saveButton = new JButton("Save & Close");
+		JButton saveButton = new JButton(UserPreferences.INSTANCE.messages
+				.getString("saveclose"));
 		saveButton.setPreferredSize(new Dimension(150, 30));
 		saveButton.setActionCommand("save");
 		saveButton.addActionListener(this);
 		buttonPanel.add(saveButton);
 
-		JButton cancelButton = new JButton("Cancel");
+		JButton cancelButton = new JButton(UserPreferences.INSTANCE.messages
+				.getString("cancel"));
 		cancelButton.setPreferredSize(new Dimension(120, 30));
 		cancelButton.setActionCommand("cancel");
 		cancelButton.addActionListener(this);
@@ -96,22 +99,33 @@ public class Preferences extends JFrame implements ActionListener {
 
 		// User Weight
 		weightLabel = new JLabel();
-		weightLabel.setText("Your Weight (kg)");
 		weight = new JTextField(20);
-		weight.setText("" + userPrefs.getWeight());
-		tab.add(weightLabel);
-		tab.add(weight, "span");
-
 		// Bike weight
 		bikeWeightLabel = new JLabel();
-		bikeWeightLabel.setText("Bike Weight (kg)");
 		bikeWeight = new JTextField(20);
-		bikeWeight.setText("" + userPrefs.getBikeWeight());
+		if (userPrefs.isMetric()) {
+			weightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("your_weight") + " (kg) ");
+			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("bike_weight") + " (kg) ");
+			weight.setText(String.format("%.1f",userPrefs.getWeight()));
+			bikeWeight.setText(String.format("%.1f",userPrefs.getBikeWeight()));
+		} else {
+			weightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("your_weight")+ " (lbs)");
+			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("bike_weight") + " (lbs)");
+			weight.setText(String.format("%.0f", userPrefs.getWeight()));
+			bikeWeight.setText("" + userPrefs.getBikeWeight());
+		}
+		tab.add(weightLabel);
+		tab.add(weight, "span");
 		tab.add(bikeWeightLabel);
 		tab.add(bikeWeight, "span");
 
 		JLabel wheelLabel = new JLabel();
-		wheelLabel.setText("Wheel Size (mm)");
+		wheelLabel.setText(UserPreferences.INSTANCE.messages
+				.getString("wheel_size") + " (mm)");
 		tab.add(wheelLabel);
 		wheelSize = new JTextField(20);
 		wheelSize.setText("" + userPrefs.getWheelsize());
@@ -125,7 +139,8 @@ public class Preferences extends JFrame implements ActionListener {
 		tab.add(maxHR, "span");
 
 		JLabel pwrLabel = new JLabel();
-		pwrLabel.setText("FT Power");
+		pwrLabel.setText(UserPreferences.INSTANCE.messages
+				.getString("ftp"));
 		tab.add(pwrLabel);
 		maxPwr = new JTextField(20);
 		maxPwr.setText("" + userPrefs.getMaxPower());
@@ -149,11 +164,21 @@ public class Preferences extends JFrame implements ActionListener {
 
 		} else if ("units".equals(command)) {
 			if (units.isSelected()) {
-				weightLabel.setText("Your Weight (kg) ");
-				bikeWeightLabel.setText("Bike Weight (kg) ");
+				weightLabel.setText(UserPreferences.INSTANCE.messages
+						.getString("your_weight") + " (kg) ");
+				bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+						.getString("bike_weight") + " (kg) ");
+				userPrefs.setUnits(true);
+				weight.setText(String.format("%.1f", userPrefs.getWeight()));
+				bikeWeight.setText(String.format("%.1f", userPrefs.getBikeWeight()));
 			} else {
-				weightLabel.setText("Your Weight (lbs)");
-				bikeWeightLabel.setText("Bike Weight (lbs)");
+				weightLabel.setText(UserPreferences.INSTANCE.messages
+						.getString("your_weight")+ " (lbs)");
+				bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+						.getString("bike_weight") + " (lbs)");
+				userPrefs.setUnits(false);
+				weight.setText(String.format("%.1f", userPrefs.getWeight()));
+				bikeWeight.setText(String.format("%.1f", userPrefs.getBikeWeight()));
 			}
 
 		} else if ("cancel".equals(command)) {
@@ -200,7 +225,7 @@ public class Preferences extends JFrame implements ActionListener {
 			userPrefs.setMaxPower(Integer.parseInt(maxPwr.getText()));
 		} catch (NumberFormatException nfe) {
 			JOptionPane.showMessageDialog(this, nfe.getMessage(),
-					"Weight format error: ", JOptionPane.ERROR_MESSAGE);
+					"Power format error: ", JOptionPane.ERROR_MESSAGE);
 		}
 
 		// set trainer
@@ -211,10 +236,13 @@ public class Preferences extends JFrame implements ActionListener {
 		if (p.getResitanceLevels() > 1) {
 			int level = trainerPanel.getResistanceLevel();
 			userPrefs.setResistance(level);
+		} else {
+			userPrefs.setResistance(1);
 		}
 
 		// set ANT Ids
 		userPrefs.setSCId(antPanel.getSCId());
 		userPrefs.setHRMId(antPanel.getHRMId());
+		antPanel.close();
 	}
 }

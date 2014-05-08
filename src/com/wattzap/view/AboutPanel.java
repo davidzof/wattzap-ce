@@ -41,9 +41,9 @@ public class AboutPanel extends JFrame implements ActionListener {
 	 * string grepping for the obsfucated About dialog. Won't hold them long.
 	 */
 	private static final String decodeKey = "CAFEBABE";
-	// <html>WattzAp Virtual Turbo Trainer<br/><br/>Version: 1.0.0 beta
-	// 1<br/>Date: 24th October 2013<br/>(c) 2013, All rights reserved<br/>
-	private static final String blurb = "fykyKC5/FSQ3NTwEMmEULDE1MyQuYRYwMSMpZRYzIywtJDR5IDNte38jNGp8Fyc3MCgpK3hhc2tyb3ZlICQ2JGNyeicwbnwBIjUjf2JzdzErYQgqNCQvJyYzZndycHF5ITNpe2oia2VxcXd2bmEDKS9hNCwlKTY2YzMjNiczNCAnfSQ3bX8=";
+	// <html>WattzAp Virtual Turbo Trainer<br/><br/>Version: x.x.x 
+	// <br/>Date: xx xxx xxx<br/>(c) xxxx, All rights reserved<br/>
+	private static final String blurb = "fykyKC5/FSQ3NTwEMmEULDE1MyQuYRYwMSMpZRYzIywtJDR5IDNte38jNGp8Fyc3MCgpK3hhc2t3b3Z5IDNtewcgMiB4YXB2MSVmCCMzIS1/IzRqfGkhbGNzdnR2bWIELy1mNysmKjEwYTQgMSQwMyYleicwbnw=";
 	// Your software is registered
 	private static final String registered = "Gi4zN2IyLSM3Nic3J2ErNmMzIyIrMjYgMSQi";
 	// Incorrect registration key

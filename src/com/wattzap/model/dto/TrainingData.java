@@ -7,11 +7,19 @@ import java.util.Collection;
 * @date 19 August 2013
 */
 public class TrainingData {
-	ArrayList<TrainingItem> training = new ArrayList<TrainingItem>();
-	boolean hr = false;
-	boolean pwr  = false;
-	boolean cdc = false;
+	private ArrayList<TrainingItem> training = new ArrayList<TrainingItem>();
+	private boolean hr = false;
+	private boolean pwr  = false;
+	private boolean cdc = false;
+	private String name;
 	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 	
 	public boolean isHr() {
 		return hr;

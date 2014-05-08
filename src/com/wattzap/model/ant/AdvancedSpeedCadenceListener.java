@@ -31,17 +31,21 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 	private static int sCount = 0;
 	private static int cCount = 0;
 	private static long elapsedTime;
+	Telemetry oldT = null;
 	//
 	private double distance = 0.0;
 	private int cadence;
 
 	RouteReader routeData;
 	private double mass;
-	private double wheelSize;
-	private int resistance;
-	private Power power;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+
+	// initialize for pairing
+	private double wheelSize = userPrefs.getWheelSizeCM();
+	private int resistance = userPrefs.getResistance();
+	private Power power = userPrefs.getPowerProfile();
 	private boolean simulSpeed;
-	private boolean firstValue;
+	private boolean initializing;
 
 	public AdvancedSpeedCadenceListener() {
 		MessageBus.INSTANCE.register(Messages.START, this);
@@ -96,44 +100,36 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
 				+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
 				+ " cRR " + cRR);
-		
-		if (firstValue) {
-			if (lastTs == -1) {
-				// first time through, initialize counters and return
-				System.out.println("initialize counters and return");
+
+		if (lastTs == -1) {
+			// first time through, initialize counters and return
+			System.out.println("initialize counters and return");
+			lastTs = tS;
+			lastTc = tC;
+			sRR = sR;
+			cRR = cR;
+			initializing = true;
+			return;
+		}
+		if (initializing) {
+			// in intial phase we reset counters when they change for first time
+			if (tS != lastTs && tC != lastTc) {
 				lastTs = tS;
 				lastTc = tC;
 				sRR = sR;
 				cRR = cR;
-				return;
-			} else if (tS != lastTs) {
-				System.out.println("First change in counters, setup and return");
-				lastTs = tS;
-				lastTc = tC;
-				sRR = sR;
-				cRR = cR;
-				firstValue = false;
-			} else {
-				System.out.println("Warmup counters");
-				return;
+				initializing = false;
 			}
 		}
-		
+
 		int tD; // time delta
 		if (tS < lastTs) {
 			// we have rolled over
+			System.out.println("rollover");
 			tD = tS + (65536 - lastTs);
 			if (tD > 5000) {
 				// Time delta more than 5 seconds is almost certainly bogus,
 				// just drop it
-				// update initial values, if this is first bogus reading
-				// if (firstValue) {
-				// lastTs = tS;
-				// sRR = sR;
-				// lastTc = tC;
-				// cRR = cR;
-				// firstValue = false;
-				// }
 				return;
 			}
 		} else {
@@ -159,15 +155,15 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 			double speed = distanceKM / (timeS / (3600));
 			int powerWatts = power.getPower(speed, resistance);
-			System.out.println("Speed " + speed + " distanceKM " + distanceKM
-					+ " timeS " + timeS);
+			// System.out.println("Speed " + speed + " distanceKM " + distanceKM
+			// + " timeS " + timeS);
 
 			t.setPower(powerWatts);
 
 			// if we have GPX Data and Simulspeed is enabled calculate speed
 			// based on power and gradient using magic sauce
 			if (simulSpeed && routeData != null) {
-				System.out.println("gettng point at distance " + distance);
+				// System.out.println("gettng point at distance " + distance);
 				Point p = routeData.getPoint(distance);
 				if (routeData.routeType() == RLVReader.SLOPE) {
 					if (p == null) {
@@ -186,16 +182,17 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
 					distanceKM = (speed / 3600) * timeS;
-					
-					System.out.println("speed " + speed + " powerWatts "
-							+ powerWatts + " video Power " + p.getGradient() + " distanceKM " + distanceKM);
+
+					// System.out.println("speed " + speed + " powerWatts "
+					// + powerWatts + " video Power " + p.getGradient() +
+					// " distanceKM " + distanceKM);
 				}
 			}
 
 			t.setSpeed(speed);
 
 			sCount = 0;
-		} else if (sCount < 12) {
+		} else if (sCount < 6) {
 			// speed reading is zero, ignore the first 12 of these as sometimes
 			// readings don't change with every message
 			sCount++;
@@ -220,18 +217,19 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		t.setHeartRate(HeartRateListener.heartRate);
 		t.setCadence(cadence);
 
+		/*
+		 * Cadence caculations
+		 */
 		int cTD; // cadence time delta
 		if (tC < lastTc) {
 			// we have rolled over
 			cTD = tC + (65536 - lastTc);
-
-			// System.out.println("rollover ctD " + cTD);
+			System.out.println("rollover ctD " + cTD);
 		} else {
 			cTD = tC - lastTc;
 		}
 
-		System.out.println(" cR " + cR + " tC " + tC);
-
+		System.out.println(" cR " + cR + " tC " + tC + " cTD " + cTD);
 		if (cTD < 5000) {
 			// Time deltas of > 5 seconds are bogus
 			int cRD; // cadence rotation delta
@@ -244,24 +242,37 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 			if (cRD > 0) {
 				double timeC = ((double) cTD) / 1024.0;
-				// System.out.println("timeC" + timeC);
+				System.out.println("timeC" + timeC + " cRD " + cRD);
 				cadence = ((int) (cRD * ((1 / timeC) * 60.0)));
 				cCount = 0;
-			} else if (cCount < 12) {
-				// System.out.println("ACSL cCount " + cCount);
+			} else if (cCount < 6) {
+				System.out.println("ACSL cCount " + cCount);
 				cCount++;
+			} else {
+				cadence = 0;
 			}
 		}
 
 		lastTs = tS;
-		lastTc = tC;
-		cRR = cR;
 		sRR = sR;
+		if (tC < lastTc || cTD < 5000) {
+			// no rollover or delta less than 5000.
+			lastTc = tC;
+			cRR = cR;
+		}
 
 		if (t.getSpeed() >= 0.0) {
+			// some sanity checks
+
+			if (cadence > 250 || t.getPower() > 2500) {
+				System.out.println("Bogosity!!!! > " + t);
+				return;
+			}
+
+			distance += distanceKM;
 			System.out.println(t);
 			MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
-			distance += distanceKM;
+
 		}
 	}
 
@@ -270,15 +281,15 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		switch (message) {
 		case START:
 			// get up to date values
-			mass = UserPreferences.INSTANCE.getTotalWeight();
-			wheelSize = UserPreferences.INSTANCE.getWheelSizeCM();
-			resistance = UserPreferences.INSTANCE.getResistance();
-			power = UserPreferences.INSTANCE.getPowerProfile();
-			simulSpeed = UserPreferences.INSTANCE.isVirtualPower();
+			mass = userPrefs.getTotalWeight();
+			wheelSize = userPrefs.getWheelSizeCM();
+			resistance = userPrefs.getResistance();
+			power = userPrefs.getPowerProfile();
+			simulSpeed = userPrefs.isVirtualPower();
 			elapsedTime = System.currentTimeMillis();
 			lastTs = -1;
 			lastTc = -1;
-			firstValue = true;
+			initializing = false;
 			break;
 		case STARTPOS:
 			distance = (Double) o;

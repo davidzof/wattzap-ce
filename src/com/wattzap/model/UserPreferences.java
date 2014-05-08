@@ -1,10 +1,12 @@
 package com.wattzap.model;
 
 import java.awt.Rectangle;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.UUID;
 
+import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.model.power.Power;
 import com.wattzap.model.power.PowerProfiles;
 
@@ -19,11 +21,13 @@ public enum UserPreferences {
 	private Power powerProfile;
 	String user;
 	private final DataStore ds;
-	private static int evalTime = 480;
+	private static int evalTime = 240;
 	private static String workingDirectory = null;
 	private static String userDataDirectory = null;
 	private static final String cryptKey = "afghanistanbananastan";
+	private static final double LBSTOKG = 0.45359237;
 	public ResourceBundle messages;
+	private boolean antEnabled = true;
 
 	UserPreferences() {
 		user = System.getProperty("user.name");
@@ -33,8 +37,33 @@ public enum UserPreferences {
 		Locale currentLocale;
 
 		currentLocale = Locale.getDefault();
+		currentLocale = Locale.ENGLISH;
 		messages = ResourceBundle.getBundle("MessageBundle", currentLocale);
 
+	}
+
+	public void setAntEnabled(boolean v) {
+		antEnabled = v;
+	}
+
+	public boolean isAntEnabled() {
+		return antEnabled;
+	}
+
+	public void addWorkout(WorkoutData data) {
+		ds.saveWorkOut(user, data);
+	}
+
+	public WorkoutData getWorkout(String name) {
+		return ds.getWorkout(user, name);
+	}
+
+	public void deleteWorkout(String name) {
+		ds.deleteWorkout(user, name);
+	}
+
+	public List<WorkoutData> listWorkouts() {
+		return ds.listWorkouts(user);
 	}
 
 	public String getDBVersion() {
@@ -78,27 +107,52 @@ public enum UserPreferences {
 		setInt("", "videoWidth", r.width);
 		setInt("", "videoX", r.x);
 		setInt("", "videoY", r.y);
-
 	}
-	
+
 	public double getWeight() {
+		if (this.isMetric()) {
+			return getDouble("weight", 80.0);
+		} else {
+			// convert to lbs
+			return getDouble("weight", 80.0) / 0.45359237;
+		}
+	}
+
+	public double getWeightKG() {
 		return getDouble("weight", 80.0);
 	}
 
+	// always store as kg
 	public void setWeight(double weight) {
-		setDouble("weight", weight);
+		if (this.isMetric()) {
+			setDouble("weight", weight);
+		} else {
+			// convert to lbs
+			setDouble("weight", weight * 0.45359237);
+		}
 	}
 
 	public double getBikeWeight() {
-		return getDouble("bikeweight", 10.0);
+		if (this.isMetric()) {
+			return getDouble("bikeweight", 10.0);
+		} else {
+			// convert to lbs
+			return getDouble("bikeweight", 10.0) / 0.45359237;
+		}
 	}
 
 	public double getTotalWeight() {
 		return getDouble("weight", 80.0) + getDouble("bikeweight", 10.0);
 	}
 
+	// always store as kg
 	public void setBikeWeight(double weight) {
-		setDouble("bikeweight", weight);
+		if (this.isMetric()) {
+			setDouble("bikeweight", weight);
+		} else {
+			// convert to lbs
+			setDouble("bikeweight", weight * 0.45359237);
+		}
 	}
 
 	// 2133 is 700Cx23
@@ -212,7 +266,8 @@ public enum UserPreferences {
 
 	public boolean isRegistered() {
 		if (get("", "rsnn", null) == null) {
-			return false;
+			// return false;
+			return true;
 		}
 		return true;
 	}

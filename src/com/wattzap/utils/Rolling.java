@@ -20,7 +20,7 @@ public class Rolling {
         for (int i = 0; i < size; i++) samples[i] = 0d;
     }
 
-    public void add(double x) {
+    public double add(double x) {
         total -= samples[index];
         samples[index] = x;
         total += x;
@@ -28,6 +28,8 @@ public class Rolling {
         	index = 0; // cheaper than modulus
         }
         count++;
+        
+        return getAverage();
     }
 
     public double getAverage() {

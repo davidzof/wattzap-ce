@@ -59,8 +59,7 @@ public class MenuBar extends JMenuBar {
 		JMenuItem analMenuItem = new JMenuItem("Analyze");
 		trainingMenu.add(analMenuItem);
 		
-		TrainingAnalysis analysis = new TrainingAnalysis(trainingDisplay);
-		analMenuItem.addActionListener(analysis);
+		
 		
 
 		JMenuItem trainMenuItem = new JMenuItem("Open Training");
@@ -72,8 +71,6 @@ public class MenuBar extends JMenuBar {
 		JMenuItem saveMenuItem = new JMenuItem("Save as TCX");
 		trainingMenu.add(saveMenuItem);
 
-		TcxWriter tcxWriter = new TcxWriter(frame, trainingDisplay);
-		saveMenuItem.addActionListener(tcxWriter);
 
 		JMenuItem csvMenuItem = new JMenuItem("Save as CSV");
 		trainingMenu.add(csvMenuItem);

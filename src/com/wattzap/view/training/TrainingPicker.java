@@ -19,6 +19,7 @@ import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.TrainingData;
 import com.wattzap.model.dto.TrainingItem;
+import com.wattzap.utils.FileName;
 
 public class TrainingPicker extends JFileChooser implements ActionListener {
 	private static final long serialVersionUID = 1L;
@@ -45,7 +46,8 @@ public class TrainingPicker extends JFileChooser implements ActionListener {
 
 			CSVReader reader;
 			TrainingData tData = new TrainingData();
-
+			tData.setName(FileName.removeExtension(file.getName()));
+			
 			try {
 				reader = new CSVReader(new FileReader(file));
 

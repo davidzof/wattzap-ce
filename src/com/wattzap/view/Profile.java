@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.apache.log4j.LogManager;
@@ -40,18 +41,10 @@ public class Profile extends JPanel implements MessageCallback {
 
 	private static Logger logger = LogManager.getLogger("Profile");
 
-	public Profile(Dimension d, MainFrame frame) {
+	public Profile(Dimension d) {
 		super();
 
 		// this.setPreferredSize(d);
-
-		// code to see if we are registered
-		if (!UserPreferences.INSTANCE.isRegistered()
-				&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-			logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
-			UserPreferences.INSTANCE.shutDown();
-			System.exit(0);
-		}
 
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
@@ -76,8 +69,20 @@ public class Profile extends JPanel implements MessageCallback {
 				setVisible(false);
 				revalidate();
 			}
+			
 			return;
 		case GPXLOAD:
+			// code to see if we are registered
+			if (!UserPreferences.INSTANCE.isRegistered()
+					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
+				logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
+				JOptionPane.showMessageDialog(this, UserPreferences.INSTANCE.messages.getString("trial_expired"),
+						UserPreferences.INSTANCE.messages.getString("warning"),
+						JOptionPane.WARNING_MESSAGE);
+				UserPreferences.INSTANCE.shutDown();
+				System.exit(0);
+			}
+			
 			RouteReader routeData = (RouteReader) o;
 
 			if (chartPanel != null) {
