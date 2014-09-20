@@ -1,0 +1,13 @@
+# Functional Threshhold Power Test Protocol from Allen & Coggan p47, determine initial HR from 220 - Age, takes about 1 hour
+# FTP is 20 min average power / 1.05. FTHR is average heart rate
+4,Warm Up,70,,
+1,1 Minute Fast Pedalling,,,100
+1,1 Minute Recovery,,,<70
+1,1 Minute Fast Pedalling,,,100
+1,1 Minute Recovery,,,<70
+1,1 Minute Fast Pedalling,,,100
+1,1 Minute Recovery,,,<70
+5,All Out Effort,>100,,
+10,Easy Riding,<70,,
+20,All Out Effort - FTP Test,95-105,,
+10,Cool down,<70,,

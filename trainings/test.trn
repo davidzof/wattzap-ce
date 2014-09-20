@@ -1,0 +1,32 @@
+# Wattzap (http://www.wattzap.com/) training file format
+# Cadence
+0:08,,,,<80
+0:08,,,,>60
+0:08,,,,60-80
+0:08,,,,90
+# Heart Rate Levels
+0:08,Active Recovery,1,,
+0:08,Endurance,2,,
+0:08,Tempo,3,,
+0:08,Lactate,4,,
+0:08,VO2Max,5,,
+0:08,,<80,,
+0:08,,>60,,
+0:08,,60-80,,
+# Power
+0:08,,,80,
+0:08,,,70-80,
+0:08,,,<80,
+0:08,,,<100,
+0:08,,,>60,
+0:08,,,>100,
+# Power Levels
+0:08,Active Recovery,,1,
+0:08,Endurance,,2,
+0:08,Tempo,,3,
+0:08,Lactate Threshold,,4,
+0:08,VO2Max,,5,
+0:08,Anaerobic Capacity,,6,
+0:08,Neuromuscular Power,,7,
+0:08,Tempo,,3,85-95
+0:08,,,225w,
