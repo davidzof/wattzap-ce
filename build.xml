@@ -1,0 +1,109 @@
+<project name="wattzap" default="dist" basedir=".">
+    <description>
+        Wattzap Ant Build File
+    </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src:src-pe"/>
+  <property name="build" location="bin"/>
+  <property name="dist"  location="dist"/>
+
+  <path id="master-classpath">
+      <fileset dir="lib">
+        <include name="**/*.jar"/>
+      </fileset>
+    </path>
+  <property name="classpath"  refid="master-classpath"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="compile" depends="init"
+        description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}" debug="true" debuglevel="lines,vars,source">
+        <classpath refid="master-classpath"/>
+    </javac>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}/lib"/>
+
+    <jar destfile="${dist}/lib/wattzap.jar">
+      <fileset dir="${build}">
+        <exclude name="**/*Test.class" />
+        <exclude name="org/**/*.class" />
+      </fileset>
+    </jar>
+
+    <zip destfile="tmp.jar" > 
+      <zipfileset src="lib/jformica_jsr80.jar" excludes="org/cowboycoders/ant/interfaces/**/*.class" />
+      <zipfileset dir="bin" includes="org/cowboycoders/ant/interfaces/**/*.class"  />
+    </zip>
+    <move file="tmp.jar" tofile="lib/jformica_jsr80.jar"/>
+
+    <zip destfile="tmp.jar" > 
+      <zipfileset src="lib/usb4java-javax-1.2.0.jar" excludes="org/usb4java/javax/AbstractIrp*.class" />
+      <zipfileset dir="bin" includes="org/usb4java/javax/AbstractIrp*.class"  />
+    </zip>
+    <move file="tmp.jar" tofile="lib/usb4java-javax-1.2.0.jar"/>
+  </target>
+
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+
+  <target name="linux" description="make Linux release">
+ <copy todir="dist/wattzap/lib">
+    <fileset dir="lib"/>
+  </copy>
+ <copy todir="dist/wattzap/properties">
+    <fileset dir="properties"/>
+  </copy>
+<copy file="wattzap.sh" todir="dist/wattzap/"/>
+<chmod file="dist/wattzap/wattzap.sh" perm="755"/>
+<copy file="wattzap.jar" todir="dist/wattzap/lib/"/>
+
+<tar destfile="dist/wattzap.tar" basedir="dist/wattzap"/>
+<gzip destfile="dist/wattzap.tgz" src="dist/wattzap.tar"/>
+</target>
+
+<taskdef resource="proguard/ant/task.properties" classpath="/home/david/bin/proguard4.10/lib/proguard.jar"/>
+
+  <proguard>
+    -libraryjars ${java.home}/lib/rt.jar:${java.home}/lib/jce.jar:${classpath}
+    -injars      dist/lib/wattzap.jar
+    -outjars     wattzap.jar
+    -printmapping out.map
+    -keepattributes SourceFile,LineNumberTable
+
+    -keepclasseswithmembers public class * {
+        public static void main(java.lang.String[]);
+    }
+
+    -keepclasseswithmembers public class * {
+      public void receiveMessage(org.cowboycoders.ant.messages.data.BroadcastDataMessage);
+    }
+
+    -keepclassmembers enum * {
+      public static **[] values();
+      public static ** valueOf(java.lang.String);
+    }
+
+
+    -keepdirectories com/wattzap/model/power, com/wattzap/model
+    -keep public class com.wattzap.model.power.* { }
+    -keep public class com.wattzap.model.* { }
+    -keepattributes *Annotation*
+
+  </proguard>
+</project>
