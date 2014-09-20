@@ -9,6 +9,8 @@ import javax.swing.event.ChangeListener;
 import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.dto.Telemetry;
 
 /**
@@ -19,7 +21,6 @@ import com.wattzap.model.dto.Telemetry;
  */
 public class HeartRateListener implements
 		BroadcastListener<BroadcastDataMessage> {
-	private List<ChangeListener> listeners = new ArrayList<ChangeListener>();
 
 	public static int heartRate = 0;
 
@@ -40,19 +41,7 @@ public class HeartRateListener implements
 
 			Telemetry t = new Telemetry();
 			t.setHeartRate(rate);
-			notifyListeners(t);
+			MessageBus.INSTANCE.send(Messages.HEARTRATE, t);
 		}
-	}
-
-	void notifyListeners(Telemetry t) {
-		ChangeEvent event = new ChangeEvent(t);
-
-		for (ChangeListener l : listeners) {
-			l.stateChanged(event);
-		}
-	}
-
-	public void addChangeListener(ChangeListener l) {
-		listeners.add(l);
 	}
 }

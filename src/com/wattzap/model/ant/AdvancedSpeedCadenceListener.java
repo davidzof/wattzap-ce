@@ -97,13 +97,13 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		// Bytes 6 and 7: speed rotation count.
 		int sR = data[6] + (data[7] << 8);
 
-		System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
-				+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
-				+ " cRR " + cRR);
+		//System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
+		//		+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
+		//		+ " cRR " + cRR);
 
 		if (lastTs == -1) {
 			// first time through, initialize counters and return
-			System.out.println("initialize counters and return");
+			//System.out.println("initialize counters and return");
 			lastTs = tS;
 			lastTc = tC;
 			sRR = sR;
@@ -125,7 +125,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		int tD; // time delta
 		if (tS < lastTs) {
 			// we have rolled over
-			System.out.println("rollover");
+			//System.out.println("rollover");
 			tD = tS + (65536 - lastTs);
 			if (tD > 5000) {
 				// Time delta more than 5 seconds is almost certainly bogus,
@@ -144,7 +144,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			sRD = sR - sRR;
 		}
 
-		System.out.println(" sRD " + sRD + " tD " + tD);
+		//System.out.println(" sRD " + sRD + " tD " + tD);
 		double distanceKM = 0;
 		if (tD > 0) {
 			// We have a time value and rotation value, lets calculate the
@@ -214,7 +214,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			t.setLongitude(p.getLongitude());
 		}
 		t.setTime(elapsedTime);
-		t.setHeartRate(HeartRateListener.heartRate);
+		//t.setHeartRate(HeartRateListener.heartRate);
 		t.setCadence(cadence);
 
 		/*
@@ -224,12 +224,12 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		if (tC < lastTc) {
 			// we have rolled over
 			cTD = tC + (65536 - lastTc);
-			System.out.println("rollover ctD " + cTD);
+			//System.out.println("rollover ctD " + cTD);
 		} else {
 			cTD = tC - lastTc;
 		}
 
-		System.out.println(" cR " + cR + " tC " + tC + " cTD " + cTD);
+		//System.out.println(" cR " + cR + " tC " + tC + " cTD " + cTD);
 		if (cTD < 5000) {
 			// Time deltas of > 5 seconds are bogus
 			int cRD; // cadence rotation delta
@@ -242,11 +242,11 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 			if (cRD > 0) {
 				double timeC = ((double) cTD) / 1024.0;
-				System.out.println("timeC" + timeC + " cRD " + cRD);
+				//System.out.println("timeC" + timeC + " cRD " + cRD);
 				cadence = ((int) (cRD * ((1 / timeC) * 60.0)));
 				cCount = 0;
 			} else if (cCount < 6) {
-				System.out.println("ACSL cCount " + cCount);
+				//System.out.println("ACSL cCount " + cCount);
 				cCount++;
 			} else {
 				cadence = 0;
@@ -265,12 +265,12 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			// some sanity checks
 
 			if (cadence > 250 || t.getPower() > 2500) {
-				System.out.println("Bogosity!!!! > " + t);
+				//System.out.println("Bogosity!!!! > " + t);
 				return;
 			}
 
 			distance += distanceKM;
-			System.out.println(t);
+			//System.out.println(t);
 			MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
 
 		}

@@ -97,15 +97,21 @@ public class Ant implements MessageCallback {
 		 */
 		SCListener = scListener;
 		HRListener = hrmListener;
-		AntTransceiver antchip = new AntTransceiver(0);
-
+		AntTransceiver antchip = null;
+		if (userPrefs.isANTUSB()) {
+			antchip = new AntTransceiver(0, AntTransceiver.ANTUSBM_ID);
+		} else {
+			antchip = new AntTransceiver(0);
+		}
 		// initialises node with chosen driver
 		node = new Node(antchip);
 
 		// ANT+ key
 		key = new NetworkKey(0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45);
 		key.setName("N:ANT+");
-		
+	}
+
+	public void register() {
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.STOP, this);
 	}
@@ -286,7 +292,7 @@ public class Ant implements MessageCallback {
 		// start listening
 		hrChannel.open();
 	}
-	
+
 	@Override
 	public void callback(Messages message, Object o) {
 		switch (message) {

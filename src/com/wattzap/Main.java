@@ -117,11 +117,10 @@ public class Main implements Runnable {
 		frame.setBounds(userPrefs.getMainBounds());
 
 		// Must be declared above Odometer
-		AdvancedSpeedCadenceListener scListener = null;
+		//AdvancedSpeedCadenceListener scListener = null;
 		JPanel odo = null;
 		try {
-			scListener = new AdvancedSpeedCadenceListener();
-			new Ant(scListener, new HeartRateListener());
+			new Ant(new AdvancedSpeedCadenceListener(), new HeartRateListener()).register();
 			odo = new AntOdometer();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
@@ -242,15 +241,10 @@ public class Main implements Runnable {
 		recoverMenuItem.setActionCommand(TrainingController.recover);
 		trainingMenu.add(recoverMenuItem);
 
-		JMenuItem importMenuItem = new JMenuItem(
-				userPrefs.messages.getString("import"));
-		importMenuItem.setActionCommand(TrainingController.importer);
-		trainingMenu.add(importMenuItem);
-
 		analMenuItem.addActionListener(trainingController);
 		saveMenuItem.addActionListener(trainingController);
 		recoverMenuItem.addActionListener(trainingController);
-		importMenuItem.addActionListener(trainingController);
+		
 		viewMenuItem.addActionListener(trainingController);
 
 		frame.add(trainingDisplay, "cell 0 0");

@@ -28,8 +28,9 @@ public enum UserPreferences {
 	private static final double LBSTOKG = 0.45359237;
 	public ResourceBundle messages;
 	private boolean antEnabled = true;
-
-	UserPreferences() {
+	private boolean antUSBM = false;
+	
+	private UserPreferences() {
 		user = System.getProperty("user.name");
 		String wd = getWD();
 		ds = new DataStore(wd, cryptKey);
@@ -191,6 +192,14 @@ public enum UserPreferences {
 	public void setUnits(boolean value) {
 		setBoolean("units", value);
 	}
+	
+	public boolean isANTUSB() {
+		return getBoolean("antusbm", false);
+	}
+
+	public void setAntUSBM(boolean value) {
+		setBoolean("antusbm", value);
+	}
 
 	public boolean isDebug() {
 		return getBoolean("debug", false);
@@ -267,7 +276,7 @@ public enum UserPreferences {
 	public boolean isRegistered() {
 		if (get("", "rsnn", null) == null) {
 			// return false;
-			return true;
+			return false;
 		}
 		return true;
 	}

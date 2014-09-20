@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -36,6 +37,7 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 	private Ant antDevice;
 	private int hrmID;
 	private int scID;
+	JCheckBox antUSBM;
 
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
 	AdvancedSpeedCadenceListener scListener;
@@ -46,7 +48,6 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
 
-		System.out.println("SCID " + userPrefs.getSCId());
 		scListener = new AdvancedSpeedCadenceListener();
 		hrListener = new HeartRateListener();
 
@@ -78,6 +79,14 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 		add(label4);
 		add(hrm, "wrap");
 
+
+		antUSBM = new JCheckBox("ANTUSB-m Stick");
+		antUSBM.setSelected(userPrefs.isANTUSB());
+		antUSBM.setActionCommand("antusbm");
+		antUSBM.addActionListener(this);
+
+		add(antUSBM, "wrap");
+
 		JButton pairButton = new JButton("Pair");
 		pairButton.setPreferredSize(new Dimension(60, 30));
 		pairButton.setActionCommand("start");
@@ -95,17 +104,24 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 		add(status, "span");
 
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 	}
 
 	@Override
 	public void callback(Messages message, Object o) {
 		Telemetry t = (Telemetry) o;
-		int hr = t.getHeartRate();
-		if (hr != -1) {
-			hrm.setText(Integer.toString(hr) + " bpm");
+		switch(message) {
+		case HEARTRATE:
+			int hr = t.getHeartRate();
+			System.out.println("hr " + hr);
+			if (hr != -1) {
+				hrm.setText(Integer.toString(hr) + " bpm");
+			}
+			break;
+		case SPEEDCADENCE:
+			speedLabel.setText(String.format("%.1f", t.getSpeed()) + " km/h");
+			break;
 		}
-		speedLabel.setText(String.format("%.1f", t.getSpeed()) + " km/h");
-
 	}
 
 	@Override
@@ -118,15 +134,23 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 			status.setText("Attempting pairing...");
 			// MessageBus.INSTANCE.send(Messages.START, new Double(0));
 
+		} else if ("antusbm".equals(command)) {
+			if (antUSBM.isSelected()) {
+				userPrefs.setAntUSBM(true);
+			} else {
+				userPrefs.setAntUSBM(false);
+
+			}
+
 		} else {
 			status.setText("Pairing complete...");
 			// MessageBus.INSTANCE.send(Messages.STOP, null);
+			MessageBus.INSTANCE.unregister();
 			hrmID = antDevice.getHRMChannelId();
 			hrmIdField.setText("" + hrmID);
 			scID = antDevice.getSCChannelId();
 			sandcField.setText("" + scID);
 			antDevice.close();
-
 		}
 
 	}

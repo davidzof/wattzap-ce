@@ -3,6 +3,7 @@ package com.wattzap.view;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -16,13 +17,12 @@ import org.apache.log4j.Logger;
 
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.Messages;
-import com.wattzap.model.GPXReader;
-import com.wattzap.model.RLVReader;
+import com.wattzap.model.Readers;
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 
 /**
- * (c) 2013 David George / TrainingLoops.com
+ * (c) 2013 David George / Wattzap.com
  * 
  * Speed and Cadence ANT+ processor.
  * 
@@ -39,10 +39,22 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 		super();
 		this.frame = panel;
 
+		List<RouteReader> readers = Readers.INSTANCE.getReaders();
+		String extensions[] = new String[readers.size()];
+		StringBuffer fileTypes = new StringBuffer();
+		for (int i = 0; i < readers.size(); i++) {
+			extensions[i] = readers.get(i).getExtension();
+			if (i > 0) {
+				fileTypes.append(", ");
+			}
+			fileTypes.append(readers.get(i).getExtension());
+		}
+
 		File cwd = new File(UserPreferences.INSTANCE.getRouteDir());
 		setCurrentDirectory(cwd);
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(
-				"GPX Files and RLV files (.gpx, .rlv)", "gpx", "rlv");
+				"Supported file types (" + fileTypes.toString() + ")",
+				extensions);
 		setFileFilter(filter);
 	}
 
@@ -57,13 +69,13 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 			if (retVal == JFileChooser.APPROVE_OPTION) {
 				UserPreferences.INSTANCE.setRouteDir(file.getParent());
 				RouteReader track;
-				if (file.getName().endsWith(".gpx")) {
-					track = new GPXReader();
-				} else {
-					track = new RLVReader();
+				String ext = file.getName().substring(
+						file.getName().length() - 3);
+				track = Readers.INSTANCE.getReader(ext);
+				if (track != null) {
+					track.load(file.getAbsolutePath());
+					MessageBus.INSTANCE.send(Messages.GPXLOAD, track);
 				}
-				track.load(file.getAbsolutePath());
-				MessageBus.INSTANCE.send(Messages.GPXLOAD, track);
 			} else {
 				logger.info("Open command cancelled by user.");
 			}

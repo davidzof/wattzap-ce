@@ -169,7 +169,7 @@ public class TcxWriter /* implements TrackWriter */{
 		}
 		pw.println("      </Lap>");
 		pw.print("      <Creator xsi:type=\"Device_t\">");
-		pw.format("<Name>Via running on %s</Name>\n", "1.1.1");
+		pw.format("<Name>Wattzap Analyzer running on %s</Name>\n", "2.0.0");
 
 		// The following code is correct. ID is inconsistently capitalized in
 		// the TCX schema.
@@ -282,8 +282,7 @@ public class TcxWriter /* implements TrackWriter */{
 
 			Telemetry last = null;
 			for (Telemetry t : data) {
-				// hmmm need to think about this should be -91?
-				if (t.getLatitude() == 0 && t.getLongitude() == 0) {
+				if (t.getLatitude() > 90 || t.getLongitude() > 180) {
 					// No GPS data to save
 					writeLocation(t, 1);
 				} else {

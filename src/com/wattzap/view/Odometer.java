@@ -191,10 +191,11 @@ public class Odometer extends JPanel implements MessageCallback {
 		add(chronoLabel);
 		chronoLabel.setText("00:00:00");
 
-
 		initLabels(userPrefs.isMetric());
 
+		System.out.println("listen for HR messages");
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 	}
@@ -226,8 +227,9 @@ public class Odometer extends JPanel implements MessageCallback {
 			powerLabel.setText("" + t.getPower());
 
 			// Resistance
-			resistanceLabel.setText("" + t.getResistance());
+				resistanceLabel.setText("" + t.getResistance());
 
+			
 			// Speed & Distance
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeed()));
@@ -274,6 +276,8 @@ public class Odometer extends JPanel implements MessageCallback {
 
 			break;
 
+		
+
 		case GPXLOAD:
 			RouteReader routeData = (RouteReader) o;
 			type = routeData.routeType();
@@ -303,7 +307,6 @@ public class Odometer extends JPanel implements MessageCallback {
 			} else {
 				resistanceLabel.setVisible(false);
 				resistanceText.setVisible(false);
-
 			}
 
 			distanceLabel.setText("0.0");
@@ -313,13 +316,14 @@ public class Odometer extends JPanel implements MessageCallback {
 			// code to see if we are registered
 			if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
 				logger.info("Out of time " + userPrefs.getEvalTime());
-				JOptionPane.showMessageDialog(this, userPrefs.messages.getString("trial_expired"),
+				JOptionPane.showMessageDialog(this,
+						userPrefs.messages.getString("trial_expired"),
 						userPrefs.messages.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				userPrefs.shutDown();
 				System.exit(0);
 			}
-			
+
 			initLabels(userPrefs.isMetric());
 		}
 	}

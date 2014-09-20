@@ -9,14 +9,14 @@ import java.io.Serializable;
  * @date 19 June 2013
  */
 public class Telemetry implements Serializable {
-	private double speed;
+	private double speed = -1;
 	private int cadence;
 	private double distance = 0.0;
-	private int power;
+	private int power = -1;
 	private double elevation;
 	private double gradient;
 	private double latitude = 91;
-	private double longitude;
+	private double longitude = 181;
 	private int heartRate = -1;
 	private long time;
 

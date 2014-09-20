@@ -237,6 +237,7 @@ MessageCallback {
 				setSpeed(t);
 			}
 			break;
+		
 		case STOP:
 			if (mPlayer != null) {
 

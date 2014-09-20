@@ -81,15 +81,14 @@ public class DataStore {
 				s2 = conn.createStatement();
 				s2.execute(WorkoutData.dbTable12());
 
-				insertProp("", "dbVersion", "1.2");
-			} else {
+				insertProp("", "dbVersion", "1.3");
+			} else if (dbVersion.equals("1.2")){
 				s2 = conn.createStatement();
-
 
 				// s2.execute("DROP TABLE workouts");
 				//System.out.println("adding column");
-				//s2.execute("ALTER TABLE workouts ADD COLUMN description varchar(256)");
-				// insertProp("", "dbVersion", null);
+				s2.execute("ALTER TABLE workouts ADD COLUMN source INTEGER  DEFAULT 1");
+				insertProp("", "dbVersion", "1.3");
 			}
 
 		} catch (SQLException sqle) {
@@ -156,6 +155,7 @@ public class DataStore {
 			psInsert.setDate(21, new java.sql.Date(data.getDate()));
 			
 			psInsert.setString(22, data.getDescription());
+			psInsert.setInt(23, data.getSource()); // Wattzap
 			int i = psInsert.executeUpdate();
 
 			conn.commit();
@@ -211,6 +211,7 @@ public class DataStore {
 				data.setDate(rs.getDate(21).getTime());
 				
 				data.setDescription(rs.getString(22));
+				data.setSource(rs.getInt(23));
 			}
 		} catch (SQLException e) {
 			logger.error(e.getLocalizedMessage());
@@ -307,7 +308,8 @@ public class DataStore {
 				data.setDate(rs.getDate(21).getTime());
 				
 				data.setDescription(rs.getString(22));
-
+				data.setSource(rs.getInt(23));
+				
 				workouts.add(data);
 			}
 		} catch (SQLException e) {

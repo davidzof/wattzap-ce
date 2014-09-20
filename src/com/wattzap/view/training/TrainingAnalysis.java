@@ -22,8 +22,13 @@ import org.apache.log4j.Logger;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.WorkoutData;
-import com.wattzap.utils.RollingTime;
 
+/**
+ * (c) 2014 David George / Wattzap.com
+ * 
+ * @author David George
+ * @date 1 January 2014
+ */
 public class TrainingAnalysis extends JFrame {
 	private static final long serialVersionUID = -7939830514817673972L;
 	private JLabel fiveSecondPower;
@@ -334,15 +339,13 @@ public class TrainingAnalysis extends JFrame {
 		workoutData.setDistance(lastPoint.getDistance());
 
 		int maxCad = 0;
-		int aveCad = 0;
+		long aveCad = 0;
 		int maxHR = 0;
-		int aveHR = 0;
+		long aveHR = 0;
 		int minHR = 220;
 		int ftHR = 0;
 		double tPower = 0;
 
-		int power = 0;
-		RollingTime rollingTime = new RollingTime(5);
 		// five second power
 		Telemetry last = null;
 
@@ -350,9 +353,7 @@ public class TrainingAnalysis extends JFrame {
 		double qPwr = 0;
 
 		ftHR = 0;
-		rollingTime = new RollingTime(1200);
 		TreeMap<Integer, Long> pow = new TreeMap<Integer, Long>();
-		long totalTime = 0;
 		Telemetry first = null;
 		for (Telemetry t : data) {
 			if (first == null) {
@@ -361,7 +362,6 @@ public class TrainingAnalysis extends JFrame {
 			} else {
 				if (pow.containsKey(t.getPower())) {
 					long time = pow.get(t.getPower());
-					totalTime += t.getTime() - first.getTime();
 					pow.put(t.getPower(), time
 							+ (t.getTime() - first.getTime()));
 				} else {
@@ -369,14 +369,6 @@ public class TrainingAnalysis extends JFrame {
 				}
 
 				first = t;
-			}
-
-			// 20 minute HR
-
-			int avePwr = rollingTime.average(t.getHeartRate(),
-					t.getTime() / 1000);
-			if (aveHR > ftHR) {
-				ftHR = aveHR;
 			}
 
 			if (maxPwr < t.getPower()) {
@@ -390,7 +382,7 @@ public class TrainingAnalysis extends JFrame {
 			if (t.getCadence() > maxCad) {
 				maxCad = t.getCadence();
 			}
-			if (t.getHeartRate() < minHR) {
+			if (t.getHeartRate() != -1 && t.getHeartRate() < minHR) {
 				minHR = t.getHeartRate();
 			}
 			if (last != null) {
@@ -400,7 +392,9 @@ public class TrainingAnalysis extends JFrame {
 				 * then we adjust last time
 				 */
 				tPower += t.getPower() * (t.getTime() - last.getTime());
-				aveHR += t.getHeartRate() * (t.getTime() - last.getTime());
+				if (t.getHeartRate() > 0) {
+					aveHR += t.getHeartRate() * (t.getTime() - last.getTime());
+				}
 				aveCad += t.getCadence() * (t.getTime() - last.getTime());
 			}
 			last = t;
@@ -417,19 +411,15 @@ public class TrainingAnalysis extends JFrame {
 			tot += value;
 			if (tot >= 5000 && fiveSecPwr == 0) {
 				fiveSecPwr = key;
-				System.out.println("5 sec pow " + key);
 			}
 			if (tot >= 60000 && oneMinPwr == 0) {
 				oneMinPwr = key;
-				System.out.println("1 minute power " + key + " tot " + tot);
 			}
 			if (tot >= 300000 && fiveMinPwr == 0) {
 				fiveMinPwr = key;
-				System.out.println("5 min pow " + key);
 			}
 			if (tot >= 1200000 && twentyMinPwr == 0) {
 				twentyMinPwr = key;
-				System.out.println("20 min pow " + key);
 			}
 		}// for
 		workoutData.setFiveSecondPwr(fiveSecPwr);
@@ -446,9 +436,9 @@ public class TrainingAnalysis extends JFrame {
 
 		workoutData.setMaxHR(maxHR);
 		workoutData.setMinHR(minHR);
-		workoutData.setAveHR((int) (aveHR / len));
 		workoutData.setMaxCadence(maxCad);
 		workoutData.setAveCadence((int) (aveCad / len));
+		workoutData.setAveHR((int) (aveHR / len));
 
 		workoutData.setAvePower((int) (tPower / len));
 		workoutData.setMaxPower(maxPwr);
