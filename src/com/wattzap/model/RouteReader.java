@@ -27,6 +27,10 @@ import com.wattzap.model.dto.Point;
  * @date 19 November 2013
  */
 public interface RouteReader {
+	// Slope (Integer) 0 = Watt program, 1 = Slope program, 2 = Pulse (HR)
+	public final static int POWER = 0;
+	public final static int SLOPE = 1;
+	
 	public String getExtension();
 	
 	public String getFilename();

@@ -1,3 +1,18 @@
+/* This file is part of Wattzap Community Edition.
+ *
+ * Wattzap Community Edtion is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Wattzap Community Edition is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.wattzap.view;
 
 import java.awt.Color;
@@ -19,7 +34,6 @@ import org.apache.log4j.Logger;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
-import com.wattzap.model.RLVReader;
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
@@ -47,7 +61,7 @@ public class Odometer extends JPanel implements MessageCallback {
 	private JLabel powerLabel;
 	private JLabel chronoLabel;
 
-	private int type = RLVReader.SLOPE;
+	private int type = RouteReader.SLOPE;
 
 	private static Logger logger = LogManager.getLogger("Odometer");
 
@@ -251,7 +265,7 @@ public class Odometer extends JPanel implements MessageCallback {
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
 					- startTime)));
 			switch (type) {
-			case RLVReader.POWER:
+			case RouteReader.POWER:
 				if (userPrefs.isMetric()) {
 					elevationLabel.setText(String.format("%.1f",
 							(totalDistance / 1000) - t.getDistance()));
@@ -263,14 +277,14 @@ public class Odometer extends JPanel implements MessageCallback {
 				}
 
 				break;
-			case RLVReader.SLOPE:
+			case RouteReader.SLOPE:
 				elevationLabel.setText(String.format("%.0f", t.getElevation()));
 				slopeLabel.setText(String.format("%.1f", t.getGradient()));
 
 				break;
-			}
+			}// switch
 
-			if (type == RLVReader.SLOPE) {
+			if (type == RouteReader.SLOPE) {
 				break;
 			}
 
@@ -282,13 +296,13 @@ public class Odometer extends JPanel implements MessageCallback {
 			RouteReader routeData = (RouteReader) o;
 			type = routeData.routeType();
 			switch (type) {
-			case RLVReader.POWER:
+			case RouteReader.POWER:
 				levelText
 						.setText(userPrefs.messages.getString("distance_left"));
 				slopeText.setVisible(false);
 				slopeLabel.setVisible(false);
 				break;
-			case RLVReader.SLOPE:
+			case RouteReader.SLOPE:
 				levelText.setText(userPrefs.messages.getString("altitude"));
 				slopeText.setVisible(true);
 				slopeLabel.setVisible(true);

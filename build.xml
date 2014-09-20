@@ -3,7 +3,7 @@
         Wattzap Ant Build File
     </description>
   <!-- set global properties for this build -->
-  <property name="src" location="src:src-pe"/>
+  <property name="src" location="src"/>
   <property name="build" location="bin"/>
   <property name="dist"  location="dist"/>
 
@@ -76,34 +76,4 @@
 <tar destfile="dist/wattzap.tar" basedir="dist/wattzap"/>
 <gzip destfile="dist/wattzap.tgz" src="dist/wattzap.tar"/>
 </target>
-
-<taskdef resource="proguard/ant/task.properties" classpath="/home/david/bin/proguard4.10/lib/proguard.jar"/>
-
-  <proguard>
-    -libraryjars ${java.home}/lib/rt.jar:${java.home}/lib/jce.jar:${classpath}
-    -injars      dist/lib/wattzap.jar
-    -outjars     wattzap.jar
-    -printmapping out.map
-    -keepattributes SourceFile,LineNumberTable
-
-    -keepclasseswithmembers public class * {
-        public static void main(java.lang.String[]);
-    }
-
-    -keepclasseswithmembers public class * {
-      public void receiveMessage(org.cowboycoders.ant.messages.data.BroadcastDataMessage);
-    }
-
-    -keepclassmembers enum * {
-      public static **[] values();
-      public static ** valueOf(java.lang.String);
-    }
-
-
-    -keepdirectories com/wattzap/model/power, com/wattzap/model
-    -keep public class com.wattzap.model.power.* { }
-    -keep public class com.wattzap.model.* { }
-    -keepattributes *Annotation*
-
-  </proguard>
 </project>

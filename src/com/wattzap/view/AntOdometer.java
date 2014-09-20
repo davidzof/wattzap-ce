@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.Color;
@@ -34,7 +34,6 @@ import org.apache.log4j.Logger;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
-import com.wattzap.model.RLVReader;
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
@@ -60,7 +59,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 	private JLabel powerLabel;
 	private JLabel chronoLabel;
 
-	private int type = RLVReader.SLOPE;
+	private int type = RouteReader.SLOPE;
 	private TrainingItem current;
 	private static Logger logger = LogManager.getLogger("Odometer");
 
@@ -271,7 +270,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
 					- startTime)));
 			switch (type) {
-			case RLVReader.POWER:
+			case RouteReader.POWER:
 				if (userPrefs.isMetric()) {
 					// remaing distance
 					elevationLabel.setText(String.format("%.3f",
@@ -283,7 +282,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 				}
 				break;
-			case RLVReader.SLOPE:
+			case RouteReader.SLOPE:
 				elevationLabel.setText(String.format("%.0f", t.getElevation()));
 				break;
 			}
@@ -326,12 +325,12 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			RouteReader routeData = (RouteReader) o;
 			type = routeData.routeType();
 			switch (type) {
-			case RLVReader.POWER:
+			case RouteReader.POWER:
 				slopeText.setText(userPrefs.messages.getString("target_power"));
 				levelText
 						.setText(userPrefs.messages.getString("distance_left"));
 				break;
-			case RLVReader.SLOPE:
+			case RouteReader.SLOPE:
 				slopeText.setText(userPrefs.messages.getString("slope") + " %");
 				levelText.setText(userPrefs.messages.getString("altitude"));
 

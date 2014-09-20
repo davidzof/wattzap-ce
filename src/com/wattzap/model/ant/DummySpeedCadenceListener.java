@@ -1,3 +1,18 @@
+/* This file is part of Wattzap Community Edition.
+ *
+ * Wattzap Community Edtion is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Wattzap Community Edition is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package com.wattzap.model.ant;
 
 import java.math.BigDecimal;
@@ -11,7 +26,6 @@ import org.apache.log4j.Logger;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
-import com.wattzap.model.RLVReader;
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Point;
@@ -77,7 +91,7 @@ public class DummySpeedCadenceListener extends Thread implements
 				// if ant disabled always use this calculation
 				if ((virtualPower || !UserPreferences.INSTANCE.isAntEnabled())
 						&& routeData != null) {
-					if (routeData.routeType() == RLVReader.SLOPE) {
+					if (routeData.routeType() == RouteReader.SLOPE) {
 						p = routeData.getPoint(distance);
 
 						/*
