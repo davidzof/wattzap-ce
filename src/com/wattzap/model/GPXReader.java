@@ -60,7 +60,7 @@ public class GPXReader implements RouteReader {
 	
 	@Override
 	public int routeType() {
-		return RLVReader.SLOPE;
+		return RouteReader.SLOPE;
 	}
 
 	@Override
