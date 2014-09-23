@@ -12,12 +12,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.graphs;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -25,6 +26,7 @@ import java.awt.Stroke;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JPanel;
@@ -44,6 +46,10 @@ import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import com.wattzap.model.dto.Telemetry;
+import com.wattzap.utils.Rolling;
+import com.wattzap.view.SmoothingPanel;
+
 /**
  * Mean Maximal Power Graph
  * 
@@ -54,6 +60,7 @@ public class SCHRGraph extends JPanel {
 	ValueMarker marker = null;
 	XYPlot plot;
 	private ChartPanel chartPanel = null;
+	private final ArrayList<Telemetry> telemetry[];
 	// a few colors
 	private final static Color straw = new Color(255, 255, 191);// straw
 	private final static Color cornflower = new Color(145, 191, 219);// cornflower
@@ -61,9 +68,11 @@ public class SCHRGraph extends JPanel {
 
 	private static Logger logger = LogManager.getLogger("Profile");
 
-	public SCHRGraph(XYSeries powerSeries, XYSeries cadenceSeries,
-			XYSeries heartRateSeries) {
+	final ValueAxis powerAxis = new NumberAxis("Power (watts)");
+
+	public SCHRGraph(ArrayList<Telemetry> telemetry[]) {
 		super();
+		this.telemetry = telemetry;
 
 		final NumberAxis domainAxis = new NumberAxis("Time (h:m:s)");
 
@@ -120,11 +129,7 @@ public class SCHRGraph extends JPanel {
 			}
 		});
 
-		final ValueAxis powerAxis = new NumberAxis("Power (watts)");
-		powerAxis.setRange(0, powerSeries.getMaxY());
-
 		// create plot ...
-		final IntervalXYDataset powerData = new XYSeriesCollection(powerSeries);
 		final XYItemRenderer powerRenderer = new StandardXYItemRenderer() {
 			Stroke regularStroke = new BasicStroke(0.7f);
 			Color color;
@@ -144,12 +149,12 @@ public class SCHRGraph extends JPanel {
 			}
 		};
 		powerRenderer.setSeriesPaint(0, orange);
-		final XYPlot plot = new XYPlot(powerData, domainAxis, powerAxis,
-				powerRenderer);
+		plot = new XYPlot();
+		plot.setRenderer(0, powerRenderer);
+		plot.setRangeAxis(0, powerAxis);
+		plot.setDomainAxis(domainAxis);
 
 		// add a second dataset and renderer...
-		final IntervalXYDataset cadenceData = new XYSeriesCollection(
-				cadenceSeries);
 		final XYItemRenderer cadenceRenderer = new StandardXYItemRenderer() {
 			Stroke regularStroke = new BasicStroke(0.7f);
 			Color color;
@@ -167,7 +172,7 @@ public class SCHRGraph extends JPanel {
 			public Paint getItemPaint(int row, int column) {
 				return cornflower;
 			}
-			
+
 			public Shape lookupLegendShape(int series) {
 				return new Rectangle(15, 15);
 			}
@@ -175,19 +180,16 @@ public class SCHRGraph extends JPanel {
 
 		final ValueAxis cadenceAxis = new NumberAxis("Cadence (rpm)");
 		cadenceAxis.setRange(0, 200);
-		
 
 		// arguments of new XYLineAndShapeRenderer are to activate or deactivate
 		// the display of points or line. Set first argument to true if you want
 		// to draw lines between the points for e.g.
-		plot.setDataset(1, cadenceData);
 		plot.setRenderer(1, cadenceRenderer);
 		plot.setRangeAxis(1, cadenceAxis);
 		plot.mapDatasetToRangeAxis(1, 1);
 		cadenceRenderer.setSeriesPaint(0, cornflower);
 
 		// add a third dataset and renderer...
-		final IntervalXYDataset hrData = new XYSeriesCollection(heartRateSeries);
 		final XYItemRenderer hrRenderer = new StandardXYItemRenderer() {
 			Stroke regularStroke = new BasicStroke(0.7f);
 			Color color;
@@ -206,7 +208,6 @@ public class SCHRGraph extends JPanel {
 				return straw;
 			}
 
-	
 		};
 
 		// arguments of new XYLineAndShapeRenderer are to activate or deactivate
@@ -214,7 +215,7 @@ public class SCHRGraph extends JPanel {
 		// to draw lines between the points for e.g.
 		final ValueAxis heartRateAxis = new NumberAxis("Heart-Rate (bpm)");
 		heartRateAxis.setRange(0, 200);
-		plot.setDataset(2, hrData);
+
 		plot.setRenderer(2, hrRenderer);
 		hrRenderer.setSeriesPaint(0, straw);
 
@@ -225,20 +226,55 @@ public class SCHRGraph extends JPanel {
 		// return a new chart containing the overlaid plot...
 		JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT,
 				plot, true);
-		
+
 		chart.getLegend().setBackgroundPaint(Color.gray);
 
 		chartPanel = new ChartPanel(chart);
-		chartPanel.setSize(100, 1200);
+		this.setPreferredSize(new Dimension(1200, 400));
 		chartPanel.setFillZoomRectangle(true);
 		chartPanel.setMouseWheelEnabled(true);
 		chartPanel.setBackground(Color.gray);
 
 		setLayout(new BorderLayout());
 		add(chartPanel, BorderLayout.CENTER);
-		// setBackground(Color.black);
-		chartPanel.revalidate();
+
+		SmoothingPanel smoothingPanel = new SmoothingPanel(this);
+		add(smoothingPanel, BorderLayout.SOUTH);
 		setVisible(true);
+	}
+
+	public void updateValue(int smoothing) {
+
+		XYSeries powerSeries = new XYSeries("Power");
+		XYSeries cadenceSeries = new XYSeries("Cadence");
+		XYSeries hrSeries = new XYSeries("Heart-Rate");
+
+		Rolling pAve = new Rolling(smoothing);
+		Rolling hrAve = new Rolling(smoothing);
+		Rolling cAve = new Rolling(smoothing);
+
+		long startTime = -1;
+		for (Telemetry t : telemetry[0]) {
+			if (startTime == -1) {
+				startTime = t.getTime();
+				continue;
+			}
+			powerSeries.add((t.getTime() - startTime), pAve.add(t.getPower()));
+			cadenceSeries.add((t.getTime() - startTime),
+					cAve.add(t.getCadence()));
+			hrSeries.add((t.getTime() - startTime), hrAve.add(t.getHeartRate()));
+		}// for
+
+		final IntervalXYDataset cadenceData = new XYSeriesCollection(
+				cadenceSeries);
+		final IntervalXYDataset hrData = new XYSeriesCollection(hrSeries);
+		final IntervalXYDataset powerData = new XYSeriesCollection(powerSeries);
+		powerAxis.setRange(0, powerSeries.getMaxY());
+		plot.setDataset(0, powerData);
+		plot.setDataset(1, cadenceData);
+		plot.setDataset(2, hrData);
+
+		chartPanel.revalidate();
 	}
 
 	private static final long serialVersionUID = 1L;

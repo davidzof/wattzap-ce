@@ -578,26 +578,9 @@ public class Workouts extends JPanel implements ActionListener {
 			return;
 		}
 
-		XYSeries series1 = new XYSeries("Power");
-		XYSeries series2 = new XYSeries("Cadence");
-		XYSeries series3 = new XYSeries("Heart-Rate");
-
-		// TODO: Make this configurable
-		Rolling pAve = new Rolling(30);
-		Rolling hrAve = new Rolling(30);
-		Rolling cAve = new Rolling(30); // smoothing
-		long startTime = -1;
-		for (Telemetry t : telemetry[0]) {
-			if (startTime == -1) {
-				startTime = t.getTime();
-				continue;
-			}
-			series1.add((t.getTime() - startTime), pAve.add(t.getPower()));
-			series2.add((t.getTime() - startTime), cAve.add(t.getCadence()));
-			series3.add((t.getTime() - startTime), hrAve.add(t.getHeartRate()));
-		}// for
-
-		SCHRGraph mmp = new SCHRGraph(series1, series2, series3);
+		SCHRGraph mmp = new SCHRGraph(telemetry);
+		// show data with smoothing of 1 second
+		mmp.updateValue(1);
 
 		JFrame frame = new JFrame("Ride Summary");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
@@ -605,7 +588,6 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		// Create and set up the content pane.
-
 		mmp.setOpaque(true); // content panes must be opaque
 		frame.setContentPane(mmp);
 
