@@ -12,12 +12,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.graphs;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GradientPaint;
+import java.util.ArrayList;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import javax.swing.JPanel;
 
@@ -31,10 +34,12 @@ import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.ValueMarker;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+
+import com.wattzap.controller.DistributionAccessor;
+import com.wattzap.model.dto.Telemetry;
 
 /* 
  Power Distribution Chart
@@ -45,16 +50,23 @@ import org.jfree.data.category.CategoryDataset;
 public class DistributionGraph extends JPanel {
 	private ChartPanel chartPanel = null;
 
-	private static Logger logger = LogManager.getLogger("Profile");
+	CategoryPlot plot;
+	private final ArrayList<Telemetry> telemetry[];
+	private final DistributionAccessor da;
+	private static Logger logger = LogManager.getLogger("Distribution Graph");
 
-	public DistributionGraph(CategoryDataset dataset, String domainLabel) {
+	public DistributionGraph(ArrayList<Telemetry> telemetry[], DistributionAccessor da, String domainLabel, int scale) {
 		super();
 
+		this.telemetry = telemetry;
+		this.da = da;
+
 		// create the chart...
-		JFreeChart chart = ChartFactory.createBarChart("", 
-				domainLabel, // domain axis label
+		JFreeChart chart = ChartFactory.createBarChart("", domainLabel, // domain
+																		// axis
+																		// label
 				"Time %", // range axis label
-				dataset, // data
+				null, // data
 				PlotOrientation.VERTICAL, // orientation
 				false, // include legend
 				true, // tooltips?
@@ -65,8 +77,7 @@ public class DistributionGraph extends JPanel {
 		chart.setBackgroundPaint(Color.white);
 
 		// get a reference to the plot for further customisation...
-		CategoryPlot plot = (CategoryPlot) chart.getPlot();
-
+		plot = (CategoryPlot) chart.getPlot();
 
 		// set the range axis to display integers only...
 		NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
@@ -94,9 +105,60 @@ public class DistributionGraph extends JPanel {
 		chartPanel.setMouseWheelEnabled(true);
 		setLayout(new BorderLayout());
 		add(chartPanel, BorderLayout.CENTER);
+		
+		BucketPanel bucketPanel = new BucketPanel(this, scale);
+		add(bucketPanel, BorderLayout.SOUTH);
+		
 		setBackground(Color.black);
 		chartPanel.revalidate();
 		setVisible(true);
+	}
+
+	public void updateValues(int scale, boolean keepZeroes) {
+		da.setBucketSize(scale);
+		da.setKeepZeroes(keepZeroes);
+		System.out.println("set scale " + scale);
+		long totalTime = 0;
+		TreeMap<Integer, Long> data = new TreeMap<Integer, Long>();
+		for (int i = 0; i < telemetry.length; i++) {
+			Telemetry last = null;
+			for (Telemetry t : telemetry[i]) {
+
+				if (last == null) {
+					// first time through
+					last = t;
+				} else {
+					int key = da.getKey(t);
+					if (key != -1) {
+						if (data.containsKey(key)) {
+							// add time to current key
+							long time = data.get(key);
+							data.put(key, time
+									+ (t.getTime() - last.getTime()));
+						} else {
+							data.put(key, t.getTime() - last.getTime());
+						}
+						totalTime += t.getTime() - last.getTime();
+
+						
+					}last = t;
+				}
+			}// for
+		}// for
+
+		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+		for (Entry<Integer, Long> entry : data.entrySet()) {
+			int key = entry.getKey();
+			double p = ((double) entry.getValue() * 100 / totalTime);
+			if (p > 0.5) {
+				dataset.addValue(p, "", da.getValueLabel(key));
+			}
+
+		}// for
+		
+		plot.setDataset(dataset);
+		chartPanel.revalidate();
 	}
 
 	private static final long serialVersionUID = 1L;

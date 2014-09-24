@@ -48,7 +48,6 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.utils.Rolling;
-import com.wattzap.view.SmoothingPanel;
 
 /**
  * Mean Maximal Power Graph
@@ -230,7 +229,9 @@ public class SCHRGraph extends JPanel {
 		chart.getLegend().setBackgroundPaint(Color.gray);
 
 		chartPanel = new ChartPanel(chart);
-		this.setPreferredSize(new Dimension(1200, 400));
+		
+		// TODO: maybe remember sizes set by user?
+		this.setPreferredSize(new Dimension(1200, 500));
 		chartPanel.setFillZoomRectangle(true);
 		chartPanel.setMouseWheelEnabled(true);
 		chartPanel.setBackground(Color.gray);
@@ -243,7 +244,7 @@ public class SCHRGraph extends JPanel {
 		setVisible(true);
 	}
 
-	public void updateValue(int smoothing) {
+	public void updateValues(int smoothing) {
 
 		XYSeries powerSeries = new XYSeries("Power");
 		XYSeries cadenceSeries = new XYSeries("Cadence");

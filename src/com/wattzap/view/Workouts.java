@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.BorderLayout;
@@ -53,7 +53,6 @@ import javax.swing.table.DefaultTableModel;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
 
 import com.wattzap.controller.DistributionAccessor;
@@ -62,7 +61,6 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.utils.GPSFileVisitor;
-import com.wattzap.utils.Rolling;
 import com.wattzap.view.graphs.CSScatterGraph;
 import com.wattzap.view.graphs.DistributionGraph;
 import com.wattzap.view.graphs.MMPGraph;
@@ -295,54 +293,40 @@ public class Workouts extends JPanel implements ActionListener {
 
 		} else if (pdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
-				public final int scale = 15;
-
 				public int getKey(Telemetry t) {
-					return (int) t.getPower() / scale;
+					return getKey(t.getPower());
 				}
-
-				public String getValueLabel(int v) {
-					return "" + (v * scale) + " - " + ((v * scale) + scale);
-				}
-			}, "Power Distribution Graph", "Power (watts)");
+			}, 15, "Power Distribution Graph", "Power (watts)");
 		} else if (cdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
-				private final int scale = 5;
-
 				public int getKey(Telemetry t) {
-					return (int) t.getCadence() / scale;
+					return getKey(t.getCadence());
 				}
-
-				public String getValueLabel(int v) {
-					return "" + (v * scale) + " - " + ((v * scale) + scale);
-				}
-			}, "Cadence Distribution Graph", "Cadence (rpm)");
+			}, 5, "Cadence Distribution Graph", "Cadence (rpm)");
 		} else if (hrdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
-				private final int scale = 10;
-
 				public int getKey(Telemetry t) {
 					if (t.getHeartRate() < 30) {
 						return -1; // ignore these values
 					}
-					return (int) t.getHeartRate() / scale;
+					
+					return getKey(t.getHeartRate());
 				}
-
-				public String getValueLabel(int v) {
-					return "" + (v * scale) + " - " + ((v * scale) + scale);
-				}
-			}, "Heart-rate Distribution Graph", "Heart-rate (bpm)");
+			}, 10, "Heart-rate Distribution Graph", "Heart-rate (bpm)");
 		} else if (tlGraph.equals(command)) {
 			// Training Zone Graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
+					if (!keepZeroes && t.getPower() < scale) {
+						return -1;
+					}
 					return TrainingItem.getTrainingLevel(t.getPower());
 				}
 
 				public String getValueLabel(int v) {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
-			}, "Training Level Distribution Graph", "Training Level");
+			}, 0, "Training Level Distribution Graph", "Training Level");
 		} else if (importer.equals(command)) {
 			if (!UserPreferences.INSTANCE.isRegistered()
 					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
@@ -506,8 +490,8 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.setVisible(true);
 	}
 
-	public void DistributionGraph(DistributionAccessor da, String title,
-			String label) {
+	public void DistributionGraph(DistributionAccessor da, int scale,
+			String title, String label) {
 		if (telemetry == null) {
 			JOptionPane.showMessageDialog(this, "No Data",
 					"No data to display, load a workout(s) first",
@@ -515,45 +499,9 @@ public class Workouts extends JPanel implements ActionListener {
 			return;
 		}
 
-		long totalTime = 0;
-		TreeMap<Integer, Long> data = new TreeMap<Integer, Long>();
-		for (int i = 0; i < telemetry.length; i++) {
-			Telemetry first = null;
-			for (Telemetry t : telemetry[i]) {
-
-				if (first == null) {
-					// first time through
-					first = t;
-				} else {
-					int key = da.getKey(t);
-					if (key != -1) {
-						if (data.containsKey(key)) {
-							// add time to current key
-							long time = data.get(key);
-							data.put(key, time
-									+ (t.getTime() - first.getTime()));
-						} else {
-							data.put(key, t.getTime() - first.getTime());
-						}
-						totalTime += t.getTime() - first.getTime();
-
-						first = t;
-					}
-				}
-			}// for
-		}// for
-
-		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
-		for (Entry<Integer, Long> entry : data.entrySet()) {
-			int key = entry.getKey();
-			double p = ((double) entry.getValue() * 100 / totalTime);
-			if (p > 0.5) {
-				dataset.addValue(p, "", da.getValueLabel(key));
-			}
-
-		}// for
-		DistributionGraph mmp = new DistributionGraph(dataset, label);
+		DistributionGraph dgGraph = new DistributionGraph(telemetry, da, label,
+				scale);
+		dgGraph.updateValues(scale, true);
 
 		JFrame frame = new JFrame(title);
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
@@ -562,8 +510,8 @@ public class Workouts extends JPanel implements ActionListener {
 
 		// Create and set up the content pane.
 
-		mmp.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(mmp);
+		dgGraph.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(dgGraph);
 
 		// Display the window.
 		frame.pack();
@@ -578,9 +526,9 @@ public class Workouts extends JPanel implements ActionListener {
 			return;
 		}
 
-		SCHRGraph mmp = new SCHRGraph(telemetry);
+		SCHRGraph pchrGraph = new SCHRGraph(telemetry);
 		// show data with smoothing of 1 second
-		mmp.updateValue(1);
+		pchrGraph.updateValues(1);
 
 		JFrame frame = new JFrame("Ride Summary");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
@@ -588,8 +536,8 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		// Create and set up the content pane.
-		mmp.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(mmp);
+		pchrGraph.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(pchrGraph);
 
 		// Display the window.
 		frame.pack();

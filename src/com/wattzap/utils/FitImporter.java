@@ -181,14 +181,15 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 				point.setSpeed(speed.getDoubleValue() * 3.6);
 			}
 
+			// use power from file
 			Field power = getField("power", fields);
-			/*if (power != null) {
+			if (power != null) {
 
 				point.setPower(power.getShortValue());
 				if (point.getPower() > 0) {
 					isPower = true; // contains power values
 				}
-			}*/
+			}
 
 			if (last != null) {
 				if (distance == null) {

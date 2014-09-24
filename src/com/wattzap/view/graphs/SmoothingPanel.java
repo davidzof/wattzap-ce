@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.wattzap.view;
+package com.wattzap.view.graphs;
 
 import java.awt.Color;
 import java.awt.event.ItemEvent;
@@ -22,8 +22,6 @@ import java.awt.event.ItemListener;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import com.wattzap.view.graphs.SCHRGraph;
 
 /**
  * (c) 2014 Wattzap.com
@@ -67,7 +65,7 @@ public class SmoothingPanel extends JPanel implements ItemListener {
 			// trim of " sec" part of string and convert to integer
 			int smoothing = Integer.parseInt(item.substring(0,
 					item.length() - 4));
-			graph.updateValue(smoothing);
+			graph.updateValues(smoothing);
 		}
 
 	}
