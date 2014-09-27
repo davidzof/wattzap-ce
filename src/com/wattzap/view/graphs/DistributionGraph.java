@@ -19,8 +19,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.util.ArrayList;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import javax.swing.JPanel;
 
@@ -35,7 +35,6 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import com.wattzap.controller.DistributionAccessor;
@@ -55,7 +54,8 @@ public class DistributionGraph extends JPanel {
 	private final DistributionAccessor da;
 	private static Logger logger = LogManager.getLogger("Distribution Graph");
 
-	public DistributionGraph(ArrayList<Telemetry> telemetry[], DistributionAccessor da, String domainLabel, int scale) {
+	public DistributionGraph(ArrayList<Telemetry> telemetry[],
+			DistributionAccessor da, String domainLabel, int scale) {
 		super();
 
 		this.telemetry = telemetry;
@@ -72,7 +72,6 @@ public class DistributionGraph extends JPanel {
 				true, // tooltips?
 				false // URLs?
 				);
-
 
 		chart.setBackgroundPaint(Color.white);
 
@@ -105,10 +104,10 @@ public class DistributionGraph extends JPanel {
 		chartPanel.setMouseWheelEnabled(true);
 		setLayout(new BorderLayout());
 		add(chartPanel, BorderLayout.CENTER);
-		
+
 		BucketPanel bucketPanel = new BucketPanel(this, scale);
 		add(bucketPanel, BorderLayout.SOUTH);
-		
+
 		setBackground(Color.black);
 		chartPanel.revalidate();
 		setVisible(true);
@@ -117,7 +116,7 @@ public class DistributionGraph extends JPanel {
 	public void updateValues(int scale, boolean keepZeroes) {
 		da.setBucketSize(scale);
 		da.setKeepZeroes(keepZeroes);
-		System.out.println("set scale " + scale);
+
 		long totalTime = 0;
 		TreeMap<Integer, Long> data = new TreeMap<Integer, Long>();
 		for (int i = 0; i < telemetry.length; i++) {
@@ -133,15 +132,14 @@ public class DistributionGraph extends JPanel {
 						if (data.containsKey(key)) {
 							// add time to current key
 							long time = data.get(key);
-							data.put(key, time
-									+ (t.getTime() - last.getTime()));
+							data.put(key, time + (t.getTime() - last.getTime()));
 						} else {
 							data.put(key, t.getTime() - last.getTime());
 						}
 						totalTime += t.getTime() - last.getTime();
 
-						
-					}last = t;
+					}
+					last = t;
 				}
 			}// for
 		}// for
@@ -156,7 +154,7 @@ public class DistributionGraph extends JPanel {
 			}
 
 		}// for
-		
+
 		plot.setDataset(dataset);
 		chartPanel.revalidate();
 	}

@@ -317,7 +317,7 @@ public class Workouts extends JPanel implements ActionListener {
 			// Training Zone Graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
-					if (!keepZeroes && t.getPower() < scale) {
+					if (!keepZeroes && t.getPower() < 5) {
 						return -1;
 					}
 					return TrainingItem.getTrainingLevel(t.getPower());
