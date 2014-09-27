@@ -4,6 +4,8 @@ Wattzap Community Edition
 This is the community edition of the Wattzap Turbo Trainer Software. It is provided "as is" and without support. It is primarily
 intended for developers who want to add new features to Wattzap.
 
+see: http://www.wattzap.com/ for more information
+
 
 Basic Architecture
 ==================
