@@ -15,6 +15,8 @@
 */
 package com.wattzap.model.ant;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
@@ -38,6 +40,8 @@ import com.wattzap.model.power.Power;
 public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		implements BroadcastListener<BroadcastDataMessage>, MessageCallback {
 
+	private final static Logger logger = LogManager.getLogger("ASCL");
+	
 	private static int lastTs = -1;
 	private static int lastTc = -1;
 	private static int sRR = 0; // previous speed rotation measurement
@@ -111,7 +115,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		// Bytes 6 and 7: speed rotation count.
 		int sR = data[6] + (data[7] << 8);
 
-		System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
+		logger.debug("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
 				+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
 				+ " cRR " + cRR);
 
@@ -286,7 +290,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			}
 
 			distance += distanceKM;
-			System.out.println("Sending " + t);
+			logger.debug("Sending " + t);
 			MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
 
 		}
