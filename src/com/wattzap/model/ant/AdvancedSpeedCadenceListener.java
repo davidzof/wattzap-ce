@@ -111,9 +111,9 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		// Bytes 6 and 7: speed rotation count.
 		int sR = data[6] + (data[7] << 8);
 
-		//System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
-		//		+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
-		//		+ " cRR " + cRR);
+		System.out.println("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR
+				+ " lastTs " + lastTs + " lastTc " + lastTc + " sRR " + sRR
+				+ " cRR " + cRR);
 
 		if (lastTs == -1) {
 			// first time through, initialize counters and return
@@ -207,11 +207,13 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 			sCount = 0;
 		} else if (sCount < 6) {
-			// speed reading is zero, ignore the first 12 of these as sometimes
+			// speed reading is zero, ignore the first 6 of these as sometimes
 			// readings don't change with every message
 			sCount++;
 			// System.out.println("ACSL sCount " + sCount);
 			t.setSpeed(-1.0);
+		} else {
+			t.setSpeed(0.0);
 		}
 
 		t.setDistance(distance);
@@ -284,7 +286,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			}
 
 			distance += distanceKM;
-			//System.out.println(t);
+			System.out.println("Sending " + t);
 			MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
 
 		}
