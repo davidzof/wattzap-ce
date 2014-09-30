@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.Canvas;
@@ -44,9 +44,20 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.utils.Rolling;
 
 /**
- * (c) 2013 David George / TrainingLoops.com
+ * (c) 2013-2014 David George / TrainingLoops.com
  * 
- * Speed and Cadence ANT+ processor.
+ * Video Player.
+ * 
+ * Synchronizes video playback to road speed. This is done using an SDK to the
+ * cross platform VLC player. We can't set the speed frame by frame because it
+ * would be too expensive in terms of CPU cycles. What we do is compare the
+ * speed from the rider with the speed the video was recorded at and set the
+ * playback speed according to this ratio. For example is the rider is doing
+ * 10kph and the video was recorded at 20kpg we set the playback speed to 50%.
+ * 
+ * It sounds easy but both the rider speed and video record speed are constantly
+ * varying so adjustments have to be made continuously. It is very easy to
+ * overshoot hence the different offsets used.
  * 
  * @author David George
  * @date 11 June 2013
@@ -167,7 +178,7 @@ MessageCallback {
 		}
 
 		if (mapTime != lastMapTime) {
-			// position update
+			// position has changed
 			rSpeed.add(p.getSpeed());
 			float perCent = 1.0f;
 			if (mapTime > videoTime + 250) {
@@ -187,20 +198,22 @@ MessageCallback {
 					}
 				}
 			} else if (videoTime > mapTime + 250) {
+				// video too fast
 				perCent = ((float) mapTime / videoTime);
 
 				// System.out.println("video too fast, speed up map");
 				if (perCent < lastCent) {
 					// System.out.println("rate of change increasing");
 					if (perCent < 0.9 || perCent > 1.1) {
+						// 10% out, use bigger changes
 						diff -= 0.06f;
 					} else {
 						diff -= 0.03f;
 					}
 				} else {
-					// System.out.println("rate of change decreasing");
-
+					// rate of change is decreasing
 					diff += 0.01f;
+					// System.out.println("rate of change decreasing");
 				}
 			}
 
@@ -251,7 +264,7 @@ MessageCallback {
 				setSpeed(t);
 			}
 			break;
-		
+
 		case STOP:
 			if (mPlayer != null) {
 

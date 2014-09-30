@@ -218,6 +218,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			t.setSpeed(-1.0);
 		} else {
 			t.setSpeed(0.0);
+			cadence = 0;
 		}
 
 		t.setDistance(distance);
@@ -234,9 +235,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			t.setLongitude(p.getLongitude());
 		}
 		t.setTime(elapsedTime);
-		//t.setHeartRate(HeartRateListener.heartRate);
-		t.setCadence(cadence);
-
+		
 		/*
 		 * Cadence caculations
 		 */
@@ -244,12 +243,12 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		if (tC < lastTc) {
 			// we have rolled over
 			cTD = tC + (65536 - lastTc);
-			//System.out.println("rollover ctD " + cTD);
+			logger.debug("rollover ctD " + cTD);
 		} else {
 			cTD = tC - lastTc;
 		}
 
-		//System.out.println(" cR " + cR + " tC " + tC + " cTD " + cTD);
+		logger.debug(" cR " + cR + " tC " + tC + " cTD " + cTD);
 		if (cTD < 5000) {
 			// Time deltas of > 5 seconds are bogus
 			int cRD; // cadence rotation delta
@@ -262,7 +261,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 			if (cRD > 0) {
 				double timeC = ((double) cTD) / 1024.0;
-				//System.out.println("timeC" + timeC + " cRD " + cRD);
+				logger.debug("timeC" + timeC + " cRD " + cRD);
 				cadence = ((int) (cRD * ((1 / timeC) * 60.0)));
 				cCount = 0;
 			} else if (cCount < 6) {
@@ -275,20 +274,21 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 		lastTs = tS;
 		sRR = sR;
-		if (tC < lastTc || cTD < 5000) {
+		//if (tC < lastTc || cTD < 5000) {
 			// no rollover or delta less than 5000.
 			lastTc = tC;
 			cRR = cR;
-		}
+		//}
 
 		if (t.getSpeed() >= 0.0) {
 			// some sanity checks
-
 			if (cadence > 250 || t.getPower() > 2500) {
-				//System.out.println("Bogosity!!!! > " + t);
+				logger.debug("Bogosity >>> " + t);
+				cadence = t.getCadence(); // old good value
 				return;
 			}
 
+			t.setCadence(cadence);
 			distance += distanceKM;
 			logger.debug("Sending " + t);
 			MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);

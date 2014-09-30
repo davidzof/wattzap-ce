@@ -54,8 +54,7 @@ public class MainFrame extends JFrame implements ActionListener,
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				// remember position and size
-				Rectangle r = getBounds();
-				UserPreferences.INSTANCE.setMainBounds(r);
+				MessageBus.INSTANCE.send(Messages.CLOSE, null);
 				UserPreferences.INSTANCE.shutDown();
 				System.exit(0);
 			}
@@ -67,9 +66,7 @@ public class MainFrame extends JFrame implements ActionListener,
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		logger.info(command);
-		// remember position and size
-		Rectangle r = this.getBounds();
-		UserPreferences.INSTANCE.setMainBounds(r);
+		MessageBus.INSTANCE.send(Messages.CLOSE, null);
 		UserPreferences.INSTANCE.shutDown();
 		System.exit(0);
 	}
@@ -79,6 +76,10 @@ public class MainFrame extends JFrame implements ActionListener,
 		logger.info(message);
 		switch (message) {
 		case CLOSE:
+			// remember position and size	
+			Rectangle r = this.getBounds();
+			UserPreferences.INSTANCE.setMainBounds(r);
+			
 			this.revalidate();
 
 			break;

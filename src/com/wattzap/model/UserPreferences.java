@@ -114,11 +114,13 @@ public enum UserPreferences {
 		int x = getInt("", "videoX", 0);
 		int y = getInt("", "videoY", 650);
 
+		
 		Rectangle r = new Rectangle(x, y, width, height);
 		return r;
 	}
 
 	public void setVideoBounds(Rectangle r) {
+		
 		setInt("", "videoHeight", r.height);
 		setInt("", "videoWidth", r.width);
 		setInt("", "videoX", r.x);

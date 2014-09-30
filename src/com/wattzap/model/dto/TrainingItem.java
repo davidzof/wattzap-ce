@@ -416,6 +416,30 @@ public class TrainingItem {
 		}
 		return 7;
 	}
+	
+	public static int getHRTrainingLevel(int hr) {
+		// active recovery < 68%
+		int level1 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.68);
+		// Endurance 69 - 83%
+		int level2 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.83);
+		// Tempo 84 - 94%
+		int level3 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.94);
+		// Lactate Threshold 95-105%
+		int level4 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 1.05);
+		// VO2Max > 105%
+		int level5 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 1.05);
+		
+		if (hr >= 0 && hr <= level1) {
+			return 1;
+		} else if (hr > level1 && hr <= level2) {
+			return 2;
+		} else if (hr > level2 && hr <= level3) {
+			return 3;
+		} else if (hr > level3 && hr <= level4) {
+			return 4;
+		}
+		return 5;
+	}
 
 	public static String getTrainingName(int level) {
 		switch (level) {

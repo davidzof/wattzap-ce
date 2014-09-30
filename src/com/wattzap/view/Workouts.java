@@ -92,6 +92,7 @@ public class Workouts extends JPanel implements ActionListener {
 	private final static String cdGraph = "CDG";
 	private final static String hrdGraph = "HRDG";
 	private final static String tlGraph = "TLDG";
+	private final static String tlhrGraph = "TLHRDG";
 	public final static String importer = "IMP";
 
 	private final static String[] columnNames = { "Date", "Time", "Source",
@@ -235,6 +236,12 @@ public class Workouts extends JPanel implements ActionListener {
 		distMenu.add(tlMenuItem);
 		tlMenuItem.addActionListener(this);
 
+		JMenuItem tlhrMenuItem = new JMenuItem(
+				userPrefs.messages.getString("trainlevelhr"));
+		tlhrMenuItem.setActionCommand(tlhrGraph);
+		distMenu.add(tlhrMenuItem);
+		tlhrMenuItem.addActionListener(this);
+
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
@@ -283,37 +290,43 @@ public class Workouts extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		if (scGraph.equals(command)) {
+		switch (command) {
+		case scGraph:
 			CSScatterPlot();
-		} else if (mmpGraph.equals(command)) {
+			break;
+		case mmpGraph:
 			mmpGraph();
-
-		} else if (schrGraph.equals(command)) {
+			break;
+		case schrGraph:
 			SCHRGraph();
-
-		} else if (pdGraph.equals(command)) {
+			break;
+		case pdGraph:
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getPower());
 				}
 			}, 15, "Power Distribution Graph", "Power (watts)");
-		} else if (cdGraph.equals(command)) {
+			break;
+		case cdGraph:
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getCadence());
 				}
 			}, 5, "Cadence Distribution Graph", "Cadence (rpm)");
-		} else if (hrdGraph.equals(command)) {
+			break;
+		case hrdGraph:
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					if (t.getHeartRate() < 30) {
 						return -1; // ignore these values
 					}
-					
+
 					return getKey(t.getHeartRate());
 				}
 			}, 10, "Heart-rate Distribution Graph", "Heart-rate (bpm)");
-		} else if (tlGraph.equals(command)) {
+
+			break;
+		case tlGraph:
 			// Training Zone Graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
@@ -327,7 +340,25 @@ public class Workouts extends JPanel implements ActionListener {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
 			}, 0, "Training Level Distribution Graph", "Training Level");
-		} else if (importer.equals(command)) {
+			break;
+		case tlhrGraph:
+			// Training Zone Graph
+			DistributionGraph(new DistributionAccessor() {
+				public int getKey(Telemetry t) {
+					if (!keepZeroes && t.getPower() < 5) {
+						return -1;
+					}
+					return TrainingItem.getHRTrainingLevel(t.getHeartRate());
+				}
+
+				public String getValueLabel(int v) {
+					return TrainingItem.getTrainingName(v) + " " + v;
+				}
+			}, 0, "Training Level (Heart Rate)", "Training Level");
+			break;
+		}
+
+		if (importer.equals(command)) {
 			if (!UserPreferences.INSTANCE.isRegistered()
 					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
 				logger.info("Out of time "
