@@ -15,12 +15,6 @@
 */
 package com.wattzap.model.ant;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 

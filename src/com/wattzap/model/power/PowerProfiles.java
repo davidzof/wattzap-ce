@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.power;
 
 import java.io.IOException;
@@ -67,17 +67,18 @@ public enum PowerProfiles {
 	public void getClassNamesFromPackage(String packageName)
 			throws IOException, URISyntaxException, ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
-try {
-		List<Class> classes = ReflexiveClassLoader.getClassNamesFromPackage(
-				packageName, PowerAnnotation.class);
+		try {
+			List<Class> classes = ReflexiveClassLoader
+					.getClassNamesFromPackage(packageName,
+							PowerAnnotation.class);
 
-		for (Class c : classes) {
-			Power p = (Power) c.newInstance();
-			logger.info("adding power " + p.description());
-			profiles.add(p);
+			for (Class c : classes) {
+				Power p = (Power) c.newInstance();
+				logger.info("adding power " + p.description());
+				profiles.add(p);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-} catch (Exception e) {
-	e.printStackTrace();
-}
 	}
 }

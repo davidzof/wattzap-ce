@@ -232,8 +232,6 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 
 			}
 			last = point;
-
-			System.out.println(point);
 			data.add(point);
 		}
 

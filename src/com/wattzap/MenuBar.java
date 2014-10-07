@@ -19,11 +19,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
-import com.wattzap.utils.TcxWriter;
 import com.wattzap.view.MainFrame;
 import com.wattzap.view.RouteFilePicker;
 import com.wattzap.view.prefs.Preferences;
-import com.wattzap.view.training.TrainingAnalysis;
 import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 

@@ -39,7 +39,9 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
 
-/* 
+/**
+ * Used when ANT+ Stick is connected and configured
+ * 
  * @author David George (c) Copyright 2014
  * @date 5 February 2014
  */
@@ -248,23 +250,9 @@ public class AntOdometer extends JPanel implements MessageCallback {
 					cadenceLabel.setForeground(Color.WHITE);
 					cadenceLabel.setText("" + t.getCadence());
 				}
-
-				i = current.isHRInRange(t.getHeartRate());
-				if (i < 0) {
-					hrLabel.setForeground(skyBlue);
-					hrLabel.setText("" + t.getHeartRate());
-				} else if (i > 0) {
-					hrLabel.setForeground(Color.RED);
-					hrLabel.setText("" + t.getHeartRate());
-				} else {
-					hrLabel.setForeground(Color.WHITE);
-					hrLabel.setText("" + t.getHeartRate());
-				}
-
 			} else {
 				powerLabel.setText("" + t.getPower());
 				cadenceLabel.setText("" + t.getCadence());
-				hrLabel.setText(Integer.toString(t.getHeartRate()));
 			}
 
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
@@ -288,6 +276,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			}
 
 			break;
+			
 		case HEARTRATE:
 			t = (Telemetry) o;
 			if (current != null) {

@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import com.wattzap.model.power.Power;
 import com.wattzap.utils.ReflexiveClassLoader;
 
 /**

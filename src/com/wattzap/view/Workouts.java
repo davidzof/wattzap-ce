@@ -24,16 +24,15 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
@@ -60,7 +59,7 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.dto.WorkoutData;
-import com.wattzap.utils.GPSFileVisitor;
+import com.wattzap.utils.ActivityReader;
 import com.wattzap.view.graphs.CSScatterGraph;
 import com.wattzap.view.graphs.DistributionGraph;
 import com.wattzap.view.graphs.MMPGraph;
@@ -290,31 +289,29 @@ public class Workouts extends JPanel implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		switch (command) {
-		case scGraph:
+
+		if (scGraph.equals(command)) {
+
 			CSScatterPlot();
-			break;
-		case mmpGraph:
+		} else if (mmpGraph.equals(command)) {
+
 			mmpGraph();
-			break;
-		case schrGraph:
+		} else if (schrGraph.equals(command)) {
 			SCHRGraph();
-			break;
-		case pdGraph:
+		} else if (pdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getPower());
 				}
 			}, 15, "Power Distribution Graph", "Power (watts)");
-			break;
-		case cdGraph:
+
+		} else if (cdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getCadence());
 				}
 			}, 5, "Cadence Distribution Graph", "Cadence (rpm)");
-			break;
-		case hrdGraph:
+		} else if (hrdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					if (t.getHeartRate() < 30) {
@@ -325,8 +322,7 @@ public class Workouts extends JPanel implements ActionListener {
 				}
 			}, 10, "Heart-rate Distribution Graph", "Heart-rate (bpm)");
 
-			break;
-		case tlGraph:
+		} else if (tlGraph.equals(command)) {
 			// Training Zone Graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
@@ -340,8 +336,7 @@ public class Workouts extends JPanel implements ActionListener {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
 			}, 0, "Training Level Distribution Graph", "Training Level");
-			break;
-		case tlhrGraph:
+		} else if (tlhrGraph.equals(command)) {
 			// Training Zone Graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
@@ -355,10 +350,7 @@ public class Workouts extends JPanel implements ActionListener {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
 			}, 0, "Training Level (Heart Rate)", "Training Level");
-			break;
-		}
-
-		if (importer.equals(command)) {
+		} else if (importer.equals(command)) {
 			if (!UserPreferences.INSTANCE.isRegistered()
 					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
 				logger.info("Out of time "
@@ -374,21 +366,33 @@ public class Workouts extends JPanel implements ActionListener {
 			String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
 					+ "/Imports/";
 
-			Path homeFolder = Paths.get(workoutDir);
-			GPSFileVisitor pf = new GPSFileVisitor(workoutDir);
-			try {
-				Files.walkFileTree(homeFolder, pf);
-			} catch (IOException ex) {
-				ex.printStackTrace();
+			ActivityReader ar = new ActivityReader();
+			File dir = new File(workoutDir);
+			Set<File> fileTree = new HashSet<File>();
+			for (File entry : dir.listFiles()) {
+				if (entry.isFile()) {
+					try {
+						ar.readActivity(entry.getCanonicalPath());
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
 			}
 
+			/*
+			 * Path homeFolder = Paths.get(workoutDir); GPSFileVisitor pf = new
+			 * GPSFileVisitor(workoutDir); try { Files.walkFileTree(homeFolder,
+			 * pf); } catch (IOException ex) { ex.printStackTrace(); }
+			 */
+
 			StringBuilder importedFiles = new StringBuilder();
-			if (pf.getImportedFileList().isEmpty()) {
+			if (ar.getImportedFileList().isEmpty()) {
 				importedFiles.append("No files to import");
 			} else {
 
 				importedFiles.append("Imported:\n\n");
-				for (String file : pf.getImportedFileList()) {
+				for (String file : ar.getImportedFileList()) {
 					importedFiles.append(file);
 					importedFiles.append("\n");
 				}// for
@@ -421,7 +425,7 @@ public class Workouts extends JPanel implements ActionListener {
 			WorkoutData data = workoutList.get(i);
 			String fileName = data.getTcxFile();
 			try {
-				telemetry[count] = GPSFileVisitor.readTelemetry(workoutDir
+				telemetry[count] = ActivityReader.readTelemetry(workoutDir
 						+ fileName);
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block

@@ -15,9 +15,6 @@
 */
 package com.wattzap.view;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.JOptionPane;
 
 import org.apache.log4j.LogManager;
@@ -98,7 +95,9 @@ public class Map extends GPXPanel implements MessageCallback {
 					this.removeGPXFile(gpxFile);
 				}
 				setVisible(false);
-				frame.revalidate();
+				frame.invalidate();
+				frame.validate();
+				// frame.revalidate(); JDK 1.7 ONLY
 			}
 			break;
 		case GPXLOAD:

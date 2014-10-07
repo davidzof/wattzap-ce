@@ -128,7 +128,6 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 		switch(message) {
 		case HEARTRATE:
 			int hr = t.getHeartRate();
-			System.out.println("hr " + hr);
 			if (hr != -1) {
 				hrm.setText(Integer.toString(hr) + " bpm");
 			}

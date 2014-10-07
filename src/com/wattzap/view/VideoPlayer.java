@@ -297,8 +297,10 @@ MessageCallback {
 
 			Rectangle r = getBounds();
 			UserPreferences.INSTANCE.setVideoBounds(r);
-			revalidate();
-			mainFrame.revalidate();
+			//revalidate();
+			//mainFrame.revalidate();
+			revalidate(this);
+			revalidate(mainFrame);
 			setVisible(false);
 			mapStartTime = 0;
 			if (routeData != null) {
@@ -328,15 +330,20 @@ MessageCallback {
 
 				add(odo, java.awt.BorderLayout.SOUTH);
 				videoLoaded = true;
-				revalidate();
+				//revalidate(); Java 1.7 code
+				revalidate(this);
 				setVisible(true);
 			} else {
 				videoLoaded = false;
 				remove(odo);
-				mainFrame.revalidate();
+				//mainFrame.revalidate(); Java 1.7 code
+				revalidate(mainFrame);
 				mainFrame.add(odo, "cell 0 2, grow");
-				revalidate();
-				mainFrame.revalidate();
+				
+				//revalidate();
+				//mainFrame.revalidate();
+				revalidate(this);
+				revalidate(mainFrame);
 				// mPlayer = null;
 				setVisible(false);
 			}
@@ -344,4 +351,10 @@ MessageCallback {
 			break;
 		}
 	}
+	
+	private void revalidate(JFrame frame) {
+		frame.invalidate();
+		frame.validate();
+	}
+	
 }

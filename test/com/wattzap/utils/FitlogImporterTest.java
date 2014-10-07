@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.utils;
 
 import java.io.FileReader;
@@ -27,6 +27,12 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.view.training.TrainingAnalysis;
 
+/**
+ * Importer for FITLOG format (.fitlog format which is an open XML standard
+ * devised by the creators of Sportstracks)
+ * 
+ * @author david (c) 1st May 2014 David George/Wattzap.com
+ */
 public class FitlogImporterTest {
 	@Test
 	public void FitLogImport() {
@@ -41,15 +47,11 @@ public class FitlogImporterTest {
 			xr.parse(new InputSource(r));
 
 			ArrayList<Telemetry> data = handler.data;
-			for (Telemetry t : data) {
-				//System.out.println(t);
-			}
-
 			WorkoutData d = TrainingAnalysis.analyze(data);
 			d.setFtp(260);
 			System.out.println(d);
 		} catch (Exception e) {
-e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 }

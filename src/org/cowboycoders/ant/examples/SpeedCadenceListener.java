@@ -15,20 +15,10 @@
 */
 package org.cowboycoders.ant.examples;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
-import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
-import com.wattzap.model.power.Power;
 
 /**
  * (c) 2013 David George

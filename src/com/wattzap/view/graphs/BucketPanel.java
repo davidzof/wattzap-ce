@@ -44,7 +44,7 @@ public class BucketPanel extends JPanel implements ActionListener {
 			label.setText("Bucket Size: ");
 			add(label);
 
-			JComboBox<Integer> combo = new JComboBox<>();
+			JComboBox combo = new JComboBox();
 			for (int i = 0; i < values.length; i++) {
 				combo.addItem(values[i]);
 				if (values[i] == scale) {
@@ -74,7 +74,7 @@ public class BucketPanel extends JPanel implements ActionListener {
 		} else {
 			@SuppressWarnings("rawtypes")
 			JComboBox combo = (JComboBox) e.getSource();
-			scale = (int) combo.getSelectedItem();
+			scale = ((Integer) combo.getSelectedItem()).intValue();
 
 		}
 		graph.updateValues(scale, keepZeroes);

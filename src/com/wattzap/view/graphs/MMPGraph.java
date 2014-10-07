@@ -55,7 +55,6 @@ public class MMPGraph extends JPanel {
 
 		NumberAxis yAxis = new NumberAxis("Power (watts)");
 		yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-		double minY = series.getMinY();
 		double maxY = series.getMaxY();
 		yAxis.setRange(0, maxY + 20);
 		yAxis.setTickLabelPaint(Color.white);

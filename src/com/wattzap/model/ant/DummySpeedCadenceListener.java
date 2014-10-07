@@ -18,8 +18,6 @@ package com.wattzap.model.ant;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import javax.swing.JOptionPane;
-
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 

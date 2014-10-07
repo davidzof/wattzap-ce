@@ -15,15 +15,9 @@
 */
 package com.wattzap.utils;
 
-import static java.nio.file.FileVisitResult.CONTINUE;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,39 +31,25 @@ import org.xml.sax.helpers.XMLReaderFactory;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.WorkoutData;
-import com.wattzap.model.power.Power;
 import com.wattzap.view.training.TrainingAnalysis;
 
 /**
- * Imports TCX Files into database
+ * Imports Training Activities into the Wattzap database
  * 
  * @author David George
  * @date 2nd May 2014
  */
-public class GPSFileVisitor extends SimpleFileVisitor<Path> {
+public class ActivityReader  {
 	String workoutDir;
 	List<String> importedFiles = new ArrayList<String>();
 	private Logger logger = LogManager.getLogger("GPSFileVisitor");
 
-	public GPSFileVisitor(String workoutDir) {
-		super();
-		this.workoutDir = workoutDir;
-	}
 
 	public List<String> getImportedFileList() {
 		return importedFiles;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.nio.file.SimpleFileVisitor#visitFile(java.lang.Object,
-	 * java.nio.file.attribute.BasicFileAttributes)
-	 */
-	@Override
-	public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
-		if (attr.isRegularFile()) {
-			final String fileName = file.toString();
+	public void readActivity(String fileName) {
 			try {
 				ArrayList<Telemetry> telemetry = readTelemetry(fileName);
 				if (telemetry != null) {
@@ -114,8 +94,6 @@ public class GPSFileVisitor extends SimpleFileVisitor<Path> {
 				 */
 				e.printStackTrace();
 			}
-		}
-		return CONTINUE;
 	}
 
 	public static ArrayList<Telemetry> readTelemetry(String fileName)
@@ -186,26 +164,5 @@ public class GPSFileVisitor extends SimpleFileVisitor<Path> {
 		}
 
 		return data;
-	}
-
-	/*
-	 * Print each directory visited.(non-Javadoc)
-	 * 
-	 * @see java.nio.file.SimpleFileVisitor#postVisitDirectory(java.lang.Object,
-	 * java.io.IOException)
-	 */
-	@Override
-	public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-		return CONTINUE;
-	}
-
-	/*
-	 * If there is some error accessing the file, let the user know. If you
-	 * don't override this method and an error occurs, an IOException is thrown.
-	 */
-	@Override
-	public FileVisitResult visitFileFailed(Path file, IOException exc) {
-		System.err.println(exc);
-		return CONTINUE;
 	}
 }

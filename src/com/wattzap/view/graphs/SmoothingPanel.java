@@ -30,6 +30,7 @@ import javax.swing.JPanel;
  * @date 22 September 2014
  */
 public class SmoothingPanel extends JPanel implements ItemListener {
+	private static final long serialVersionUID = 1L;
 	private final SCHRGraph graph;
 
 	public SmoothingPanel(SCHRGraph graph) {
@@ -39,7 +40,7 @@ public class SmoothingPanel extends JPanel implements ItemListener {
 		label.setText("Smoothing: ");
 		add(label);
 
-		JComboBox<String> combo = new JComboBox<>();
+		JComboBox combo = new JComboBox();
 		combo.addItem("1 sec");
 		combo.addItem("2 sec");
 		combo.addItem("5 sec");
@@ -58,7 +59,6 @@ public class SmoothingPanel extends JPanel implements ItemListener {
 	@Override
 	public void itemStateChanged(ItemEvent e) {
 		if (e.getStateChange() == ItemEvent.SELECTED) {
-			@SuppressWarnings("rawtypes")
 			JComboBox combo = (JComboBox) e.getSource();
 
 			String item = (String) combo.getSelectedItem();

@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.training;
 
 import java.awt.Color;
@@ -452,10 +452,12 @@ public class TrainingAnalysis extends JFrame {
 		workoutData.setMaxHR(maxHR);
 		workoutData.setMinHR(minHR);
 		workoutData.setMaxCadence(maxCad);
-		workoutData.setAveCadence((int) (aveCad / len));
-		workoutData.setAveHR((int) (aveHR / len));
+		if (len > 0) {
+			workoutData.setAveCadence((int) (aveCad / len));
+			workoutData.setAveHR((int) (aveHR / len));
 
-		workoutData.setAvePower((int) (tPower / len));
+			workoutData.setAvePower((int) (tPower / len));
+		}
 		workoutData.setMaxPower(maxPwr);
 		workoutData.setTotalPower((int) (tPower / (3600000)));
 

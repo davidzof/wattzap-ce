@@ -15,7 +15,6 @@
 */
 package com.wattzap.model;
 
-import com.wattzap.model.GPXReader;
 
 public class GPXDataTest {
 

@@ -15,14 +15,9 @@
 */
 package org.cowboycoders.ant.examples;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
+
 
 /**
  * Heart Rate ANT+ processor.
@@ -48,7 +43,7 @@ public class HeartRateListener implements
 		int rate = message.getUnsignedData()[7];
 		if (rate > 0 || rate < 220) {
 			heartRate = rate;
-			System.out.println("HR " + heartRate);
+
 		}
 	}
 }

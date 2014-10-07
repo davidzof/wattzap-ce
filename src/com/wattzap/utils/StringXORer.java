@@ -12,14 +12,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.utils;
 
-import java.io.IOException;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
-
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * @author David George
@@ -44,17 +40,18 @@ public class StringXORer {
 	}
 
 	private static byte[] base64Decode(String s) {
-		try {
-			BASE64Decoder d = new BASE64Decoder();
-			return d.decodeBuffer(s);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+
+		// BASE64Decoder d = new BASE64Decoder();
+		return DatatypeConverter.parseBase64Binary(s);
+		// return d.decodeBuffer(s);
+
 	}
 
 	private static String base64Encode(byte[] bytes) {
-		BASE64Encoder enc = new BASE64Encoder();
-		return enc.encode(bytes).replaceAll("\\s", "");
+		// BASE64Encoder enc = new BASE64Encoder();
+		// return enc.encode(bytes).replaceAll("\\s", "");
+
+		return DatatypeConverter.printBase64Binary(bytes).replaceAll("\\s", "");
 
 	}
 }

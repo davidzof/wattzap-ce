@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.Color;
@@ -39,7 +39,9 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.power.Power;
 
-/* 
+/**
+ * Digital odometer. Used when no ANT+ stick detected.
+ * 
  * @author David George (c) Copyright 2013
  * @date 19 June 2013
  */
@@ -207,9 +209,7 @@ public class Odometer extends JPanel implements MessageCallback {
 
 		initLabels(userPrefs.isMetric());
 
-		System.out.println("listen for HR messages");
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
-
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 	}
@@ -223,7 +223,6 @@ public class Odometer extends JPanel implements MessageCallback {
 			speedText.setText(userPrefs.messages.getString("speed") + " (mph)");
 			distText.setText(userPrefs.messages.getString("distance")
 					+ " (miles)");
-
 		}
 	}
 
@@ -241,7 +240,7 @@ public class Odometer extends JPanel implements MessageCallback {
 			powerLabel.setText("" + t.getPower());
 
 			// Resistance
-				resistanceLabel.setText("" + t.getResistance());
+			resistanceLabel.setText("" + t.getResistance());
 
 			
 			// Speed & Distance
@@ -264,6 +263,7 @@ public class Odometer extends JPanel implements MessageCallback {
 
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
 					- startTime)));
+
 			switch (type) {
 			case RouteReader.POWER:
 				if (userPrefs.isMetric()) {
@@ -289,8 +289,6 @@ public class Odometer extends JPanel implements MessageCallback {
 			}
 
 			break;
-
-		
 
 		case GPXLOAD:
 			RouteReader routeData = (RouteReader) o;
