@@ -142,8 +142,6 @@ MessageCallback {
 			logger.debug("FPS " + fps + " length " + len
 					+ " milliSeconds time " + time);
 
-			t.getSpeed();
-			p.getSpeed();
 			rSpeed.add(p.getSpeed());
 			double rate = t.getSpeed() / p.getSpeed();
 			if (rate > 1.0) {
@@ -168,9 +166,10 @@ MessageCallback {
 		}
 		if (t.getSpeed() == 0.0) {
 			mPlayer.pause();
+			return;
 		}
 
-		long mapTime = p.getTime() /*- mapStartTime*/;
+		long mapTime = p.getTime();
 
 		long videoTime = (int) (len * mPlayer.getPosition());
 		if (videoTime == 0) {

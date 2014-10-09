@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.ant;
 
 import java.math.BigDecimal;
@@ -95,37 +95,44 @@ public class DummySpeedCadenceListener extends Thread implements
 						/*
 						 * increase power for hills to FTP
 						 */
-						powerWatts += powerWatts
-								* (p.getGradient() / routeData.getMaxSlope());
+						if (p != null) {
+							powerWatts += powerWatts
+									* (p.getGradient() / routeData
+											.getMaxSlope());
 
-						if (UserPreferences.INSTANCE.getResistance() == 0) {
-							int r = power.getResistance(p.getGradient());
-							t.setResistance(r);
-							speed = power.getSpeed(powerWatts, r);
-						} else {
-							// speed corresponding to this power
-							speed = power.getSpeed(powerWatts,
-									UserPreferences.INSTANCE.getResistance());
+							if (UserPreferences.INSTANCE.getResistance() == 0) {
+								int r = power.getResistance(p.getGradient());
+								t.setResistance(r);
+								speed = power.getSpeed(powerWatts, r);
+							} else {
+								// speed corresponding to this power
+								speed = power.getSpeed(powerWatts,
+										UserPreferences.INSTANCE
+												.getResistance());
+							}
+
+							BigDecimal bd = new BigDecimal(speed).setScale(2,
+									RoundingMode.HALF_UP);
+
+							t.setVirtualSpeed(bd.intValue());
+
+							// we need to now calculate video speed but we need
+							// to
+							// display real speed
+							// what would be our real speed for those watts -
+							// show
+							// in odo
+							double realSpeed = power.getRealSpeed(mass,
+									p.getGradient() / 100, powerWatts);
+							speed = (realSpeed * 3600) / 1000;
 						}
-
-						BigDecimal bd = new BigDecimal(speed).setScale(2,
-								RoundingMode.HALF_UP);
-
-						t.setVirtualSpeed(bd.intValue());
-
-						// we need to now calculate video speed but we need to
-						// display real speed
-						// what would be our real speed for those watts - show
-						// in odo
-						double realSpeed = power.getRealSpeed(mass,
-								p.getGradient() / 100, powerWatts);
-						speed = (realSpeed * 3600) / 1000;
 					} else {
 						p = routeData.getPoint(distance);
 						// power comes from video (gradient)
-						//powerWatts = (int) ((p.getGradient()) + (Math.random() * 4));
+						// powerWatts = (int) ((p.getGradient()) +
+						// (Math.random() * 4));
 						powerWatts = (int) p.getGradient();
-						
+
 						// apply some smoothing
 						rPower.add(powerWatts);
 						powerWatts = (int) rPower.getAverage();
@@ -141,14 +148,15 @@ public class DummySpeedCadenceListener extends Thread implements
 									RoundingMode.HALF_UP);
 
 							t.setVirtualSpeed(bd.intValue());
-							t.setResistance(UserPreferences.INSTANCE.getResistance());
+							t.setResistance(UserPreferences.INSTANCE
+									.getResistance());
 						}
 					}
 				} else {
 					speed = power.getRealSpeed(mass, 0, powerWatts) * 3.6;
 				}
 
-				//t.setHeartRate((int) (110 + (powerWatts * 60 / 400)));
+				// t.setHeartRate((int) (110 + (powerWatts * 60 / 400)));
 				// t.setCadence((int) (60 + ((powerWatts * 40 / 300))));
 				t.setPower(powerWatts);
 
@@ -156,7 +164,11 @@ public class DummySpeedCadenceListener extends Thread implements
 					p = routeData.getPoint(distance);
 					if (p == null) {
 						// end of the road
+						t.setDistance(distance);
 						distance = 0.0;
+						t.setSpeed(0);
+						t.setTime(System.currentTimeMillis());
+						MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
 						return;
 					}
 					t.setElevation(p.getElevation());
@@ -167,10 +179,7 @@ public class DummySpeedCadenceListener extends Thread implements
 
 				t.setSpeed(speed);
 				t.setDistance(distance);
-
 				t.setTime(System.currentTimeMillis());
-
-				// notifyListeners(t);
 				MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
 
 				// d = s * t
@@ -190,7 +199,7 @@ public class DummySpeedCadenceListener extends Thread implements
 			resistance = UserPreferences.INSTANCE.getResistance();
 			power = UserPreferences.INSTANCE.getPowerProfile();
 			virtualPower = UserPreferences.INSTANCE.isVirtualPower();
-			if (this.getState() == Thread.State.NEW ) {
+			if (this.getState() == Thread.State.NEW) {
 				start();
 			}
 			running = true;
@@ -205,11 +214,12 @@ public class DummySpeedCadenceListener extends Thread implements
 			// code to see if we are registered
 			if (!UserPreferences.INSTANCE.isRegistered()
 					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-				logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
+				logger.info("Out of time "
+						+ UserPreferences.INSTANCE.getEvalTime());
 				UserPreferences.INSTANCE.shutDown();
 				System.exit(0);
 			}
-			
+
 			this.routeData = (RouteReader) o;
 			power = UserPreferences.INSTANCE.getPowerProfile();
 			power.setGrades(routeData.getMaxSlope(), routeData.getMinSlope());

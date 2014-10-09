@@ -30,6 +30,7 @@ public interface RouteReader {
 	// Slope (Integer) 0 = Watt program, 1 = Slope program, 2 = Pulse (HR)
 	public final static int POWER = 0;
 	public final static int SLOPE = 1;
+	public final static int HEARTRATE = 2;
 	
 	public String getExtension();
 	
