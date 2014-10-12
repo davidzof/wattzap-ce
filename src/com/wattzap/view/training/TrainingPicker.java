@@ -12,13 +12,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.training;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -34,6 +35,17 @@ import com.wattzap.model.dto.TrainingData;
 import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.utils.FileName;
 
+/**
+ * Opens and Reads training files.
+ * 
+ * The format is: Time, Comment, Heart Rate, Power, Cadence
+ * 
+ * Time: mm:ss or mm Heart Rate: > greater than < less than 1-5: Training Level
+ * % of functional threshhold heart rate Power:
+ * 
+ * @author David George (c) Copyright 2013
+ * @date 19 November 2013
+ */
 public class TrainingPicker extends JFileChooser implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	JFrame frame;
@@ -57,10 +69,10 @@ public class TrainingPicker extends JFileChooser implements ActionListener {
 			File file = getSelectedFile();
 			UserPreferences.INSTANCE.setTrainingDir(file.getParent());
 
-			CSVReader reader;
+			CSVReader reader = null;
 			TrainingData tData = new TrainingData();
 			tData.setName(FileName.removeExtension(file.getName()));
-			
+
 			try {
 				reader = new CSVReader(new FileReader(file));
 
@@ -107,6 +119,15 @@ public class TrainingPicker extends JFileChooser implements ActionListener {
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(frame, ex.getMessage() + " ",
 						"Error", JOptionPane.ERROR_MESSAGE);
+			} finally {
+				try {
+					if (reader != null) {
+						reader.close();
+					}
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 
 			MessageBus.INSTANCE.send(Messages.TRAINING, tData);

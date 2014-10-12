@@ -17,7 +17,9 @@ package com.wattzap.model.dto;
 
 import com.wattzap.model.UserPreferences;
 
-/* 
+/** 
+ * Represents a training item
+ * 
  * @author David George (c) Copyright 2013
  * @date 19 August 2013
  */
@@ -136,7 +138,7 @@ public class TrainingItem {
 					break;
 				}
 			} else {
-				// percentage of max hearrate
+				// percentage of max heartrate
 				heartRate = (heartRate * UserPreferences.INSTANCE.getMaxHR()) / 100;
 				hrHigh = (int) ((double) heartRate * 1.02);
 				hrLow = (int) ((double) heartRate * 0.98);
