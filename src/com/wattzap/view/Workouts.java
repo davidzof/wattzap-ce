@@ -60,7 +60,7 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.utils.ActivityReader;
-import com.wattzap.view.graphs.CSScatterGraph;
+import com.wattzap.view.graphs.GenericScatterGraph;
 import com.wattzap.view.graphs.DistributionGraph;
 import com.wattzap.view.graphs.MMPGraph;
 import com.wattzap.view.graphs.SCHRGraph;
@@ -72,6 +72,7 @@ import com.wattzap.view.graphs.SCHRGraph;
  * @date 17 April 2014
  */
 public class Workouts extends JPanel implements ActionListener {
+	private static final long serialVersionUID = 1L;
 	private List<WorkoutData> workoutList;
 	private List<Integer> selectedRows;
 	private final JTable table;
@@ -83,6 +84,8 @@ public class Workouts extends JPanel implements ActionListener {
 	private static Logger logger = LogManager.getLogger("Workouts");
 
 	private final static String scGraph = "SCG";
+	public final static String hrWattsGraph = "PWG";
+
 	// summary graphs
 	private final static String mmpGraph = "MMP";
 	private final static String schrGraph = "SCHR";
@@ -208,6 +211,13 @@ public class Workouts extends JPanel implements ActionListener {
 		scatMenu.add(cpgMenuItem);
 		cpgMenuItem.addActionListener(this);
 
+		JMenuItem powerWattsMenuItem = new JMenuItem(
+				userPrefs.messages.getString("poWt"));
+		powerWattsMenuItem.setActionCommand(hrWattsGraph);
+		scatMenu.add(powerWattsMenuItem);
+		powerWattsMenuItem.addActionListener(this);
+
+		// distribution
 		JMenu distMenu = new JMenu(userPrefs.messages.getString("distribution"));
 		distMenu.setMnemonic(KeyEvent.VK_D);
 		menuBar.add(distMenu);
@@ -291,10 +301,10 @@ public class Workouts extends JPanel implements ActionListener {
 		String command = e.getActionCommand();
 
 		if (scGraph.equals(command)) {
-
 			CSScatterPlot();
+		} else if (hrWattsGraph.equals(command)) {
+			HRWattsScatterPlot();
 		} else if (mmpGraph.equals(command)) {
-
 			mmpGraph();
 		} else if (schrGraph.equals(command)) {
 			SCHRGraph();
@@ -303,14 +313,16 @@ public class Workouts extends JPanel implements ActionListener {
 				public int getKey(Telemetry t) {
 					return getKey(t.getPower());
 				}
-			}, 15, "Power Distribution Graph", "Power (watts)");
+			}, 15, userPrefs.messages.getString("pdGr"),
+					userPrefs.messages.getString("poWtt"));
 
 		} else if (cdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getCadence());
 				}
-			}, 5, "Cadence Distribution Graph", "Cadence (rpm)");
+			}, 5, userPrefs.messages.getString("cDgr"),
+					userPrefs.messages.getString("cDrpm"));
 		} else if (hrdGraph.equals(command)) {
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
@@ -320,7 +332,8 @@ public class Workouts extends JPanel implements ActionListener {
 
 					return getKey(t.getHeartRate());
 				}
-			}, 10, "Heart-rate Distribution Graph", "Heart-rate (bpm)");
+			}, 10, userPrefs.messages.getString("hrDgr"),
+					userPrefs.messages.getString("hrBpm"));
 
 		} else if (tlGraph.equals(command)) {
 			// Training Zone Graph
@@ -367,7 +380,9 @@ public class Workouts extends JPanel implements ActionListener {
 					+ "/Imports/";
 
 			ActivityReader ar = new ActivityReader();
+
 			File dir = new File(workoutDir);
+			System.out.println("workout dir " + workoutDir + " dir " + dir);
 			Set<File> fileTree = new HashSet<File>();
 			for (File entry : dir.listFiles()) {
 				if (entry.isFile()) {
@@ -443,7 +458,7 @@ public class Workouts extends JPanel implements ActionListener {
 			return;
 		}
 
-		TreeMap<Integer, Long> power = new TreeMap<Integer, Long>();
+		TreeMap<Integer, Long> powerValues = new TreeMap<Integer, Long>();
 		for (int i = 0; i < telemetry.length; i++) {
 			Telemetry first = null;
 			for (Telemetry t : telemetry[i]) {
@@ -452,22 +467,27 @@ public class Workouts extends JPanel implements ActionListener {
 					// first time through
 					first = t;
 				} else {
-					if (power.containsKey(t.getPower())) {
-						long time = power.get(t.getPower());
-						power.put(t.getPower(),
-								time + (t.getTime() - first.getTime()));
-					} else {
-						power.put(t.getPower(), t.getTime() - first.getTime());
-					}
+					int power = t.getPower();
+					if (power > 50) {
+						if (powerValues.containsKey(power)) {
+							long time = powerValues.get(power);
+							powerValues.put(power,
+									time + (t.getTime() - first.getTime()));
+						} else {
+							powerValues.put(power,
+									t.getTime() - first.getTime());
+						}
 
-					first = t;
+						first = t;
+					}
 				}
 			}// for
 		}// for
 
 		long total = 0;
 		XYSeries series = new XYSeries("Mean Maximal Power");
-		for (Entry<Integer, Long> entry : power.descendingMap().entrySet()) {
+		for (Entry<Integer, Long> entry : powerValues.descendingMap()
+				.entrySet()) {
 			Integer pwr = entry.getKey();
 			total += entry.getValue();
 			series.addOrUpdate(total / 1000, (double) pwr);
@@ -490,7 +510,10 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.setVisible(true);
 	}
 
-	public void CSScatterPlot() {
+	/**
+	 * Cadence / Speed Scatter plot
+	 */
+	private void CSScatterPlot() {
 		if (telemetry == null) {
 			JOptionPane.showMessageDialog(this, "No Data",
 					"No data to display, load a workout first",
@@ -509,8 +532,45 @@ public class Workouts extends JPanel implements ActionListener {
 			}// for
 		}// for
 
-		CSScatterGraph mmp = new CSScatterGraph(series);
+		GenericScatterGraph mmp = new GenericScatterGraph(series, "Power",
+				"Cadence");
 		JFrame frame = new JFrame("Cadence Power Scatter Plot");
+		ImageIcon img = new ImageIcon("icons/turbo.jpg");
+		frame.setIconImage(img.getImage());
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		// Create and set up the content pane.
+
+		mmp.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(mmp);
+
+		// Display the window.
+		frame.pack();
+		frame.setVisible(true);
+	}
+
+	public void HRWattsScatterPlot() {
+		if (telemetry == null) {
+			JOptionPane.showMessageDialog(this, "No Data",
+					"No data to display, load a workout first",
+					JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		XYSeries series = new XYSeries("Heart Rate / Watts Scatter Plot");
+
+		for (int i = 0; i < telemetry.length; i++) {
+			for (Telemetry t : telemetry[i]) {
+
+				if (t.getHeartRate() > 0 && t.getPower() > 0) {
+					series.addOrUpdate(t.getPower(), t.getHeartRate());
+				}
+			}// for
+		}// for
+
+		GenericScatterGraph mmp = new GenericScatterGraph(series, "Power",
+				"Heartrate");
+		JFrame frame = new JFrame("Heart Rate / Power Scatter Plot");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

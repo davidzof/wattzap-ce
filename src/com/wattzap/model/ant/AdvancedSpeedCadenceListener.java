@@ -181,7 +181,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			// if we have GPX Data and Simulspeed is enabled calculate speed
 			// based on power and gradient using magic sauce
 			if (simulSpeed && routeData != null) {
-				// System.out.println("gettng point at distance " + distance);
+				// System.out.println("getting point at distance " + distance);
 				Point p = routeData.getPoint(distance);
 				if (routeData.routeType() == RouteReader.SLOPE) {
 					if (p == null) {
@@ -194,9 +194,9 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 					realSpeed = (realSpeed * 3600) / 1000;
 					distanceKM = (realSpeed / speed) * distanceKM;
 					speed = realSpeed;
-
 				} else {
-					double ratio = (powerWatts / p.getGradient());
+					// power profile, speed is the ratio of our trainer power to the expected power
+					double ratio = (powerWatts / p.getPower());
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
 					distanceKM = (speed / 3600) * timeS;

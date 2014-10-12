@@ -260,7 +260,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			switch (type) {
 			case RouteReader.POWER:
 				if (userPrefs.isMetric()) {
-					// remaing distance
+					// remaining distance
 					elevationLabel.setText(String.format("%.3f",
 							(totalDistance / 1000) - t.getDistance()));
 				} else {

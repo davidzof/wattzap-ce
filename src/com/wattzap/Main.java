@@ -64,6 +64,9 @@ import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
 /**
+ * 
+ * mydyac6shohuditkiboj
+ * 
  * (c) 2013 David George / Wattzap.com
  * 
  * @author David George

@@ -37,26 +37,26 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.util.ShapeUtilities;
 
 /* 
- * Mean Maximal Power Graph
+ * Generic Scatter Graph
  * 
  * @author David George (c) Copyright 2014
  * @date 18 April 2014
  */
-public class CSScatterGraph extends JPanel {
+public class GenericScatterGraph extends JPanel {
 	ValueMarker marker = null;
 	XYPlot plot;
 	private ChartPanel chartPanel = null;
 
-	private static Logger logger = LogManager.getLogger("CSSScatterGraph");
+	private static Logger logger = LogManager.getLogger("GenericScatterGraph");
 
-	public CSScatterGraph(XYSeries series) {
+	public GenericScatterGraph(XYSeries series, String xAxis, String yAxis) {
 		super();
 
 		XYDataset xyDataset = new XYSeriesCollection(series);
 
 		JFreeChart chart = ChartFactory.createScatterPlot("", // chart title
-				"Power", // x axis label
-				"Cadence", // y axis label
+				xAxis, // x axis label
+				yAxis, // y axis label
 				xyDataset, PlotOrientation.VERTICAL, false, // include legend
 				true, // tooltips
 				false // urls

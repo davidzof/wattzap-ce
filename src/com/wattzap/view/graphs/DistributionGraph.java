@@ -41,7 +41,7 @@ import com.wattzap.controller.DistributionAccessor;
 import com.wattzap.model.dto.Telemetry;
 
 /* 
- Power Distribution Chart
+ * Power Distribution Chart
  * 
  * @author David George (c) Copyright 2014
  * @date 21 April 2014

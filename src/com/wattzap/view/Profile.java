@@ -86,17 +86,7 @@ public class Profile extends JPanel implements MessageCallback {
 			
 			return;
 		case GPXLOAD:
-			// code to see if we are registered
-			if (!UserPreferences.INSTANCE.isRegistered()
-					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-				logger.info("Out of time " + UserPreferences.INSTANCE.getEvalTime());
-				JOptionPane.showMessageDialog(this, UserPreferences.INSTANCE.messages.getString("trial_expired"),
-						UserPreferences.INSTANCE.messages.getString("warning"),
-						JOptionPane.WARNING_MESSAGE);
-				UserPreferences.INSTANCE.shutDown();
-				System.exit(0);
-			}
-			
+			// Note if we are loading a Power Profile there is no GPX data so we don't show the chart panel
 			RouteReader routeData = (RouteReader) o;
 
 			if (chartPanel != null) {

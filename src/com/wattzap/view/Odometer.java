@@ -273,7 +273,6 @@ public class Odometer extends JPanel implements MessageCallback {
 					elevationLabel.setText(String.format("%.1f",
 							((totalDistance / 1000) - t.getDistance())
 									/ KMTOMILES));
-
 				}
 
 				break;
