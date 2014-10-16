@@ -26,12 +26,10 @@ import org.apache.log4j.Logger;
 import com.wattzap.utils.ReflexiveClassLoader;
 
 /**
- * Load all available route readers
+ * Load all available route readers, this lets us add Route Readers dynamically.
  * 
  * @author David George
- * 
- *         (c) 19 September 2014, David George / Wattzap.com
- * 
+ * (c) 19 September 2014, David George / Wattzap.com
  */
 public enum Readers {
 	INSTANCE;
@@ -57,7 +55,6 @@ public enum Readers {
 	public RouteReader getReader(String ext) {
 		for (RouteReader r : readers) {
 			if (ext.equals(r.getExtension())) {
-
 				return r;
 			}
 		}

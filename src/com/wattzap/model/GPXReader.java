@@ -42,11 +42,9 @@ import com.wattzap.utils.Rolling;
  * @date 11 June 2013
  */
 @RouteAnnotation
-public class GPXReader implements RouteReader {
+public class GPXReader extends RouteReader {
 	private GPXFile gpxFile;
 	private XYSeries series;
-	private Point[] points;
-	private int currentPoint = 0;
 	private String fileName;
 	private static final int gradientDistance = 100; // distance to calculate
 														// gradients over.
@@ -100,45 +98,6 @@ public class GPXReader implements RouteReader {
 
 		return 0;
 
-	}
-
-	/**
-	 * Get the point that corresponds to the distance (in km)
-	 */
-	/*
-	 * public Point getPoint(double distance) { int index = 0; while
-	 * ((points[index].getDistanceFromStart() < (distance * 1000))) { index++;
-	 * if (index == points.length) { return null; } }
-	 * 
-	 * if (index > 0) { currentPoint = index - 1; }
-	 * 
-	 * return points[currentPoint]; }
-	 */
-
-	public Point getPoint(double distance) {
-		while ((points[currentPoint].getDistanceFromStart() < (distance * 1000))) {
-			currentPoint++;
-			if (currentPoint == points.length) {
-				return null;
-			}
-		}// while
-		if (currentPoint > 0) {
-			return points[currentPoint - 1];
-		} else {
-			return points[0];
-		}
-	}
-
-	/**
-	 * Returns a Point relative to the start of the track
-	 * 
-	 * @param distance
-	 * @return
-	 */
-	@Override
-	public Point getAbsolutePoint(double distance) {
-		currentPoint = 0;
-		return getPoint(distance);
 	}
 
 	/**

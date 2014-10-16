@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.training;
 
 import java.awt.BorderLayout;
@@ -147,7 +147,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	}
 
 	private void update(Telemetry t) {
-
 		if (time == t.getTime()) {
 			// no change
 			return;
@@ -171,9 +170,9 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 		// training
 		if (current != null && antEnabled) {
-
 			long ct = current.getTime();
 			if (ct > 0) {
+				// time based training
 				if (aggregateTime + (time - startTime) > current.getTime()) {
 					if (training.hasNext()) {
 						current = training.next();
@@ -185,17 +184,14 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 					}
 				}
 			} else {
-				// time based
-				if (t.getDistance() > current.getDistance()) {
-					if (training.hasNext()) {
-						current = training.next();
-						MessageBus.INSTANCE
-								.send(Messages.TRAININGITEM, current);
-						// Sound beep on training change
-						Toolkit.getDefaultToolkit().beep();
-					}
-				}
+				// distance based training
+				if (tData.isNext(t.getDistance())) {
+					current = tData.getNext(t.getDistance());
+					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+					// Sound beep on training change
+					Toolkit.getDefaultToolkit().beep();
 
+				}
 			}
 
 			if (tData != null) {
@@ -300,6 +296,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			if (numElements > 0) {
 				// TODO: this is a race hazard, this method can be called before
 				// setup, hence this test.
+
 				Telemetry t = (Telemetry) o;
 				update(t);
 			}
@@ -340,17 +337,12 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		case STARTPOS:
 			double distance = (Double) o;
 			if (current != null && current.getTime() == 0 && tData != null) {
-				training = tData.getTraining().iterator();
-
-				// Power Program
-				TrainingItem item = current = training.next();
-				while (current.getDistance() < distance) {
-					if (training.hasNext()) {
-						current = training.next();
-					}
-					item = current;
-				}
-				current = item;
+				current = tData.getNext(distance);
+				// MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+				String[] details = { current.getDescription()
+						+ current.getPowerMsg() + current.getHRMsg()
+						+ current.getCadenceMsg() + "</b></font></html>" };
+				support.updateDetails(details);
 			}
 
 			break;
@@ -365,7 +357,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			}
 
 			createModels(tData);
-			// data = new ArrayList<Telemetry>();
 			aggregateTime = 0;
 			break;
 		case CLOSE:

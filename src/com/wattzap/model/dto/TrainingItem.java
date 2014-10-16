@@ -18,7 +18,7 @@ package com.wattzap.model.dto;
 import com.wattzap.model.UserPreferences;
 
 /** 
- * Represents a training item
+ * Represents a training item. Basically an object with Heart Rate, Power or Cadence targets.
  * 
  * @author David George (c) Copyright 2013
  * @date 19 August 2013
@@ -76,6 +76,11 @@ public class TrainingItem {
 		return -1;
 	}
 
+	/**
+	 * Set Heart Rate target based on Coggan/Friel heart rate levels
+	 * 
+	 * @param String representing heart rate level
+	 */
 	public void setHr(String v) {
 		v = v.trim();
 		if (v.charAt(0) == '<') {
@@ -192,6 +197,11 @@ public class TrainingItem {
 		powerLow = (int) (power * 0.975);
 	}
 
+	/**
+	 * Set power based on Coggan/Friel power levels
+	 * 
+	 * @param v String representing level from 1-7
+	 */
 	public void setPower(String v) {
 		v = v.trim();
 		if (v.charAt(0) == '<') {
@@ -443,6 +453,12 @@ public class TrainingItem {
 		return 5;
 	}
 
+	/**
+	 * Helper class to convert an integer power training level to its string representation
+	 * 
+	 * @param level (1-7)
+	 * @return	Level description
+	 */
 	public static String getTrainingName(int level) {
 		switch (level) {
 		case 1:

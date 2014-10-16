@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.event.ActionEvent;
@@ -50,10 +50,20 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 
 	private static Logger logger = LogManager.getLogger("Route File Picker");
 
+	/**
+	 * Displays list of all supported filetypes. To add a new filetype subclass
+	 * RouteReader.
+	 * 
+	 * @param panel
+	 */
 	public RouteFilePicker(JFrame panel) {
 		super();
 		this.frame = panel;
 
+		/**
+		 * Readers is a singleton that finds all the RouteReaders on the
+		 * classpath
+		 */
 		List<RouteReader> readers = Readers.INSTANCE.getReaders();
 		String extensions[] = new String[readers.size()];
 		StringBuffer fileTypes = new StringBuffer();
@@ -73,8 +83,11 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 		setFileFilter(filter);
 	}
 
+	/*
+	 * A file was selected by the user
+	 */
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public final void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		logger.debug(command);
 

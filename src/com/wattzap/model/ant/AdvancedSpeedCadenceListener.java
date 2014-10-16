@@ -199,6 +199,8 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 					double ratio = (powerWatts / p.getPower());
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
+					System.out.println("speed " + speed + " ratio " + ratio + " power " + powerWatts + " tpower " + p.getPower());
+					
 					distanceKM = (speed / 3600) * timeS;
 
 					// System.out.println("speed " + speed + " powerWatts "
@@ -237,7 +239,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		t.setTime(elapsedTime);
 		
 		/*
-		 * Cadence caculations
+		 * Cadence calculations
 		 */
 		int cTD; // cadence time delta
 		if (tC < lastTc) {

@@ -214,7 +214,6 @@ public class AntOdometer extends JPanel implements MessageCallback {
 				startTime = t.getTime();
 			}
 
-			slopeLabel.setText(String.format("%.1f", t.getGradient()));
 			boolean metric = userPrefs.isMetric();
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeed()));
@@ -272,11 +271,12 @@ public class AntOdometer extends JPanel implements MessageCallback {
 				break;
 			case RouteReader.SLOPE:
 				elevationLabel.setText(String.format("%.0f", t.getElevation()));
+				slopeLabel.setText(String.format("%.1f", t.getGradient()));
 				break;
 			}
 
 			break;
-			
+
 		case HEARTRATE:
 			t = (Telemetry) o;
 			if (current != null) {
@@ -297,6 +297,9 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			break;
 		case TRAININGITEM:
 			current = (TrainingItem) o;
+			if (current != null) {
+				slopeLabel.setText("" + current.getPower());
+			}
 			break;
 		case GPXLOAD:
 			current = null;

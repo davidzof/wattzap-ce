@@ -170,7 +170,6 @@ MessageCallback {
 		}
 
 		long mapTime = p.getTime();
-
 		long videoTime = (int) (len * mPlayer.getPosition());
 		if (videoTime == 0) {
 			return;
@@ -183,12 +182,12 @@ MessageCallback {
 			if (mapTime > videoTime + 250) {
 				perCent = ((float) videoTime / mapTime);
 				// map too fast
-				// System.out.println("map too fast, speed up video");
+				//System.out.println("map too fast, speed up video");
 				if (perCent > lastCent) {
-					// System.out.println("rate of change decreasing");
+					//System.out.println("rate of change decreasing");
 					diff -= 0.01f;
 				} else {
-					// System.out.println("rate of change increasing");
+					//System.out.println("rate of change increasing");
 					// rate of change is increasing
 					if (perCent < 0.9 || perCent > 1.1) {
 						diff += 0.06f;
@@ -200,9 +199,9 @@ MessageCallback {
 				// video too fast
 				perCent = ((float) mapTime / videoTime);
 
-				// System.out.println("video too fast, speed up map");
+				//System.out.println("video too fast, speed up map");
 				if (perCent < lastCent) {
-					// System.out.println("rate of change increasing");
+					//System.out.println("rate of change increasing");
 					if (perCent < 0.9 || perCent > 1.1) {
 						// 10% out, use bigger changes
 						diff -= 0.06f;
@@ -212,7 +211,7 @@ MessageCallback {
 				} else {
 					// rate of change is decreasing
 					diff += 0.01f;
-					// System.out.println("rate of change decreasing");
+					//System.out.println("rate of change decreasing");
 				}
 			}
 
@@ -282,12 +281,13 @@ MessageCallback {
 			}
 
 			Point p = routeData.getAbsolutePoint(startDistance);
-			mapStartTime = p.getTime();
-			if (mapStartTime > 0 && len > 0) {
-				float pos = (float) mapStartTime / len;
-				mPlayer.setPosition(pos);
+			if (p != null) {
+				mapStartTime = p.getTime();
+				if (mapStartTime > 0 && len > 0) {
+					float pos = (float) mapStartTime / len;
+					mPlayer.setPosition(pos);
+				}
 			}
-			// mapStartTime = 0;
 			break;
 		case CLOSE:
 			// by default add to telemetry frame
@@ -296,8 +296,8 @@ MessageCallback {
 
 			Rectangle r = getBounds();
 			UserPreferences.INSTANCE.setVideoBounds(r);
-			//revalidate();
-			//mainFrame.revalidate();
+			// revalidate();
+			// mainFrame.revalidate();
 			revalidate(this);
 			revalidate(mainFrame);
 			setVisible(false);
@@ -319,28 +319,32 @@ MessageCallback {
 			rRate = new Rolling(5);
 
 			String videoFile = routeData.getFilename();
-			videoFile += ".avi";
+			videoLoaded = false;
+			String[] fileTypes = new String[] { ".avi", ".mp4", ".flv" };
+			for (String ext : fileTypes) {
+				if ((new File(videoFile + ext)).exists()) {
+					mainFrame.remove(odo);
+					mainFrame.repaint();
+					mPlayer.enableOverlay(false);
+					mPlayer.prepareMedia(videoFile + ext);
 
-			if ((new File(videoFile)).exists()) {
-				mainFrame.remove(odo);
-				mainFrame.repaint();
-				mPlayer.enableOverlay(false);
-				mPlayer.prepareMedia(videoFile);
+					add(odo, java.awt.BorderLayout.SOUTH);
+					videoLoaded = true;
+					// revalidate(); Java 1.7 code
+					revalidate(this);
+					setVisible(true);
+					break;
+				}
+			}
 
-				add(odo, java.awt.BorderLayout.SOUTH);
-				videoLoaded = true;
-				//revalidate(); Java 1.7 code
-				revalidate(this);
-				setVisible(true);
-			} else {
-				videoLoaded = false;
+			if (videoLoaded == false) {
 				remove(odo);
-				//mainFrame.revalidate(); Java 1.7 code
+				// mainFrame.revalidate(); Java 1.7 code
 				revalidate(mainFrame);
 				mainFrame.add(odo, "cell 0 2, grow");
-				
-				//revalidate();
-				//mainFrame.revalidate();
+
+				// revalidate();
+				// mainFrame.revalidate();
 				revalidate(this);
 				revalidate(mainFrame);
 				// mPlayer = null;
@@ -350,10 +354,10 @@ MessageCallback {
 			break;
 		}
 	}
-	
+
 	private void revalidate(JFrame frame) {
-		frame.invalidate();
+		// frame.invalidate();
 		frame.validate();
 	}
-	
+
 }

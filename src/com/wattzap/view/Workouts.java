@@ -116,8 +116,6 @@ public class Workouts extends JPanel implements ActionListener {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.getColumnModel().getColumn(0).setPreferredWidth(130);
 		table.getColumnModel().getColumn(1).setPreferredWidth(100);
-		// table.removeColumn(table.getColumnModel().getColumn(13));// Remove
-		// Filename from View
 
 		table.setRowSelectionAllowed(true);
 		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -382,7 +380,6 @@ public class Workouts extends JPanel implements ActionListener {
 			ActivityReader ar = new ActivityReader();
 
 			File dir = new File(workoutDir);
-			System.out.println("workout dir " + workoutDir + " dir " + dir);
 			Set<File> fileTree = new HashSet<File>();
 			for (File entry : dir.listFiles()) {
 				if (entry.isFile()) {
@@ -394,12 +391,6 @@ public class Workouts extends JPanel implements ActionListener {
 					}
 				}
 			}
-
-			/*
-			 * Path homeFolder = Paths.get(workoutDir); GPSFileVisitor pf = new
-			 * GPSFileVisitor(workoutDir); try { Files.walkFileTree(homeFolder,
-			 * pf); } catch (IOException ex) { ex.printStackTrace(); }
-			 */
 
 			StringBuilder importedFiles = new StringBuilder();
 			if (ar.getImportedFileList().isEmpty()) {

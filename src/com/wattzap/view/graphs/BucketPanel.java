@@ -39,7 +39,7 @@ public class BucketPanel extends JPanel implements ActionListener {
 		this.graph = graph;
 
 		if (scale > 0) {
-			int values[] = { 5, 10, 15, 20, 25, 30, 40, 50 };
+			int values[] = { 3, 5, 10, 15, 20, 25, 30, 40, 50 };
 			JLabel label = new JLabel();
 			label.setText("Bucket Size: ");
 			add(label);
