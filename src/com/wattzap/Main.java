@@ -64,8 +64,7 @@ import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
 /**
- * 
- * mydyac6shohuditkiboj
+ * Main entry point
  * 
  * (c) 2013 David George / Wattzap.com
  * 

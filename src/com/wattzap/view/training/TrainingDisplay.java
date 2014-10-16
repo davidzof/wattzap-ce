@@ -49,7 +49,8 @@ import com.wattzap.model.dto.TrainingItem;
 /**
  * (c) 2013 David George / TrainingLoops.com
  * 
- * Speed and Cadence ANT+ processor.
+ * Displays training data. Shows target power/hr/cadence based on training
+ * programme with real time data coming from sensors.
  * 
  * @author David George
  * @date 1 September 2013
@@ -58,6 +59,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	private static final long serialVersionUID = 1L;
 	private SimpleXYChartSupport support = null;
 	int cadence;
+	int heartRate = 0;
 	long aggregateTime = 0;
 	long startTime;
 	long time;
@@ -81,6 +83,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		setLayout(new BorderLayout());
 
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
 		MessageBus.INSTANCE.register(Messages.STOP, this);
@@ -221,7 +224,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 	/*
 	 * Save every one point for every second TODO: move this to data acquisition
-	 * so we don't even send this points
+	 * so we don't even send these points
 	 * 
 	 * @param t
 	 */
@@ -254,15 +257,15 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	}
 
 	public void loadJournal() {
-		ObjectInputStream objectinputstream = null;
+		ObjectInputStream objectInputStream = null;
 		data = new ArrayList<Telemetry>();
 		Telemetry t = null;
 		try {
 			FileInputStream streamIn = new FileInputStream(userPrefs.getWD()
 					+ "/journal.ser");
-			objectinputstream = new ObjectInputStream(streamIn);
+			objectInputStream = new ObjectInputStream(streamIn);
 
-			while ((t = (Telemetry) objectinputstream.readObject()) != null) {
+			while ((t = (Telemetry) objectInputStream.readObject()) != null) {
 				data.add(t);
 			}// while
 
@@ -278,13 +281,39 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			if (t != null) {
 				MessageBus.INSTANCE.send(Messages.STARTPOS, t.getDistance());
 			}
-			if (objectinputstream != null) {
+			if (objectInputStream != null) {
 				try {
-					objectinputstream.close();
+					objectInputStream.close();
 				} catch (IOException e) {
 					logger.error("Cannot close journal file "
 							+ e.getLocalizedMessage());
 				}
+			}
+		}
+
+		// Now rewrite journal file (end might be corrupt)
+		ObjectOutputStream objectOutputStream = null;
+		// existing data, append to journal file
+		try {
+			FileOutputStream fout = new FileOutputStream(userPrefs.getWD()
+					+ "/journal.ser", true);
+
+			objectOutputStream = new ObjectOutputStream(fout);
+			for (Telemetry telemetry : data) {
+				oos.writeObject(telemetry);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.error("Can't write telemetry data to journal "
+					+ e.getLocalizedMessage());
+		} finally {
+			try {
+				if (objectOutputStream != null) {
+					objectOutputStream.close();
+				}
+			} catch (IOException e) {
+				logger.error("Cannot close journal file "
+						+ e.getLocalizedMessage());
 			}
 		}
 	}
@@ -298,9 +327,16 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				// setup, hence this test.
 
 				Telemetry t = (Telemetry) o;
+				// recover last heart rate data
+				t.setHeartRate(heartRate);
 				update(t);
 			}
 
+			break;
+
+		case HEARTRATE:
+			Telemetry t = (Telemetry) o;
+			heartRate = t.getHeartRate();
 			break;
 		case STOP:
 			if (data != null && !data.isEmpty()) {
@@ -316,20 +352,29 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			if (chart == null) {
 				createModels(null);
 			}
-			if (data == null) {
-				data = new ArrayList<Telemetry>();
+			try {
+				if (oos == null) {
+					// oos is closed
+					if (data == null) {
+						// new training, truncate the journal file
+						data = new ArrayList<Telemetry>();
+						FileOutputStream fout = new FileOutputStream(
+								userPrefs.getWD() + "/journal.ser", false);
 
-				try {
-					FileOutputStream fout = new FileOutputStream(
-							userPrefs.getWD() + "/journal.ser", false);
+						oos = new ObjectOutputStream(fout);
+					} else {
+						// existing data, append to journal file
+						FileOutputStream fout = new FileOutputStream(
+								userPrefs.getWD() + "/journal.ser", true);
 
-					oos = new ObjectOutputStream(fout);
-				} catch (Exception e) {
-					logger.error("Can't create journal file "
-							+ e.getLocalizedMessage());
+						oos = new ObjectOutputStream(fout);
+					}
 				}
-
+			} catch (Exception e) {
+				logger.error("Can't create journal file "
+						+ e.getLocalizedMessage());
 			}
+
 			startTime = 0;
 			MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 
@@ -369,6 +414,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			if (oos != null) {
 				try {
 					oos.close();
+					oos = null;
 				} catch (IOException e) {
 					logger.error("Can't close journal file "
 							+ e.getLocalizedMessage());

@@ -31,6 +31,8 @@ import com.wattzap.view.training.TrainingAnalysis;
 import com.wattzap.view.training.TrainingDisplay;
 
 /**
+ * Controller linked to training data.
+ * 
  * (c) 2014 David George / Wattzap.com
  * 
  * @author David George

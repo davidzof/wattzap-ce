@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model;
 
 import java.lang.annotation.ElementType;
@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /*
+ * Route Reader classes must be annotated with RouteAnnotation so they are detected and loaded by WattzAp
  * (c) 2013 David George / Wattzap.com
  */
 @Retention(RetentionPolicy.RUNTIME)

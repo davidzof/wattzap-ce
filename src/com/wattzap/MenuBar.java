@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap;
 
 import javax.swing.JMenu;
@@ -26,8 +26,9 @@ import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
 /**
- * (c) 2013 David George / Wattzap.com
+ * Main menu bar
  * 
+ * (c) 2013 David George / Wattzap.com
  * 
  * @author David George
  * @date 11 June 2013
@@ -35,10 +36,10 @@ import com.wattzap.view.training.TrainingPicker;
 public class MenuBar extends JMenuBar {
 	private static final long serialVersionUID = 8868201635857315675L;
 	private MainFrame frame;
-	
+
 	public void init(MainFrame frame) {
 		this.frame = frame;
-		
+
 		JMenu fileMenu = new JMenu("File");
 		add(fileMenu);
 		JMenuItem openMenuItem = new JMenuItem("Open Course");
@@ -53,17 +54,17 @@ public class MenuBar extends JMenuBar {
 
 		JMenu appMenu = new JMenu("Application");
 		add(appMenu);
-		
+
 		Preferences preferences = new Preferences();
 		JMenuItem prefMenuItem = new JMenuItem("Preferences");
 		prefMenuItem.addActionListener(preferences);
 		appMenu.add(prefMenuItem);
 		JMenuItem aboutMenuItem = new JMenuItem("About");
 		appMenu.add(aboutMenuItem);
-		
+
 		frame.setJMenuBar(this);
 	}
-	
+
 	public void trainingInit(TrainingDisplay trainingDisplay) {
 		// Submenu: Training
 		JMenu trainingMenu = new JMenu("Training");
@@ -71,9 +72,6 @@ public class MenuBar extends JMenuBar {
 
 		JMenuItem analMenuItem = new JMenuItem("Analyze");
 		trainingMenu.add(analMenuItem);
-		
-		
-		
 
 		JMenuItem trainMenuItem = new JMenuItem("Open Training");
 		trainingMenu.add(trainMenuItem);
@@ -83,7 +81,6 @@ public class MenuBar extends JMenuBar {
 
 		JMenuItem saveMenuItem = new JMenuItem("Save as TCX");
 		trainingMenu.add(saveMenuItem);
-
 
 		JMenuItem csvMenuItem = new JMenuItem("Save as CSV");
 		trainingMenu.add(csvMenuItem);

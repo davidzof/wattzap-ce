@@ -20,7 +20,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.apache.log4j.LogManager;
@@ -39,7 +38,6 @@ import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
 import com.wattzap.model.RouteReader;
-import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 
 /* 

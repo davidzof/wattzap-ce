@@ -335,30 +335,32 @@ public class TrainingItem {
 		return -1;
 	}
 
-	public void setCadence(String v) {
-		v = v.trim();
-		if (v.charAt(0) == '<') {
+	public void setCadence(String c) {
+		if (c == null) {
+			return;
+		}
+		c = c.trim();
+		if (c.charAt(0) == '<') {
 			// less than
-			cadence = Integer.parseInt(v.substring(1));
+			cadence = Integer.parseInt(c.substring(1));
 			cadenceHigh = cadence;
 			cadenceLow = 0;
-		} else if (v.charAt(0) == '>') {
+		} else if (c.charAt(0) == '>') {
 			// greater than
-			cadence = Integer.parseInt(v.substring(1));
+			cadence = Integer.parseInt(c.substring(1));
 			cadenceHigh = 0;
 			cadenceLow = cadence;
-		} else if (v.indexOf('-') != -1) {
-			int i = v.indexOf('-');
-			cadenceLow = Integer.parseInt(v.substring(0, i).trim());
-			cadenceHigh = Integer.parseInt(v.substring(i + 1).trim());
+		} else if (c.indexOf('-') != -1) {
+			int i = c.indexOf('-');
+			cadenceLow = Integer.parseInt(c.substring(0, i).trim());
+			cadenceHigh = Integer.parseInt(c.substring(i + 1).trim());
 			cadence = cadenceLow + ((cadenceHigh - cadenceLow) / 2);
 		} else {
 			// absolute power in watts
-			cadence = Integer.parseInt(v.trim());
+			cadence = Integer.parseInt(c.trim());
 			cadenceHigh = (int) ((double) cadence * 1.025);
 			cadenceLow = (int) ((double) cadence * 0.975);
 		}
-
 	}
 
 	public long getTime() {

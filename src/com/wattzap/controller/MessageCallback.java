@@ -16,6 +16,8 @@
 package com.wattzap.controller;
 
 /**
+ * Objects wanting to listen to messages on the message bus must implement this.
+ * 
  * (c) 2013 David George / Wattzap.com
  * 
  * @author David George

@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.controller;
 
 import java.util.EnumMap;
@@ -20,6 +20,16 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
+ * Message Bus implementation
+ * 
+ * A Message Bus is a combination of a common data model, a common command set,
+ * and a messaging infrastructure to allow different systems to communicate
+ * through a shared set of interfaces. This is analogous to a communications bus
+ * in a computer system, which serves as the focal point for communication
+ * between the CPU, main memory, and peripherals. Just as in the hardware
+ * analogy, there are a number of pieces that come together to form the message
+ * bus:
+ * 
  * (c) 2013 David George / Wattzap.com
  * 
  * @author David George
@@ -34,6 +44,15 @@ public enum MessageBus {
 				Messages.class);
 	}
 
+	/**
+	 * Register a callback to receive specific messages
+	 * 
+	 * @param m
+	 *            - Message type to register (from Messages enum)
+	 * @param o
+	 *            - Callback implementation - classes implement MessageCallback
+	 *            interface.
+	 */
 	public void register(Messages m, MessageCallback o) {
 		HashSet<MessageCallback> listeners;
 		if (objects.containsKey(m)) {
@@ -45,6 +64,7 @@ public enum MessageBus {
 		listeners.add(o);
 	}
 
+	// TODO Implement this
 	public void unregister() {
 	};
 
