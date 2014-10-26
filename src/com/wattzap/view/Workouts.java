@@ -84,7 +84,9 @@ public class Workouts extends JPanel implements ActionListener {
 	private static Logger logger = LogManager.getLogger("Workouts");
 
 	private final static String scGraph = "SCG";
-	public final static String hrWattsGraph = "PWG";
+	public final static String hrWattsGraph = "PWG"; // heart rate vs power
+	public final static String qaGraph = "QAG"; // quadrant analysis
+	public final static double pi = 3.14159;
 
 	// summary graphs
 	private final static String mmpGraph = "MMP";
@@ -206,15 +208,21 @@ public class Workouts extends JPanel implements ActionListener {
 		JMenuItem cpgMenuItem = new JMenuItem(
 				userPrefs.messages.getString("cpg"));
 		cpgMenuItem.setActionCommand(scGraph);
-		scatMenu.add(cpgMenuItem);
 		cpgMenuItem.addActionListener(this);
-
+		scatMenu.add(cpgMenuItem);
+		
 		JMenuItem powerWattsMenuItem = new JMenuItem(
 				userPrefs.messages.getString("poWt"));
 		powerWattsMenuItem.setActionCommand(hrWattsGraph);
-		scatMenu.add(powerWattsMenuItem);
 		powerWattsMenuItem.addActionListener(this);
-
+		scatMenu.add(powerWattsMenuItem);
+		
+		JMenuItem quadAnalysisMenuItem = new JMenuItem(
+				userPrefs.messages.getString("quadAnal"));
+		quadAnalysisMenuItem.setActionCommand(qaGraph);
+		quadAnalysisMenuItem.addActionListener(this);
+		scatMenu.add(quadAnalysisMenuItem);
+		
 		// distribution
 		JMenu distMenu = new JMenu(userPrefs.messages.getString("distribution"));
 		distMenu.setMnemonic(KeyEvent.VK_D);
@@ -300,6 +308,8 @@ public class Workouts extends JPanel implements ActionListener {
 
 		if (scGraph.equals(command)) {
 			CSScatterPlot();
+		} 		else if (qaGraph.equals(command)) {
+			QuadrantAnalysis();	
 		} else if (hrWattsGraph.equals(command)) {
 			HRWattsScatterPlot();
 		} else if (mmpGraph.equals(command)) {
@@ -501,6 +511,76 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.setVisible(true);
 	}
 
+	/**
+	 * Quadrant Analysis
+	 */
+	private void QuadrantAnalysis() {
+		if (telemetry == null) {
+			JOptionPane.showMessageDialog(this, "No Data",
+					"No data to display, load a workout first",
+					JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		XYSeries series = new XYSeries("Force vs Velocity");
+
+		for (int i = 0; i < telemetry.length; i++) {
+			for (Telemetry t : telemetry[i]) {
+				
+				if (t.getCadence() > 50 && t.getPower() > 50) {
+					// CPV - (Cadence * crankLength (meters) * 2 * Pi) / 60
+					double cpv = (t.getCadence() * 0.1725 * 2 * pi) / 60;
+					// AEPF = (power * 60) / (Cadence * 2 * Pi * Crank Length)
+					double aepf = (t.getPower() * 60) / (t.getCadence() * 2 * pi * 0.1725);
+					series.addOrUpdate(cpv, aepf);
+				}
+			}// for
+		}// for
+
+		GenericScatterGraph mmp = new GenericScatterGraph(series, "CPV (m/s)",
+				"AEPF (newtons)");
+		
+		XYSeries series1 = new XYSeries("FTP");
+
+		for (int cadence = 16; cadence < 160; cadence++) {
+			// CPV - (Cadence * crankLength (meters) * 2 * Pi) / 60
+			double cpv = (cadence * 0.1725 * 2 * 3.142) / 60;
+			// AEPF = (power * 60) / (Cadence * 2 * Pi * Crank Length)
+			double aepf = (UserPreferences.INSTANCE.getMaxPower() * 60)
+					/ (cadence * 2 * 3.142 * 0.1725);
+			series1.add(cpv, aepf);
+		}
+		mmp.addLine(series1);
+		
+		XYSeries series2 = new XYSeries("CPV (80 rpm)");
+		double cpv = (80 * 0.1725 * 2 * 3.142) / 60;
+		series2.add(cpv, 0);
+		series2.add(cpv, 700);
+		mmp.addLine(series2);
+
+		XYSeries series3 = new XYSeries("CPV (80 rpm)");
+		double aepf = (UserPreferences.INSTANCE.getMaxPower() * 60)
+				/ (80 * 2 * 3.142 * 0.1725);
+		series3.add(0, aepf);
+		series3.add(3, aepf);
+		mmp.addLine(series3);
+
+		
+		JFrame frame = new JFrame("Quadrant Analysis");
+		ImageIcon img = new ImageIcon("icons/turbo.jpg");
+		frame.setIconImage(img.getImage());
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		// Create and set up the content pane.
+		mmp.setOpaque(true); // content panes must be opaque
+		frame.setContentPane(mmp);
+
+		// Display the window.
+		frame.pack();
+		frame.setVisible(true);
+	}
+	
+	
 	/**
 	 * Cadence / Speed Scatter plot
 	 */

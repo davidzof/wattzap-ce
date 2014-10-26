@@ -80,7 +80,7 @@ public class MainFrame extends JFrame implements ActionListener,
 			Rectangle r = this.getBounds();
 			UserPreferences.INSTANCE.setMainBounds(r);
 			
-			this.invalidate();
+			//this.invalidate();
 			this.validate();
 			// this.revalidate(); JDK 1.7 only
 

@@ -12,20 +12,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.prefs;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -34,14 +31,20 @@ import com.wattzap.model.power.Power;
 import com.wattzap.model.power.PowerProfiles;
 
 /* 
+ * Home trainer selection and preferences
+ * 
+ * You can select from a range of Home Trainers and their characteristics (resistance levels for variable resistance trainers).
+ * 
  * @author David George (c) Copyright 2013
  * @date 19 June 2013
  */
 public class TurboPanel extends JPanel implements ActionListener {
-	private List<JRadioButton> trainerProfiles;
+	private static final long serialVersionUID = 1L;
+	// private List<JRadioButton> trainerProfiles;
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private JCheckBox virtualPower;
 	private JComboBox resistanceLevels;
+	private JComboBox trainerList = new JComboBox();
 
 	public boolean isVirtualPower() {
 		return virtualPower.isSelected();
@@ -56,48 +59,37 @@ public class TurboPanel extends JPanel implements ActionListener {
 		// Create the radio buttons.
 		PowerProfiles pp = PowerProfiles.INSTANCE;
 		List<Power> profiles = pp.getProfiles();
-		trainerProfiles = new ArrayList<JRadioButton>();
 
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
 		JLabel label2 = new JLabel();
-		label2.setText("Select your Profile");
+		label2.setText("Trainer");
 		add(label2, "wrap");
 
-		ButtonGroup group = new ButtonGroup();
 		String trainerDescription = userPrefs.getPowerProfile().description();
-		Power selectedProfile = null;
+		int index = 0;
 		for (Power p : profiles) {
-			JRadioButton button = new JRadioButton(p.description());
-
+			trainerList.addItem(p.description());
 			if (p.description().equals(trainerDescription)) {
-				button.setEnabled(true);
+				trainerList.setSelectedIndex(index);
 			}
+			index++;
 
-			trainerProfiles.add(button);
-			button.setActionCommand("trainer");
-			// button.setSelected(true);
-			group.add(button);
-			add(button, "wrap");
-			button.addActionListener(this);
-			if (p.description().equals(trainerDescription)) {
-				button.setSelected(true);
-				selectedProfile = p;
-			}
+		}
+		trainerList.addActionListener(this);
+		add(trainerList, "wrap");
 
-		}// for
+		Power selectedProfile = null;
 		virtualPower = new JCheckBox("SimulSpeed");
 		virtualPower.setSelected(userPrefs.isVirtualPower());
 		add(virtualPower, "wrap");
-		displayResistance(selectedProfile);
 
+		displayResistance(selectedProfile);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		String command = e.getActionCommand();
-
-		// trainer selected
+		// trainer selected, update resistance levels
 		String d = getProfileDescription();
 		PowerProfiles pp = PowerProfiles.INSTANCE;
 		Power p = pp.getProfile(d);
@@ -106,16 +98,10 @@ public class TurboPanel extends JPanel implements ActionListener {
 			resistanceLevels = null;
 		}
 		displayResistance(p);
-
 	}
 
 	public String getProfileDescription() {
-		for (JRadioButton button : trainerProfiles) {
-			if (button.isSelected()) {
-				return button.getText();
-			}
-		}
-		return null;
+		return (String) trainerList.getSelectedItem();
 	}
 
 	private void displayResistance(Power p) {
@@ -126,7 +112,7 @@ public class TurboPanel extends JPanel implements ActionListener {
 				// special variable resistance level when no ANT device
 				resistanceLevels.addItem("auto");
 			}
-			
+
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				resistanceLevels.addItem("" + i);
 			}
@@ -134,6 +120,9 @@ public class TurboPanel extends JPanel implements ActionListener {
 					userPrefs.getPowerProfile().description())) {
 				resistanceLevels.setSelectedIndex(userPrefs.getResistance());
 			}
+			JLabel label = new JLabel();
+			label.setText("Resistance level");
+			add(label, "wrap");
 			add(resistanceLevels);
 		}
 		validate();

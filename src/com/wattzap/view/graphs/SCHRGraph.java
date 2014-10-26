@@ -50,7 +50,7 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.utils.Rolling;
 
 /**
- * Mean Maximal Power Graph
+ * Speed, Cadence, Heart-Rate Graph
  * 
  * @author David George (c) Copyright 2014
  * @date 18 April 2014

@@ -29,6 +29,7 @@ import javax.swing.JPanel;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import uk.co.caprica.vlcj.binding.internal.libvlc_marquee_position_e;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.DefaultFullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -168,7 +169,13 @@ MessageCallback {
 			mPlayer.pause();
 			return;
 		}
-
+		
+		 //mPlayer.setMarqueeText("hello world");
+         //mPlayer.setMarqueeOpacity(127);
+         //mPlayer.setMarqueeColour(Color.RED);
+         //mPlayer.setMarqueePosition(libvlc_marquee_position_e.centre);
+         //mPlayer.enableMarquee(true);
+         
 		long mapTime = p.getTime();
 		long videoTime = (int) (len * mPlayer.getPosition());
 		if (videoTime == 0) {

@@ -68,6 +68,11 @@ public class Odometer extends JPanel implements MessageCallback {
 	private static Logger logger = LogManager.getLogger("Odometer");
 
 	private final Color textColor = new Color(240, 244, 112);
+	private static final int style1 = Font.CENTER_BASELINE;
+	private static final Font font1 = new Font("Arial", style1, 13);
+	private static final int style = Font.BOLD | Font.ITALIC;
+	private static final Font font = new Font("Arial", style, 30);
+
 	private DateFormat timeFormat;
 	private long startTime = 0;
 	private double totalDistance = 0;
@@ -83,12 +88,6 @@ public class Odometer extends JPanel implements MessageCallback {
 		timeFormat = new SimpleDateFormat("HH:mm:ss");
 		timeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		setBackground(Color.BLACK);
-
-		int style1 = Font.CENTER_BASELINE;
-		Font font1 = new Font("Arial", style1, 13);
-
-		int style = Font.BOLD | Font.ITALIC;
-		Font font = new Font("Arial", style, 30);
 		MigLayout layout = new MigLayout("fillx", "[center]", "[][shrink 0]");
 		this.setLayout(layout);
 
@@ -153,7 +152,7 @@ public class Odometer extends JPanel implements MessageCallback {
 		speedLabel = new JLabel();
 		speedLabel.setFont(font);
 		speedLabel.setText("0.0");
-		speedLabel.setForeground(Color.WHITE);
+		speedLabel.setForeground(Color.LIGHT_GRAY);
 		add(speedLabel);
 
 		if (userPrefs.INSTANCE.isVirtualPower()) {
@@ -161,7 +160,7 @@ public class Odometer extends JPanel implements MessageCallback {
 			vspeedLabel = new JLabel();
 			vspeedLabel.setFont(font);
 			vspeedLabel.setText("0");
-			vspeedLabel.setForeground(Color.WHITE);
+			vspeedLabel.setForeground(Color.LIGHT_GRAY);
 			add(vspeedLabel);
 		}
 
@@ -169,41 +168,41 @@ public class Odometer extends JPanel implements MessageCallback {
 		distanceLabel = new JLabel();
 		distanceLabel.setFont(font);
 		distanceLabel.setText("0.0");
-		distanceLabel.setForeground(Color.WHITE);
+		distanceLabel.setForeground(Color.LIGHT_GRAY);
 		add(distanceLabel);
 
 		// #4
 		powerLabel = new JLabel();
 		powerLabel.setFont(font);
 		powerLabel.setText("0");
-		powerLabel.setForeground(Color.WHITE);
+		powerLabel.setForeground(Color.LIGHT_GRAY);
 		add(powerLabel);
 
 		// #5
 		resistanceLabel = new JLabel();
 		resistanceLabel.setFont(font);
 		resistanceLabel.setText("0");
-		resistanceLabel.setForeground(Color.WHITE);
+		resistanceLabel.setForeground(Color.LIGHT_GRAY);
 		add(resistanceLabel);
 
 		// #6
 		slopeLabel = new JLabel();
 		slopeLabel.setFont(font);
 		slopeLabel.setText("0.0");
-		slopeLabel.setForeground(Color.WHITE);
+		slopeLabel.setForeground(Color.LIGHT_GRAY);
 		add(slopeLabel);
 
 		// #7
 		elevationLabel = new JLabel();
 		elevationLabel.setFont(font);
-		elevationLabel.setForeground(Color.WHITE);
+		elevationLabel.setForeground(Color.LIGHT_GRAY);
 		elevationLabel.setText("0");
 		add(elevationLabel);
 
 		// #8
 		chronoLabel = new JLabel();
 		chronoLabel.setFont(font);
-		chronoLabel.setForeground(Color.WHITE);
+		chronoLabel.setForeground(Color.LIGHT_GRAY);
 		add(chronoLabel);
 		chronoLabel.setText("00:00:00");
 
@@ -242,7 +241,6 @@ public class Odometer extends JPanel implements MessageCallback {
 			// Resistance
 			resistanceLabel.setText("" + t.getResistance());
 
-			
 			// Speed & Distance
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeed()));

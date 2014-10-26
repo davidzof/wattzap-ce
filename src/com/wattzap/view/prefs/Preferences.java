@@ -20,6 +20,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -104,6 +105,11 @@ public class Preferences extends JFrame implements ActionListener {
 		contentPane.add(buttonPanel, BorderLayout.SOUTH);
 
 		pack();
+		
+		// position centered above main window
+		Rectangle bounds = this.getBounds();
+		Rectangle mainBounds = UserPreferences.INSTANCE.getMainBounds();
+		this.setBounds(mainBounds.x+((mainBounds.width - bounds.width)/2), mainBounds.y+((mainBounds.height - bounds.height)/2), bounds.width, bounds.height);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		// dispose();
 	}

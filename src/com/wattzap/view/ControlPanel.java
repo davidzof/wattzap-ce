@@ -41,6 +41,7 @@ import com.wattzap.model.UserPreferences;
  */
 public class ControlPanel extends JPanel implements ActionListener,
 		ChangeListener, MessageCallback {
+	private static final long serialVersionUID = 1L;
 	private JSlider startPosition;
 	private int start;
 
