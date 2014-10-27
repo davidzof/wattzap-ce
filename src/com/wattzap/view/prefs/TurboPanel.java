@@ -15,6 +15,7 @@
  */
 package com.wattzap.view.prefs;
 
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -40,11 +41,13 @@ import com.wattzap.model.power.PowerProfiles;
  */
 public class TurboPanel extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
-	// private List<JRadioButton> trainerProfiles;
+	private final static Font font1 = new Font("Arial", Font.CENTER_BASELINE,
+			12);
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private JCheckBox virtualPower;
 	private JComboBox resistanceLevels;
 	private JComboBox trainerList = new JComboBox();
+	private final JLabel resistanceLabel = new JLabel();
 
 	public boolean isVirtualPower() {
 		return virtualPower.isSelected();
@@ -54,6 +57,9 @@ public class TurboPanel extends JPanel implements ActionListener {
 		return resistanceLevels.getSelectedIndex();
 	}
 
+	/**
+	 * Display turbo panel.
+	 */
 	public TurboPanel() {
 		super();
 		// Create the radio buttons.
@@ -63,15 +69,18 @@ public class TurboPanel extends JPanel implements ActionListener {
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
 		JLabel label2 = new JLabel();
-		label2.setText("Trainer");
+		label2.setText(userPrefs.messages.getString("trainer"));
+		label2.setFont(font1);
 		add(label2, "wrap");
 
 		String trainerDescription = userPrefs.getPowerProfile().description();
 		int index = 0;
+		Power selectedProfile = null;
 		for (Power p : profiles) {
 			trainerList.addItem(p.description());
 			if (p.description().equals(trainerDescription)) {
 				trainerList.setSelectedIndex(index);
+				selectedProfile = p;
 			}
 			index++;
 
@@ -79,11 +88,14 @@ public class TurboPanel extends JPanel implements ActionListener {
 		trainerList.addActionListener(this);
 		add(trainerList, "wrap");
 
-		Power selectedProfile = null;
 		virtualPower = new JCheckBox("SimulSpeed");
 		virtualPower.setSelected(userPrefs.isVirtualPower());
 		add(virtualPower, "wrap");
 
+		resistanceLabel.setText(userPrefs.messages.getString("resistance"));
+		resistanceLabel.setFont(font1);
+		add(resistanceLabel, "wrap");
+		resistanceLabel.setVisible(false);
 		displayResistance(selectedProfile);
 	}
 
@@ -93,8 +105,10 @@ public class TurboPanel extends JPanel implements ActionListener {
 		String d = getProfileDescription();
 		PowerProfiles pp = PowerProfiles.INSTANCE;
 		Power p = pp.getProfile(d);
+		System.out.println(p);
 		if (resistanceLevels != null) {
 			remove(resistanceLevels);
+			resistanceLabel.setVisible(false);
 			resistanceLevels = null;
 		}
 		displayResistance(p);
@@ -104,8 +118,15 @@ public class TurboPanel extends JPanel implements ActionListener {
 		return (String) trainerList.getSelectedItem();
 	}
 
+	/**
+	 * Show the resistance drop down list if the trainer is a variable
+	 * resistance type
+	 * 
+	 * @param p - Power profile of the selected trainer
+	 */
 	private void displayResistance(Power p) {
 		if (p != null && p.getResitanceLevels() > 1) {
+			resistanceLabel.setVisible(true);
 			resistanceLevels = new JComboBox();
 
 			if (!userPrefs.isAntEnabled()) {
@@ -118,11 +139,10 @@ public class TurboPanel extends JPanel implements ActionListener {
 			}
 			if (p.description().equals(
 					userPrefs.getPowerProfile().description())) {
+				// previously selected trainer, set selected resistance level
 				resistanceLevels.setSelectedIndex(userPrefs.getResistance());
 			}
-			JLabel label = new JLabel();
-			label.setText("Resistance level");
-			add(label, "wrap");
+
 			add(resistanceLevels);
 		}
 		validate();
