@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.Color;
@@ -25,7 +25,12 @@ import javax.swing.JPanel;
 import com.wattzap.model.UserPreferences;
 
 /**
- * (c) 2014  Wattzap.com
+ * (c) 2014 Wattzap.com
+ * 
+ * Bottom panel for Workouts View containing buttons for Reanalyzing and Deleting
+ * selected workouts as well as Quit button.
+ * 
+ * @see Workouts.java
  * 
  * @author David George
  * @date 17 April 2014
@@ -33,32 +38,49 @@ import com.wattzap.model.UserPreferences;
 public class WorkoutButtonPanel extends JPanel implements ActionListener {
 	Workouts workouts;
 
+	private final static String delete = "DEL";
+	private final static String analyze = "ANAL";
+	private final static String quit = "QUIT";
+
 	public WorkoutButtonPanel(Workouts workouts) {
 		this.workouts = workouts;
 
-		JButton stopButton = new JButton(
+		JButton deleteButton = new JButton(
 				UserPreferences.INSTANCE.messages.getString("delete"));
-		stopButton.setActionCommand("del");
-		JButton startButton = new JButton(
+		deleteButton.setActionCommand(delete);
+		
+		JButton reloadButton = new JButton(
 				UserPreferences.INSTANCE.messages.getString("load"));
-		startButton.setActionCommand("load");
-
-		startButton.addActionListener(this);
-		stopButton.addActionListener(this);
-
+		reloadButton.setActionCommand(analyze);
+		JButton quitButton = new JButton(
+				UserPreferences.INSTANCE.messages.getString("quit"));
+		quitButton.setActionCommand(quit);
+		
+		reloadButton.addActionListener(this);
+		deleteButton.addActionListener(this);
+		quitButton.addActionListener(this);
+		
 		setBackground(Color.LIGHT_GRAY);
-		add(startButton);
-		add(stopButton);
+		add(reloadButton);
+		add(deleteButton);
+		add(quitButton);
 	}
 
 	@Override
+	/**
+	 * Call in response to button click on Workouts Bottom Panel
+	 */
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		if ("load".equals(command)) {
-			workouts.load();
-		} else {
+		if (delete.equals(command)) {
 			workouts.delete();
+		} else if (quit.equals(command)) {
+			workouts.quit();
+		} else {
+			workouts.reload();
 		}
 
 	}
+
+	private static final long serialVersionUID = 1L;
 }

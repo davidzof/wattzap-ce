@@ -479,7 +479,7 @@ public class Workouts extends JPanel implements ActionListener {
 			return false;
 		} else if (listChanged == false && telemetry != null) {
 			// data already loaded and nothing changed
-			return false;
+			return true;
 		}
 
 		String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
@@ -504,6 +504,19 @@ public class Workouts extends JPanel implements ActionListener {
 		listChanged = false;
 		return true;
 	}
+	
+	void reload() {
+		
+	}
+	
+	/*
+	 * We don't destroy workouts view, we just hide it.
+	 */
+	void quit() {
+		frame.setVisible(false);
+	}
+	
+	
 
 	/**
 	 * Create Mean Maximal Power Graph
