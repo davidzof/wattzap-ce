@@ -60,8 +60,8 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.utils.ActivityReader;
-import com.wattzap.view.graphs.GenericScatterGraph;
 import com.wattzap.view.graphs.DistributionGraph;
+import com.wattzap.view.graphs.GenericScatterGraph;
 import com.wattzap.view.graphs.MMPGraph;
 import com.wattzap.view.graphs.SCHRGraph;
 
@@ -75,13 +75,16 @@ public class Workouts extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private List<WorkoutData> workoutList;
 	private List<Integer> selectedRows;
+	WorkoutData workoutData = null;
+
+	private boolean listChanged = true;
 	private final JTable table;
 	private final JFrame frame;
 
 	ArrayList<Telemetry> telemetry[] = null;
 	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-	private static Logger logger = LogManager.getLogger("Workouts");
+	private static final Logger logger = LogManager.getLogger("Workouts");
 
 	private final static String scGraph = "SCG";
 	public final static String hrWattsGraph = "PWG"; // heart rate vs power
@@ -124,22 +127,32 @@ public class Workouts extends JPanel implements ActionListener {
 
 		table.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
+					/*
+					 * Called each time there is a change to the Workouts
+					 * selection (deselect, select)
+					 * 
+					 * @see
+					 * javax.swing.event.ListSelectionListener#valueChanged(
+					 * javax.swing.event.ListSelectionEvent)
+					 */
 					public void valueChanged(ListSelectionEvent e) {
+						if (!e.getValueIsAdjusting()) {
+							ListSelectionModel lsm = (ListSelectionModel) e
+									.getSource();
 
-						ListSelectionModel lsm = (ListSelectionModel) e
-								.getSource();
-
-						if (lsm.isSelectionEmpty()) {
-							selectedRows = null;
-						} else {
-							selectedRows = new ArrayList<Integer>();
-							// Find out which indexes are selected.
-							int minIndex = lsm.getMinSelectionIndex();
-							int maxIndex = lsm.getMaxSelectionIndex();
-							for (int i = minIndex; i <= maxIndex; i++) {
-								if (lsm.isSelectedIndex(i)) {
-									selectedRows.add(i);
+							if (lsm.isSelectionEmpty()) {
+								selectedRows = null;
+							} else {
+								selectedRows = new ArrayList<Integer>();
+								// Find out which indexes are selected.
+								int minIndex = lsm.getMinSelectionIndex();
+								int maxIndex = lsm.getMaxSelectionIndex();
+								for (int i = minIndex; i <= maxIndex; i++) {
+									if (lsm.isSelectedIndex(i)) {
+										selectedRows.add(i);
+									}
 								}
+								listChanged = true;
 							}
 						}
 					}
@@ -210,19 +223,19 @@ public class Workouts extends JPanel implements ActionListener {
 		cpgMenuItem.setActionCommand(scGraph);
 		cpgMenuItem.addActionListener(this);
 		scatMenu.add(cpgMenuItem);
-		
+
 		JMenuItem powerWattsMenuItem = new JMenuItem(
 				userPrefs.messages.getString("poWt"));
 		powerWattsMenuItem.setActionCommand(hrWattsGraph);
 		powerWattsMenuItem.addActionListener(this);
 		scatMenu.add(powerWattsMenuItem);
-		
+
 		JMenuItem quadAnalysisMenuItem = new JMenuItem(
 				userPrefs.messages.getString("quadAnal"));
 		quadAnalysisMenuItem.setActionCommand(qaGraph);
 		quadAnalysisMenuItem.addActionListener(this);
 		scatMenu.add(quadAnalysisMenuItem);
-		
+
 		// distribution
 		JMenu distMenu = new JMenu(userPrefs.messages.getString("distribution"));
 		distMenu.setMnemonic(KeyEvent.VK_D);
@@ -306,72 +319,14 @@ public class Workouts extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 
-		if (scGraph.equals(command)) {
-			CSScatterPlot();
-		} 		else if (qaGraph.equals(command)) {
-			QuadrantAnalysis();	
-		} else if (hrWattsGraph.equals(command)) {
-			HRWattsScatterPlot();
-		} else if (mmpGraph.equals(command)) {
-			mmpGraph();
-		} else if (schrGraph.equals(command)) {
+		if (schrGraph.equals(command)) {
+			// Speed,Cadence, HR graph - this can only take a single line, don't
+			// reload data
 			SCHRGraph();
-		} else if (pdGraph.equals(command)) {
-			DistributionGraph(new DistributionAccessor() {
-				public int getKey(Telemetry t) {
-					return getKey(t.getPower());
-				}
-			}, 15, userPrefs.messages.getString("pdGr"),
-					userPrefs.messages.getString("poWtt"));
-
-		} else if (cdGraph.equals(command)) {
-			DistributionGraph(new DistributionAccessor() {
-				public int getKey(Telemetry t) {
-					return getKey(t.getCadence());
-				}
-			}, 5, userPrefs.messages.getString("cDgr"),
-					userPrefs.messages.getString("cDrpm"));
-		} else if (hrdGraph.equals(command)) {
-			DistributionGraph(new DistributionAccessor() {
-				public int getKey(Telemetry t) {
-					if (t.getHeartRate() < 30) {
-						return -1; // ignore these values
-					}
-
-					return getKey(t.getHeartRate());
-				}
-			}, 10, userPrefs.messages.getString("hrDgr"),
-					userPrefs.messages.getString("hrBpm"));
-
-		} else if (tlGraph.equals(command)) {
-			// Training Zone Graph
-			DistributionGraph(new DistributionAccessor() {
-				public int getKey(Telemetry t) {
-					if (!keepZeroes && t.getPower() < 5) {
-						return -1;
-					}
-					return TrainingItem.getTrainingLevel(t.getPower());
-				}
-
-				public String getValueLabel(int v) {
-					return TrainingItem.getTrainingName(v) + " " + v;
-				}
-			}, 0, "Training Level Distribution Graph", "Training Level");
-		} else if (tlhrGraph.equals(command)) {
-			// Training Zone Graph
-			DistributionGraph(new DistributionAccessor() {
-				public int getKey(Telemetry t) {
-					if (!keepZeroes && t.getPower() < 5) {
-						return -1;
-					}
-					return TrainingItem.getHRTrainingLevel(t.getHeartRate());
-				}
-
-				public String getValueLabel(int v) {
-					return TrainingItem.getTrainingName(v) + " " + v;
-				}
-			}, 0, "Training Level (Heart Rate)", "Training Level");
-		} else if (importer.equals(command)) {
+			return;
+		}
+		if (importer.equals(command)) {
+			// Import new workouts
 			if (!UserPreferences.INSTANCE.isRegistered()
 					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
 				logger.info("Out of time "
@@ -424,11 +379,107 @@ public class Workouts extends JPanel implements ActionListener {
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),
 					"Import", JOptionPane.INFORMATION_MESSAGE);
 		}
+
+		/*
+		 * Load selected data for other graphs
+		 */
+		if (!load()) {
+			return;
+		}
+		if (mmpGraph.equals(command)) {
+			mmpGraph();
+			return;
+		}
+		if (scGraph.equals(command)) {
+			CSScatterPlot();
+			return;
+		}
+		if (qaGraph.equals(command)) {
+			QuadrantAnalysis();
+			return;
+		}
+		if (hrWattsGraph.equals(command)) {
+			HRWattsScatterPlot();
+			return;
+		}
+		if (pdGraph.equals(command)) {
+			DistributionGraph(new DistributionAccessor() {
+				public int getKey(Telemetry t) {
+					return getKey(t.getPower());
+				}
+			}, 15, userPrefs.messages.getString("pdGr"),
+					userPrefs.messages.getString("poWtt"));
+			return;
+		}
+		if (cdGraph.equals(command)) {
+			DistributionGraph(new DistributionAccessor() {
+				public int getKey(Telemetry t) {
+					return getKey(t.getCadence());
+				}
+			}, 5, userPrefs.messages.getString("cDgr"),
+					userPrefs.messages.getString("cDrpm"));
+			return;
+		}
+		if (hrdGraph.equals(command)) {
+			DistributionGraph(new DistributionAccessor() {
+				public int getKey(Telemetry t) {
+					if (t.getHeartRate() < 30) {
+						return -1; // ignore these values
+					}
+
+					return getKey(t.getHeartRate());
+				}
+			}, 10, userPrefs.messages.getString("hrDgr"),
+					userPrefs.messages.getString("hrBpm"));
+			return;
+		}
+		if (tlGraph.equals(command)) {
+			// Training Zone Graph
+			DistributionGraph(new DistributionAccessor() {
+				public int getKey(Telemetry t) {
+					if (!keepZeroes && t.getPower() < 5) {
+						return -1;
+					}
+					return TrainingItem.getTrainingLevel(t.getPower());
+				}
+
+				public String getValueLabel(int v) {
+					return TrainingItem.getTrainingName(v) + " " + v;
+				}
+			}, 0, "Training Level Distribution Graph", "Training Level");
+			return;
+		}
+		if (tlhrGraph.equals(command)) {
+			// Training Zone Graph
+			DistributionGraph(new DistributionAccessor() {
+				public int getKey(Telemetry t) {
+					if (!keepZeroes && t.getPower() < 5) {
+						return -1;
+					}
+					return TrainingItem.getHRTrainingLevel(t.getHeartRate());
+				}
+
+				public String getValueLabel(int v) {
+					return TrainingItem.getTrainingName(v) + " " + v;
+				}
+			}, 0, "Training Level (Heart Rate)", "Training Level");
+			return;
+		}
 	}
 
-	void load() {
+	/**
+	 * Load one or more workouts selected in view. We concatenate all data into
+	 * a telemetry array.
+	 */
+	private boolean load() {
 		if (selectedRows == null || selectedRows.isEmpty()) {
-			return;
+			JOptionPane.showMessageDialog(this,
+					"No data to display, select a workout first", "No Data",
+					JOptionPane.ERROR_MESSAGE);
+			return false;
+		} else if (listChanged == false && telemetry != null) {
+			// data already loaded and nothing changed
+			return false;
 		}
 
 		String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
@@ -438,8 +489,8 @@ public class Workouts extends JPanel implements ActionListener {
 
 		int count = 0;
 		for (int i : selectedRows) {
-			WorkoutData data = workoutList.get(i);
-			String fileName = data.getTcxFile();
+			workoutData = workoutList.get(i);
+			String fileName = workoutData.getTcxFile();
 			try {
 				telemetry[count] = ActivityReader.readTelemetry(workoutDir
 						+ fileName);
@@ -449,16 +500,15 @@ public class Workouts extends JPanel implements ActionListener {
 			}
 			count++;
 		}// for
+
+		listChanged = false;
+		return true;
 	}
 
+	/**
+	 * Create Mean Maximal Power Graph
+	 */
 	public void mmpGraph() {
-		if (telemetry == null) {
-			JOptionPane.showMessageDialog(this, "No Data",
-					"No data to display, load a workout first",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
 		TreeMap<Integer, Long> powerValues = new TreeMap<Integer, Long>();
 		for (int i = 0; i < telemetry.length; i++) {
 			Telemetry first = null;
@@ -515,23 +565,17 @@ public class Workouts extends JPanel implements ActionListener {
 	 * Quadrant Analysis
 	 */
 	private void QuadrantAnalysis() {
-		if (telemetry == null) {
-			JOptionPane.showMessageDialog(this, "No Data",
-					"No data to display, load a workout first",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
 		XYSeries series = new XYSeries("Force vs Velocity");
 
 		for (int i = 0; i < telemetry.length; i++) {
 			for (Telemetry t : telemetry[i]) {
-				
+
 				if (t.getCadence() > 50 && t.getPower() > 50) {
 					// CPV - (Cadence * crankLength (meters) * 2 * Pi) / 60
 					double cpv = (t.getCadence() * 0.1725 * 2 * pi) / 60;
 					// AEPF = (power * 60) / (Cadence * 2 * Pi * Crank Length)
-					double aepf = (t.getPower() * 60) / (t.getCadence() * 2 * pi * 0.1725);
+					double aepf = (t.getPower() * 60)
+							/ (t.getCadence() * 2 * pi * 0.1725);
 					series.addOrUpdate(cpv, aepf);
 				}
 			}// for
@@ -539,7 +583,7 @@ public class Workouts extends JPanel implements ActionListener {
 
 		GenericScatterGraph mmp = new GenericScatterGraph(series, "CPV (m/s)",
 				"AEPF (newtons)");
-		
+
 		XYSeries series1 = new XYSeries("FTP");
 
 		for (int cadence = 16; cadence < 160; cadence++) {
@@ -551,7 +595,7 @@ public class Workouts extends JPanel implements ActionListener {
 			series1.add(cpv, aepf);
 		}
 		mmp.addLine(series1);
-		
+
 		XYSeries series2 = new XYSeries("CPV (80 rpm)");
 		double cpv = (80 * 0.1725 * 2 * 3.142) / 60;
 		series2.add(cpv, 0);
@@ -565,7 +609,6 @@ public class Workouts extends JPanel implements ActionListener {
 		series3.add(3, aepf);
 		mmp.addLine(series3);
 
-		
 		JFrame frame = new JFrame("Quadrant Analysis");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
@@ -579,19 +622,11 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.pack();
 		frame.setVisible(true);
 	}
-	
-	
+
 	/**
 	 * Cadence / Speed Scatter plot
 	 */
 	private void CSScatterPlot() {
-		if (telemetry == null) {
-			JOptionPane.showMessageDialog(this, "No Data",
-					"No data to display, load a workout first",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
 		XYSeries series = new XYSeries("Cadence Power Scatter Plot");
 
 		for (int i = 0; i < telemetry.length; i++) {
@@ -621,13 +656,6 @@ public class Workouts extends JPanel implements ActionListener {
 	}
 
 	public void HRWattsScatterPlot() {
-		if (telemetry == null) {
-			JOptionPane.showMessageDialog(this, "No Data",
-					"No data to display, load a workout first",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
 		XYSeries series = new XYSeries("Heart Rate / Watts Scatter Plot");
 
 		for (int i = 0; i < telemetry.length; i++) {
@@ -658,13 +686,6 @@ public class Workouts extends JPanel implements ActionListener {
 
 	public void DistributionGraph(DistributionAccessor da, int scale,
 			String title, String label) {
-		if (telemetry == null) {
-			JOptionPane.showMessageDialog(this, "No Data",
-					"No data to display, load a workout(s) first",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
 		DistributionGraph dgGraph = new DistributionGraph(telemetry, da, label,
 				scale);
 		dgGraph.updateValues(scale, true);
@@ -684,17 +705,23 @@ public class Workouts extends JPanel implements ActionListener {
 		frame.setVisible(true);
 	}
 
+	/**
+	 * Draw a graph of Power, Cadence and Heart Rate (and maybe speed?).
+	 */
 	public void SCHRGraph() {
-		if (telemetry == null) {
-			JOptionPane.showMessageDialog(this, "No Data",
-					"No data to display, load a workout(s) first",
-					JOptionPane.WARNING_MESSAGE);
+		if (selectedRows != null && selectedRows.size() > 1) {
+			JOptionPane.showMessageDialog(this, "Only select a single workout",
+					"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		if (!load()) {
 			return;
 		}
 
 		SCHRGraph pchrGraph = new SCHRGraph(telemetry);
 		// show data with smoothing of 1 second
 		pchrGraph.updateValues(1);
+		pchrGraph.updateWorkoutData(workoutData);
 
 		JFrame frame = new JFrame("Ride Summary");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");

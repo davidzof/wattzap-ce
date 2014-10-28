@@ -47,6 +47,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import com.wattzap.model.dto.Telemetry;
+import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.utils.Rolling;
 
 /**
@@ -60,6 +61,7 @@ public class SCHRGraph extends JPanel {
 	XYPlot plot;
 	private ChartPanel chartPanel = null;
 	private final ArrayList<Telemetry> telemetry[];
+	InfoPanel infoPanel;
 	// a few colors
 	private final static Color straw = new Color(255, 255, 191);// straw
 	private final static Color cornflower = new Color(145, 191, 219);// cornflower
@@ -229,7 +231,7 @@ public class SCHRGraph extends JPanel {
 		chart.getLegend().setBackgroundPaint(Color.gray);
 
 		chartPanel = new ChartPanel(chart);
-		
+
 		// TODO: maybe remember sizes set by user?
 		this.setPreferredSize(new Dimension(1200, 500));
 		chartPanel.setFillZoomRectangle(true);
@@ -241,11 +243,13 @@ public class SCHRGraph extends JPanel {
 
 		SmoothingPanel smoothingPanel = new SmoothingPanel(this);
 		add(smoothingPanel, BorderLayout.SOUTH);
+
+		//infoPanel = new InfoPanel();
+		//add(infoPanel, BorderLayout.NORTH);
 		setVisible(true);
 	}
 
 	public void updateValues(int smoothing) {
-
 		XYSeries powerSeries = new XYSeries("Power");
 		XYSeries cadenceSeries = new XYSeries("Cadence");
 		XYSeries hrSeries = new XYSeries("Heart-Rate");
@@ -276,6 +280,14 @@ public class SCHRGraph extends JPanel {
 		plot.setDataset(2, hrData);
 
 		chartPanel.revalidate();
+	}
+
+	public void updateWorkoutData(WorkoutData data) {
+		if (infoPanel == null) {
+			infoPanel = new InfoPanel();
+			add(infoPanel, BorderLayout.NORTH);
+		}
+		infoPanel.update(data);
 	}
 
 	private static final long serialVersionUID = 1L;
