@@ -47,9 +47,6 @@ public class SpeedCadenceListener implements
 	//
 	private double distance = 0.0;
 	private int cadence;
-	private double hr;
-
-
 
 	/**
 	 * Speed and cadence data is contained in the 8 byte data payload in the
@@ -133,7 +130,7 @@ public class SpeedCadenceListener implements
 			distance += distanceKM;
 			
 			t.setSpeed(speed);
-			t.setDistance(distance);
+			t.setDistanceMeters(distance * 1000);
 			t.setCadence(cadence);
 
 			sCount = 0;
@@ -170,7 +167,7 @@ public class SpeedCadenceListener implements
 		cRR = cR;
 		sRR = sR;
 		
-		if (t.getSpeed() >= 0.0) {
+		if (t.getSpeedKMH() >= 0.0) {
 			notifyListeners(t);
 		}
 	}

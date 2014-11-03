@@ -42,6 +42,7 @@ import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.model.power.Power;
 
 /**
+ * Import Garmin FIT format files into WattzAp
  * 
  * @author David George
  * @date 22nd May 2014
@@ -75,7 +76,7 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 
 				for (Telemetry point : data) {
 					int p = (int) Power.getPower(userPrefs.getTotalWeight(),
-							point.getGradient(), point.getSpeed());
+							point.getGradient(), point.getSpeedKMH());
 
 					if (p > userPrefs.getMaxPower()
 							&& (p > (last.getPower() * 2.0))) {
@@ -93,7 +94,24 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 						point.setPower(0);
 					}
 				}// for
-			}
+			}/* else {
+				double powerSum1 = 0;
+				double powerSum2 = 0;
+				double stdev = 0;
+				int i = 0;
+				
+				for (Telemetry point : data) {
+						double p = point.getPower();
+				    powerSum1 += p;
+				    powerSum2 += Math.pow(p, 2);
+				    stdev = Math.sqrt(i*powerSum2 - Math.pow(powerSum1, 2))/i;
+				    if (p>300)
+				    System.out.println(">>" + p + " stdev " + stdev);
+				    else
+				    	System.out.println("" + p + " stdev " + stdev);
+				    i++;
+				}// for
+			}*/
 		} catch (Exception fex) {
 
 			try {
@@ -169,7 +187,7 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 
 			Field distance = getField("distance", fields);
 			if (distance != null) {
-				point.setDistance(distance.getDoubleValue());
+				point.setDistanceMeters(distance.getDoubleValue());
 			}
 
 			if (time != null) {
@@ -209,9 +227,9 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 						return;
 					}
 					totalDistance += d;
-					point.setDistance(totalDistance);
+					point.setDistanceMeters(totalDistance);
 
-				} else if (point.getDistance() == last.getDistance()) {
+				} else if (point.getDistanceMeters() == last.getDistanceMeters()) {
 					// no change to distance, drop point
 					return;
 				}
@@ -223,7 +241,7 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 				}
 
 				double gradient = (point.getElevation() - last.getElevation())
-						/ (point.getDistance() - last.getDistance());
+						/ (point.getDistanceMeters() - last.getDistanceMeters());
 
 				point.setGradient(gAve.add(gradient));
 			} else {

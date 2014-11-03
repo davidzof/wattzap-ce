@@ -95,6 +95,8 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 	 * data since the last reading. To distinguish this from a stopped wheel a
 	 * certain number of same value readings are ignored for speed or cadence
 	 * updates.
+	 * 
+	 * FIX: convert distance to meters
 	 */
 	@Override
 	public void receiveMessage(BroadcastDataMessage message) {
@@ -223,9 +225,9 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			cadence = 0;
 		}
 
-		t.setDistance(distance);
+		t.setDistanceMeters(distance * 1000);
 		if (routeData != null) {
-			Point p = routeData.getPoint(t.getDistance());
+			Point p = routeData.getPoint(distance);
 			if (p == null) {
 				// end of the road
 				distance = 0.0;
@@ -282,7 +284,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			cRR = cR;
 		//}
 
-		if (t.getSpeed() >= 0.0) {
+		if (t.getSpeedKMH() >= 0.0) {
 			// some sanity checks
 			if (cadence > 250 || t.getPower() > 2500) {
 				logger.debug("Bogosity >>> " + t);

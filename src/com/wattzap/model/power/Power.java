@@ -119,9 +119,9 @@ public abstract class Power {
 	 * 
 	 * kr= rolling resistance coefficient
 	 * 
-	 * M = mass of bike + rider
+	 * M = mass of bike + rider in kg
 	 * 
-	 * s = speed of the bike on the road
+	 * s = speed of the bike on the road in kmh
 	 * 
 	 * ka= wind resistance coefficient
 	 * 

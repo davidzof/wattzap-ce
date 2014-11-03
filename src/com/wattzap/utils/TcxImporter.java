@@ -126,7 +126,7 @@ public class TcxImporter extends DefaultHandler {
 				} else if ("DistanceMeters".equalsIgnoreCase(name)) {
 					double distance = Double.parseDouble(buffer.toString()
 							.trim());
-					point.setDistance(distance);
+					point.setDistanceMeters(distance);
 					currentState = State.TRACKPOINT;
 				} else if ("AltitudeMeters".equalsIgnoreCase(name)) {
 					double altitude = Double.parseDouble(buffer.toString()
@@ -144,7 +144,7 @@ public class TcxImporter extends DefaultHandler {
 								last.getLongitude(), point.getElevation(),
 								last.getElevation());
 
-						if (point.getSpeed() == -1) {
+						if (point.getSpeedKMH() == -1) {
 							// calculate speed, s = d / t
 							double speed = rSpeed.add(d * 3600
 									/ (point.getTime() - last.getTime()));
@@ -156,7 +156,7 @@ public class TcxImporter extends DefaultHandler {
 						if (point.getPower() == -1) {
 							int p = (int) pAve.add(Power.getPower(
 									userPrefs.getTotalWeight(), gradient,
-									point.getSpeed()));
+									point.getSpeedKMH()));
 
 							if (p > userPrefs.getMaxPower()
 									&& (p > (last.getPower() * 2.0))) {
@@ -175,7 +175,7 @@ public class TcxImporter extends DefaultHandler {
 						}
 
 						distance += d;
-						point.setDistance(distance);
+						point.setDistanceMeters(distance);
 						point.setGradient((gradient) * 100);
 					} else {
 						if (point.getPower() != -1) {

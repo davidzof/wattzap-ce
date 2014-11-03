@@ -164,7 +164,7 @@ public class DummySpeedCadenceListener extends Thread implements
 					p = routeData.getPoint(distance);
 					if (p == null) {
 						// end of the road
-						t.setDistance(distance);
+						t.setDistanceMeters(distance  * 1000);
 						distance = 0.0;
 						t.setSpeed(0);
 						t.setTime(System.currentTimeMillis());
@@ -178,7 +178,7 @@ public class DummySpeedCadenceListener extends Thread implements
 				}
 
 				t.setSpeed(speed);
-				t.setDistance(distance);
+				t.setDistanceMeters(distance * 1000);
 				t.setTime(System.currentTimeMillis());
 				MessageBus.INSTANCE.send(Messages.SPEEDCADENCE, t);
 

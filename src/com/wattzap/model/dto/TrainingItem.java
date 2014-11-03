@@ -35,7 +35,7 @@ public class TrainingItem {
 	int power;
 	int cadence;
 	long time;
-	double distance;
+	double distanceMeters;
 	String description;
 
 	public int getHr() {
@@ -379,12 +379,12 @@ public class TrainingItem {
 		this.time = time;
 	}
 
-	public double getDistance() {
-		return distance;
+	public double getDistanceMeters() {
+		return distanceMeters;
 	}
 
-	public void setDistance(double distance) {
-		this.distance = distance;
+	public void setDistanceMeters(double distance) {
+		this.distanceMeters = distance;
 	}
 
 	@Override
@@ -440,8 +440,6 @@ public class TrainingItem {
 		int level3 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.94);
 		// Lactate Threshold 95-105%
 		int level4 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 1.05);
-		// VO2Max > 105%
-		int level5 = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 1.05);
 		
 		if (hr >= 0 && hr <= level1) {
 			return 1;

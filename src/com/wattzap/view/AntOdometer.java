@@ -71,7 +71,6 @@ public class AntOdometer extends JPanel implements MessageCallback {
 	private long startTime = 0;
 	private double totalDistance = 0;
 
-	private static final double KMTOMILES = 1.609344;
 	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	public AntOdometer() {
@@ -216,13 +215,12 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 			boolean metric = userPrefs.isMetric();
 			if (userPrefs.isMetric()) {
-				speedLabel.setText(String.format("%.1f", t.getSpeed()));
-				distanceLabel.setText(String.format("%.3f", t.getDistance()));
+				speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
+				distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
 			} else {
-				speedLabel.setText(String.format("%.1f", t.getSpeed()
-						/ KMTOMILES));
-				distanceLabel.setText(String.format("%.3f", t.getDistance()
-						/ KMTOMILES));
+				speedLabel.setText(String.format("%.1f", t.getSpeedMPH()));
+				distanceLabel.setText(String.format("%.3f",
+						t.getDistanceMiles()));
 			}
 
 			if (current != null) {
@@ -261,11 +259,11 @@ public class AntOdometer extends JPanel implements MessageCallback {
 				if (userPrefs.isMetric()) {
 					// remaining distance
 					elevationLabel.setText(String.format("%.3f",
-							(totalDistance / 1000) - t.getDistance()));
+							(totalDistance - t.getDistanceMeters()) / 1000));
 				} else {
+					// FIXME isn't totalDistance in meters? Check this
 					elevationLabel.setText(String.format("%.3f",
-							((totalDistance / 1000) - t.getDistance())
-									/ KMTOMILES));
+							(totalDistance - t.getDistanceMiles()) / 1000));
 
 				}
 				break;

@@ -97,7 +97,7 @@ public class Odometer extends JPanel implements MessageCallback {
 		speedText.setForeground(textColor);
 		add(speedText);
 
-		if (userPrefs.INSTANCE.isVirtualPower()) {
+		if (userPrefs.isVirtualPower()) {
 			// Virtual Speed #1
 			JLabel vspeedText = new JLabel();
 			vspeedText.setFont(font1);
@@ -155,7 +155,7 @@ public class Odometer extends JPanel implements MessageCallback {
 		speedLabel.setForeground(Color.LIGHT_GRAY);
 		add(speedLabel);
 
-		if (userPrefs.INSTANCE.isVirtualPower()) {
+		if (userPrefs.isVirtualPower()) {
 			// #2
 			vspeedLabel = new JLabel();
 			vspeedLabel.setFont(font);
@@ -243,18 +243,17 @@ public class Odometer extends JPanel implements MessageCallback {
 
 			// Speed & Distance
 			if (userPrefs.isMetric()) {
-				speedLabel.setText(String.format("%.1f", t.getSpeed()));
-				if (userPrefs.INSTANCE.isVirtualPower()) {
+				speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
+				if (userPrefs.isVirtualPower()) {
 					vspeedLabel.setText("" + t.getTrainerSpeed());
 				}
-				distanceLabel.setText(String.format("%.3f", t.getDistance()));
+				distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
 			} else {
-				speedLabel.setText(String.format("%.1f", t.getSpeed()
-						/ KMTOMILES));
-				distanceLabel.setText(String.format("%.3f", t.getDistance()
-						/ KMTOMILES));
+				speedLabel.setText(String.format("%.1f", t.getSpeedMPH()));
+				distanceLabel.setText(String.format("%.3f",
+						t.getDistanceMiles()));
 				// need to round up or down
-				if (userPrefs.INSTANCE.isVirtualPower()) {
+				if (userPrefs.isVirtualPower()) {
 					vspeedLabel.setText("" + t.getTrainerSpeed() / KMTOMILES);
 				}
 			}
@@ -266,11 +265,11 @@ public class Odometer extends JPanel implements MessageCallback {
 			case RouteReader.POWER:
 				if (userPrefs.isMetric()) {
 					elevationLabel.setText(String.format("%.1f",
-							(totalDistance / 1000) - t.getDistance()));
+							(totalDistance / 1000) - t.getDistanceKM()));
 				} else {
 					elevationLabel.setText(String.format("%.1f",
-							((totalDistance / 1000) - t.getDistance())
-									/ KMTOMILES));
+							((totalDistance / 1000) - t.getDistanceMiles())
+									));
 				}
 
 				break;

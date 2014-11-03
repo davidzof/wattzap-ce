@@ -59,7 +59,7 @@ public class FitlogImporter extends DefaultHandler {
 			}
 			String distance = atts.getValue("dist");
 			if (distance != null) {
-				point.setDistance(Double.parseDouble(distance));
+				point.setDistanceMeters(Double.parseDouble(distance));
 			}
 		}
 	}
@@ -67,7 +67,7 @@ public class FitlogImporter extends DefaultHandler {
 	public void endElement(String uri, String name, String qName) {
 		if ("pt".equalsIgnoreCase(name)) {
 			if (last != null) {
-				double distance = point.getDistance() - last.getDistance();
+				double distance = point.getDistanceMeters() - last.getDistanceMeters();
 				if (distance == 0) {
 					// no distance change, we've stopped, drop point
 					adjust += ((point.getTime() - adjust) - last.getTime());

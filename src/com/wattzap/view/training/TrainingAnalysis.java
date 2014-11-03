@@ -39,6 +39,8 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.WorkoutData;
 
 /**
+ * Displays a summary analysis of a workout.
+ * 
  * (c) 2014 David George / Wattzap.com
  * 
  * @author David George
@@ -293,7 +295,7 @@ public class TrainingAnalysis extends JFrame {
 			return;
 		}
 		time.setText(df.format(workoutData.getTime()) + " ");
-		distance.setText(decimalFormat.format(workoutData.getDistance())
+		distance.setText(decimalFormat.format(workoutData.getDistanceMeters()/1000)
 				+ " km");
 		qPower.setText(workoutData.getQuadraticPower() + " Watts");
 
@@ -351,14 +353,13 @@ public class TrainingAnalysis extends JFrame {
 		long len = (lastPoint.getTime() - firstPoint.getTime());
 		workoutData.setTime(len);
 		workoutData.setDate(firstPoint.getTime());
-		workoutData.setDistance(lastPoint.getDistance());
+		workoutData.setDistanceMeters(lastPoint.getDistanceMeters());
 
 		int maxCad = 0;
 		long aveCad = 0;
 		int maxHR = 0;
 		long aveHR = 0;
 		int minHR = 220;
-		int ftHR = 0;
 		double tPower = 0;
 
 		// five second power
@@ -367,20 +368,34 @@ public class TrainingAnalysis extends JFrame {
 		int maxPwr = 0;
 		double qPwr = 0;
 
-		ftHR = 0;
+
 		TreeMap<Integer, Long> pow = new TreeMap<Integer, Long>();
+		TreeMap<Integer, Long> hr = new TreeMap<Integer, Long>();
 		Telemetry first = null;
 		for (Telemetry t : data) {
+			/*
+			 * Produces a map of power buckets and their times. e.g.
+			 * 12w:5s,10w:7s,8w:9s,6w:7s,3w:5s
+			 */
 			if (first == null) {
 				// first time through
 				first = t;
 			} else {
+				// Power Values
 				if (pow.containsKey(t.getPower())) {
 					long time = pow.get(t.getPower());
 					pow.put(t.getPower(), time
 							+ (t.getTime() - first.getTime()));
 				} else {
 					pow.put(t.getPower(), t.getTime() - first.getTime());
+				}
+				// Heart Rate Values
+				if (hr.containsKey(t.getHeartRate())) {
+					long time = hr.get(t.getHeartRate());
+					hr.put(t.getHeartRate(), time
+							+ (t.getTime() - first.getTime()));
+				} else {
+					hr.put(t.getHeartRate(), t.getTime() - first.getTime());
 				}
 
 				first = t;
@@ -402,7 +417,7 @@ public class TrainingAnalysis extends JFrame {
 			}
 			if (last != null) {
 				/*
-				 * if data is recovered we need to take into account the time
+				 * if data is recovered after a crash we need to take into account the time
 				 * gap, so we check to see if T > T' by more than 2 seconds and
 				 * then we adjust last time
 				 */
@@ -415,40 +430,50 @@ public class TrainingAnalysis extends JFrame {
 			last = t;
 		}// for
 
+		/*
+		 * Calculate five second, 1 minute, five minute and twenty minute power. We order power from highest to lowest.
+		 */
 		int fiveSecPwr = 0;
 		int oneMinPwr = 0;
 		int fiveMinPwr = 0;
 		int twentyMinPwr = 0;
-		long tot = 0;
+		long timeInMillis = 0;
 		for (Map.Entry<Integer, Long> entry : pow.descendingMap().entrySet()) {
-			int key = entry.getKey();
-			long value = entry.getValue();
-			tot += value;
-			if (tot >= 5000 && fiveSecPwr == 0) {
-				fiveSecPwr = key;
+			timeInMillis +=  entry.getValue();
+			if (timeInMillis >= 5000 && fiveSecPwr == 0) {
+				fiveSecPwr = entry.getKey();
 			}
-			if (tot >= 60000 && oneMinPwr == 0) {
-				oneMinPwr = key;
+			if (timeInMillis >= 60000 && oneMinPwr == 0) {
+				oneMinPwr = entry.getKey();
 			}
-			if (tot >= 300000 && fiveMinPwr == 0) {
-				fiveMinPwr = key;
+			if (timeInMillis >= 300000 && fiveMinPwr == 0) {
+				fiveMinPwr = entry.getKey();
 			}
-			if (tot >= 1200000 && twentyMinPwr == 0) {
-				twentyMinPwr = key;
+			if (timeInMillis >= 1200000 && twentyMinPwr == 0) {
+				twentyMinPwr = entry.getKey();
 			}
 		}// for
 		workoutData.setFiveSecondPwr(fiveSecPwr);
 		workoutData.setFiveMinutePwr(fiveMinPwr);
 		workoutData.setOneMinutePwr(oneMinPwr);
 		workoutData.setTwentyMinutePwr(twentyMinPwr);
-
-		workoutData.setFtHR(ftHR);
 		qPwr /= data.size();
 		qPwr = Math.sqrt(qPwr);
 		workoutData.setQuadraticPower((int) qPwr);
-
-		workoutData.setWeight(UserPreferences.INSTANCE.getWeight());
-
+		
+		// Calculate 20 minute heart rate
+		int twentyMinHR = 0;
+		timeInMillis = 0;
+		for (Map.Entry<Integer, Long> entry : hr.descendingMap().entrySet()) {
+			timeInMillis +=  entry.getValue();
+			if (timeInMillis >= 1200000 && twentyMinHR == 0) {
+				twentyMinHR = entry.getKey();
+			}
+		}// for
+		workoutData.setFtHR(twentyMinHR);
+		
+		// always save as Kilograms
+		workoutData.setWeight(UserPreferences.INSTANCE.getWeightKG());
 		workoutData.setMaxHR(maxHR);
 		workoutData.setMinHR(minHR);
 		workoutData.setMaxCadence(maxCad);

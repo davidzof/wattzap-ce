@@ -29,7 +29,6 @@ import com.wattzap.model.power.PowerProfiles;
  * Singleton helper to read/write user preferences to a backing store
  * 
  * @author David George / 15 September 2013 (C) Copyright 2013
- * 
  */
 public enum UserPreferences {
 	INSTANCE;
@@ -68,6 +67,10 @@ public enum UserPreferences {
 
 	public void addWorkout(WorkoutData data) {
 		ds.saveWorkOut(user, data);
+	}
+	
+	public void updateWorkout(WorkoutData data) {
+		ds.updateWorkout(user, data);
 	}
 
 	public WorkoutData getWorkout(String name) {
@@ -145,7 +148,7 @@ public enum UserPreferences {
 		if (this.isMetric()) {
 			setDouble("weight", weight);
 		} else {
-			// convert to lbs
+			// convert from lbs
 			setDouble("weight", weight * 0.45359237);
 		}
 	}
@@ -154,7 +157,7 @@ public enum UserPreferences {
 		if (this.isMetric()) {
 			return getDouble("bikeweight", 10.0);
 		} else {
-			// convert to lbs
+			// convert from lbs
 			return getDouble("bikeweight", 10.0) / 0.45359237;
 		}
 	}

@@ -163,10 +163,10 @@ public class GpxImporter extends DefaultHandler {
 
 					point.setSpeed(speed);
 					distance += d;
-					point.setDistance(distance / 1000);
+					point.setDistanceMeters(distance);
 					point.setGradient((gradient) * 100);
 				} else {
-					point.setDistance(0);
+					point.setDistanceMeters(0);
 					point.setResistance(WorkoutData.GPS);
 					firstTime = point.getTime();
 				}

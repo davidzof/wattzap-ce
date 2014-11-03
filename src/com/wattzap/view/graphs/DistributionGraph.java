@@ -41,7 +41,9 @@ import com.wattzap.controller.DistributionAccessor;
 import com.wattzap.model.dto.Telemetry;
 
 /* 
- * Power Distribution Chart
+ * Distribution Chart
+ * 
+ * This is a generic bar chart showing how things like power is distributed within a workout.
  * 
  * @author David George (c) Copyright 2014
  * @date 21 April 2014
@@ -52,7 +54,6 @@ public class DistributionGraph extends JPanel {
 	CategoryPlot plot;
 	private final ArrayList<Telemetry> telemetry[];
 	private final DistributionAccessor da;
-	private static Logger logger = LogManager.getLogger("Distribution Graph");
 
 	public DistributionGraph(ArrayList<Telemetry> telemetry[],
 			DistributionAccessor da, String domainLabel, int scale) {
@@ -97,9 +98,7 @@ public class DistributionGraph extends JPanel {
 		// OPTIONAL CUSTOMISATION COMPLETED.
 
 		chartPanel = new ChartPanel(chart);
-
 		chartPanel.setSize(100, 800);
-
 		chartPanel.setFillZoomRectangle(true);
 		chartPanel.setMouseWheelEnabled(true);
 		setLayout(new BorderLayout());

@@ -24,6 +24,8 @@ import java.io.Serializable;
  * @date 19 June 2013
  */
 public class Telemetry implements Serializable {
+	private static final double KMTOMILES = 1.609344;
+	
 	private double speed = -1;
 	private int cadence;
 	private double distance = 0.0;
@@ -34,6 +36,7 @@ public class Telemetry implements Serializable {
 	private double longitude = 181;
 	private int heartRate = -1;
 	private long time;
+	private int resistance;
 
 	public long getTime() {
 		return time;
@@ -94,18 +97,39 @@ public class Telemetry implements Serializable {
 	public void setSpeed(double speed) {
 		this.speed = speed;
 	}
+	
+	public double getSpeedKMH() {
+		return speed;
+	}
+	
+	public double getSpeedMPH() {
+		return speed/KMTOMILES;
+	}
 
 	public void setCadence(int cadence) {
 		this.cadence = cadence;
 	}
 
-	public void setDistance(double distance) {
+	/**
+	 * Distance in meters
+	 */
+	public void setDistanceMeters(double distance) {
 		this.distance = distance;
 	}
-
-	public double getSpeed() {
-		return speed;
+	
+	public double getDistanceMeters() {
+		return distance;
 	}
+	
+	public double getDistanceKM() {
+		return distance/1000;
+	}
+	
+	public double getDistanceMiles() {
+		return distance/(KMTOMILES*1000);
+	}
+
+
 
 	public int getCadence() {
 		return cadence;
@@ -123,12 +147,12 @@ public class Telemetry implements Serializable {
 	
 	// for player only mode
 	public void setResistance(int v) {
-		heartRate =  v;
+		resistance =  v;
 
 	}
 
 	public int getResistance() {
-		return heartRate;
+		return resistance;
 	}
 
 	@Override
@@ -139,9 +163,4 @@ public class Telemetry implements Serializable {
 				+ ", latitude=" + latitude + ", longitude=" + longitude
 				+ ", heartRate=" + heartRate + " tt " + heartRate + ", time=" + time / 1000 + "]";
 	}
-
-	public double getDistance() {
-		return distance;
-	}
-
 }

@@ -26,6 +26,8 @@ import javax.swing.JPanel;
 /**
  * (c) 2014 Wattzap.com
  * 
+ * Added to speed/cadence/hr graph to allow values to be smoothed using moving average.
+ * 
  * @author David George
  * @date 22 September 2014
  */

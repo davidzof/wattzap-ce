@@ -70,7 +70,7 @@ public class Profile extends JPanel implements MessageCallback {
 		switch (message) {
 		case SPEEDCADENCE:
 			Telemetry t = (Telemetry) o;
-			distance = t.getDistance();
+			distance = t.getDistanceKM();
 			break;
 		case STARTPOS:
 			distance = (Double) o;

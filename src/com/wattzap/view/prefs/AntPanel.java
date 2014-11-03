@@ -133,7 +133,11 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 			}
 			break;
 		case SPEEDCADENCE:
-			speedLabel.setText(String.format("%.1f", t.getSpeed()) + " km/h");
+			if (userPrefs.isMetric()) {
+			speedLabel.setText(String.format("%.1f", t.getSpeedKMH()) + " km/h");
+			} else {
+				speedLabel.setText(String.format("%.1f", t.getSpeedMPH()) + " mph");
+			}
 			break;
 		}
 	}

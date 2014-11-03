@@ -106,7 +106,7 @@ public class TcxWriter /* implements TrackWriter */{
 		pw.print((end.getTime() - start.getTime()) / 1000);
 		pw.println("</TotalTimeSeconds>");
 		pw.print("        <DistanceMeters>");
-		pw.print(end.getDistance() * 1000);
+		pw.print(end.getDistanceMeters());
 		pw.println("</DistanceMeters>");
 		// TODO max speed etc.
 		// Calories are a required element just put in 0.
@@ -150,7 +150,7 @@ public class TcxWriter /* implements TrackWriter */{
 		pw.print(t.getElevation());
 		pw.println("</AltitudeMeters>");
 		pw.print("          <DistanceMeters>");
-		pw.print(t.getDistance() * 1000);
+		pw.print(t.getDistanceMeters());
 		pw.println("</DistanceMeters>");
 		pw.print("          <HeartRateBpm>");
 		pw.print("<Value>");
@@ -166,7 +166,7 @@ public class TcxWriter /* implements TrackWriter */{
 		pw.print(t.getPower());
 		pw.print("</Watts>");
 		pw.print("<Speed>");
-		pw.print(t.getSpeed());
+		pw.print(t.getSpeedKMH());
 		pw.print("</Speed>");
 		pw.println("</TPX></Extensions>");
 		pw.println("        </Trackpoint>");

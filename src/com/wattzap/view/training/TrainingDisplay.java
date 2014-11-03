@@ -188,8 +188,9 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				}
 			} else {
 				// distance based training
-				if (tData.isNext(t.getDistance())) {
-					current = tData.getNext(t.getDistance());
+				if (tData.isNext(t.getDistanceMeters())) {
+					
+					current = tData.getNext(t.getDistanceMeters());
 					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 					// Sound beep on training change
 					Toolkit.getDefaultToolkit().beep();
@@ -279,7 +280,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			JOptionPane.showMessageDialog(this, "Recovered " + data.size()
 					+ " records", "Info", JOptionPane.INFORMATION_MESSAGE);
 			if (t != null) {
-				MessageBus.INSTANCE.send(Messages.STARTPOS, t.getDistance());
+				MessageBus.INSTANCE.send(Messages.STARTPOS, t.getDistanceKM());
 			}
 			if (objectInputStream != null) {
 				try {
@@ -382,7 +383,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		case STARTPOS:
 			double distance = (Double) o;
 			if (current != null && current.getTime() == 0 && tData != null) {
-				current = tData.getNext(distance);
+				current = tData.getNext(distance*1000);
 				// MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 				String[] details = { current.getDescription()
 						+ current.getPowerMsg() + current.getHRMsg()

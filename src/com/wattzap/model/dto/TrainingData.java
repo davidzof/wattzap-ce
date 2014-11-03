@@ -105,9 +105,9 @@ public class TrainingData {
 	 *            Current distance covered
 	 * @return true - ready to fetch next Training Item
 	 */
-	public boolean isNext(double distance) {
+	public boolean isNext(double distanceMeters) {
 		if (currentPoint + 1 < training.size()
-				&& distance > training.get(currentPoint + 1).getDistance()) {
+				&& distanceMeters > training.get(currentPoint + 1).getDistanceMeters()) {
 			return true;
 		}
 		return false;
@@ -117,14 +117,14 @@ public class TrainingData {
 	 * Returns the next training item relative to distance. The current training
 	 * item is the one immediately prior to the current rider distance
 	 */
-	public TrainingItem getNext(double distance) {
+	public TrainingItem getNext(double distanceMeters) {
 
 		TrainingItem current = training.get(currentPoint);
-		while (distance > current.getDistance()
+		while (distanceMeters > current.getDistanceMeters()
 				&& (currentPoint + 1) < training.size()) {
 			// we have more training items
 			TrainingItem next = training.get(currentPoint + 1);
-			if (distance < next.getDistance()) {
+			if (distanceMeters < next.getDistanceMeters()) {
 				break;
 			}
 			current = next;
@@ -135,7 +135,7 @@ public class TrainingData {
 		if ((currentPoint + 1) < training.size()) {
 			current.setDescription("To "
 					+ String.format("%.2f", training.get(currentPoint + 1)
-							.getDistance()) + " km");
+							.getDistanceMeters()/1000) + " km");
 		} else {
 			current.setDescription("Final segment ");
 		}

@@ -124,7 +124,7 @@ MessageCallback {
 	}
 
 	private void setSpeed(Telemetry t) {
-		Point p = routeData.getPoint(t.getDistance());
+		Point p = routeData.getPoint(t.getDistanceKM());
 
 		if (startTime == 0) {
 			// first time through, start video
@@ -144,7 +144,7 @@ MessageCallback {
 					+ " milliSeconds time " + time);
 
 			rSpeed.add(p.getSpeed());
-			double rate = t.getSpeed() / p.getSpeed();
+			double rate = t.getSpeedKMH() / p.getSpeed();
 			if (rate > 1.0) {
 				rate = 1.0f;
 			}
@@ -165,7 +165,7 @@ MessageCallback {
 		if (mPlayer.isPlaying() == false) {
 			mPlayer.start();
 		}
-		if (t.getSpeed() == 0.0) {
+		if (t.getSpeedKMH() == 0.0) {
 			mPlayer.pause();
 			return;
 		}
@@ -231,14 +231,14 @@ MessageCallback {
 			lastMapTime = mapTime;
 			logger.debug(String
 					.format("Map Speed  %.2f, Smoothed Map Speed %.2f, Turbo Speed %.2f MapTime %d VideoTime %d, perCent %.3f, lastCent %.3f",
-							p.getSpeed(), rSpeed.getAverage(), t.getSpeed(),
+							p.getSpeed(), rSpeed.getAverage(), t.getSpeedKMH(),
 							mapTime, videoTime, perCent, lastCent));
 			lastCent = perCent;
 		}
 
 		double rate = 1.0;
 		if (rSpeed.getAverage() > 10.0) {
-			rate = t.getSpeed() / rSpeed.getAverage();
+			rate = t.getSpeedKMH() / rSpeed.getAverage();
 		}
 		rate *= diff;
 

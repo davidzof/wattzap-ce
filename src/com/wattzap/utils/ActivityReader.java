@@ -96,6 +96,14 @@ public class ActivityReader  {
 			}
 	}
 
+	/**
+	 * Reads telemetry data from file. Can be in various formats.
+	 * 
+	 * @param fileName
+	 * @return
+	 * @throws SAXException
+	 * @throws IOException
+	 */
 	public static ArrayList<Telemetry> readTelemetry(String fileName)
 			throws SAXException, IOException {
 		ArrayList<Telemetry> data = null;
@@ -113,7 +121,7 @@ public class ActivityReader  {
 			data = handler.data;
 			r.close();
 			Telemetry last = data.get(data.size() - 1);
-			last.setDistance(handler.distance);
+			last.setDistanceMeters(handler.distance);
 			return data;
 		} else if (fileName.endsWith(".fit")) {
 			FitImporter handler = new FitImporter(fileName);

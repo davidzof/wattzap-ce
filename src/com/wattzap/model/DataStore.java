@@ -37,7 +37,9 @@ import org.apache.log4j.Logger;
 import com.wattzap.model.dto.WorkoutData;
 
 /**
- * (c) 2013 David George / Wattzap.com
+ * Handles interactions with the database
+ * 
+ * (c) 2013-2014 David George / Wattzap.com
  * 
  * @author David George
  * @date 11 June 2013
@@ -127,13 +129,11 @@ public class DataStore {
 		}
 	}
 
-	/*
-	 * create table metrics (id integer primary key autoincrement, "
-	 * "filename varchar," "ride_date date," "ride_time double, "
-	 * "average_cad double," "workout_time double, " "total_distance double,"
-	 * "x_power double," "average_speed double," "total_work double,"
-	 * "average_power double," "average_hr double," "relative_intensity double,"
-	 * "bike_score double)");
+	/**
+	 * Save workout values to database
+	 * 
+	 * @param user
+	 * @param data
 	 */
 	public void saveWorkOut(String user, WorkoutData data) {
 		PreparedStatement psInsert = null;
@@ -163,7 +163,7 @@ public class DataStore {
 			psInsert.setInt(16, data.getMaxCadence());
 			psInsert.setInt(17, data.getAveCadence());
 
-			psInsert.setDouble(18, data.getDistance());
+			psInsert.setDouble(18, data.getDistanceMeters());
 			psInsert.setDouble(19, data.getWeight());
 
 			psInsert.setTime(20, new java.sql.Time(data.getTime()));
@@ -171,7 +171,7 @@ public class DataStore {
 			
 			psInsert.setString(22, data.getDescription());
 			psInsert.setInt(23, data.getSource()); // Wattzap
-			int i = psInsert.executeUpdate();
+			/*int i =*/ psInsert.executeUpdate();
 
 			conn.commit();
 		} catch (SQLException e) {
@@ -186,6 +186,56 @@ public class DataStore {
 			}
 		}
 	}
+
+	/**
+	 * Updates any calculated values
+	 */
+	public void updateWorkout(String user, WorkoutData data) {
+		PreparedStatement psUpdate = null;
+		try {
+
+			psUpdate = conn.prepareStatement(WorkoutData.updateAnalysis());
+
+			// Power
+			psUpdate.setInt(1, data.getFiveSecondPwr());
+			psUpdate.setInt(2, data.getOneMinutePwr());
+			psUpdate.setInt(3, data.getFiveMinutePwr());
+			psUpdate.setInt(4, data.getTwentyMinutePwr());
+
+			psUpdate.setInt(5, data.getQuadraticPower());
+			psUpdate.setInt(6, data.getTotalPower());
+			psUpdate.setInt(7, data.getMaxPower());
+			psUpdate.setInt(8, data.getAvePower());
+
+			psUpdate.setInt(9, data.getMaxHR());
+			psUpdate.setInt(10, data.getAveHR());
+			psUpdate.setInt(11, data.getMinHR());
+			psUpdate.setInt(12, data.getFtHR());
+
+			psUpdate.setInt(13, data.getMaxCadence());
+			psUpdate.setInt(14, data.getAveCadence());
+
+			psUpdate.setDouble(15, data.getDistanceMeters());
+			psUpdate.setString(16, user);
+			psUpdate.setString(17, data.getTcxFile());
+			
+			int i = psUpdate.executeUpdate();
+			
+			System.out.println("i " + i);
+
+			conn.commit();
+		} catch (SQLException e) {
+			logger.error(e.getLocalizedMessage());
+		} finally {
+			try {
+				if (psUpdate != null) {
+					psUpdate.close();
+				}
+			} catch (SQLException e) {
+				logger.error(e.getLocalizedMessage());
+			}
+		}
+	}	
 
 	public WorkoutData getWorkout(String user, String name) {
 		PreparedStatement s = null;
@@ -220,7 +270,7 @@ public class DataStore {
 				data.setMaxCadence(rs.getInt(16));
 				data.setAveCadence(rs.getInt(17));
 
-				data.setDistance(rs.getDouble(18));
+				data.setDistanceMeters(rs.getDouble(18));
 				data.setWeight(rs.getDouble(19));
 				data.setTime(rs.getTime(20).getTime());
 				data.setDate(rs.getDate(21).getTime());
@@ -317,7 +367,7 @@ public class DataStore {
 				data.setMaxCadence(rs.getInt(16));
 				data.setAveCadence(rs.getInt(17));
 
-				data.setDistance(rs.getDouble(18));
+				data.setDistanceMeters(rs.getDouble(18));
 				data.setWeight(rs.getDouble(19));
 				data.setTime(rs.getTime(20).getTime());
 				data.setDate(rs.getDate(21).getTime());
@@ -384,7 +434,7 @@ public class DataStore {
 			psInsert.setString(1, v);
 			psInsert.setString(2, user);
 			psInsert.setString(3, k);
-			int i = psInsert.executeUpdate();
+			/*int i =*/ psInsert.executeUpdate();
 
 			conn.commit();
 		} catch (SQLException e) {

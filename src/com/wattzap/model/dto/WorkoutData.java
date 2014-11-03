@@ -18,6 +18,14 @@ package com.wattzap.model.dto;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Represents data concerning a workout
+ * 
+ * (c) 2013-2014 David George / Wattzap.com
+ * 
+ * @author David George
+ * @date 11 June 2013
+ */
 public class WorkoutData {
 	// Power
 	private int fiveSecondPwr;
@@ -41,7 +49,7 @@ public class WorkoutData {
 	private int aveCadence = 0;
 
 	// ride
-	private double distance;
+	private double distanceMeters;
 	private long date;
 	private long time;
 
@@ -49,6 +57,8 @@ public class WorkoutData {
 	private double weight;
 	private int ftp;
 
+	// bike?
+	
 	private int dataSource;
 	
 	private String tcxFile;
@@ -174,12 +184,12 @@ public class WorkoutData {
 		this.ftHR = ftHR;
 	}
 
-	public double getDistance() {
-		return distance;
+	public double getDistanceMeters() {
+		return distanceMeters;
 	}
 
-	public void setDistance(double distance) {
-		this.distance = distance;
+	public void setDistanceMeters(double distance) {
+		this.distanceMeters = distance;
 	}
 
 	public long getDate() {
@@ -241,7 +251,7 @@ public class WorkoutData {
 				+ ", avePower=" + avePower + ", quadraticPower="
 				+ quadraticPower + ", maxHR=" + maxHR + ", aveHR=" + aveHR
 				+ ", minHR=" + minHR + ", ftHR=" + ftHR + ", distance="
-				+ distance + ", date=" + date + ", time=" + time + ", weight="
+				+ distanceMeters + ", date=" + date + ", time=" + time + ", weight="
 				+ weight + ", tcxFile=" + tcxFile + " IF " + getIntensity()
 				+ " TSS " + getStress() + "]";
 	}
@@ -303,6 +313,10 @@ public class WorkoutData {
 	
 	static public String insert() {
 		return "INSERT INTO workouts VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)";
+	}
+
+	static public String updateAnalysis() {
+		return "UPDATE workouts SET fivesecp = ?, oneminp = ?, fiveminp = ?, twentyminp = ?, qp = ?, totalp = ?, maxp = ?, avep = ?, maxhr = ?, avehr = ?, minhr = ?, fthr = ?, maxcad = ?, avecad = ?, distance = ? WHERE username = ? and filename = ?";
 	}
 	
 	static public String select() {
