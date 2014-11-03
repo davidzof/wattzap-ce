@@ -18,6 +18,9 @@ package com.wattzap.utils;
 import java.io.FileReader;
 import java.util.ArrayList;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.junit.Assert;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
@@ -28,7 +31,31 @@ import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.view.training.TrainingAnalysis;
 
 public class TcxImporterTest {
+	
 	@Test
+	public void ImportTCX() {
+		try {
+			LogManager.getRootLogger().setLevel(Level.INFO);
+			XMLReader xr = XMLReaderFactory.createXMLReader();
+			TcxImporter handler = new TcxImporter();
+			xr.setContentHandler(handler);
+			xr.setErrorHandler(handler);
+
+			String file = "resources/test/2014Apr21-183642.tcx";
+			FileReader r = new FileReader(file);
+			xr.parse(new InputSource(r));
+
+			ArrayList<Telemetry> gpxData = handler.data;
+			Telemetry last = gpxData.get(gpxData.size() - 1);
+			Assert.assertEquals(last.getDistanceKM(), 20.266, 0.001);
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+	}
+	
+	
+	//@Test
 	public void TcxImport() {
 		try {
 			XMLReader xr = XMLReaderFactory.createXMLReader();
@@ -42,8 +69,8 @@ public class TcxImporterTest {
 
 			ArrayList<Telemetry> data = handler.data;
 			Telemetry last = data.get(data.size() - 1);
-			if (last.getDistance() == 0) {
-				last.setDistance(handler.distance);// hack if no distance data
+			if (last.getDistanceMeters() == 0) {
+				last.setDistanceMeters(handler.distance);// hack if no distance data
 			}
 			for (Telemetry t : data) {
 				System.out.println(t.getPower());
