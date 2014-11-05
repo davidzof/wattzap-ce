@@ -64,6 +64,7 @@ import com.wattzap.view.graphs.DistributionGraph;
 import com.wattzap.view.graphs.GenericScatterGraph;
 import com.wattzap.view.graphs.MMPGraph;
 import com.wattzap.view.graphs.SCHRGraph;
+import com.wattzap.view.training.TrainingAnalysis;
 
 /**
  * List of workouts stored in the system
@@ -339,6 +340,8 @@ public class Workouts extends JPanel implements ActionListener {
 				return;
 			}
 
+			// All workouts to be imported are dumped into an "Imports"
+			// directory
 			String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
 					+ "/Imports/";
 
@@ -378,6 +381,8 @@ public class Workouts extends JPanel implements ActionListener {
 			}
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),
 					"Import", JOptionPane.INFORMATION_MESSAGE);
+			
+			return;
 		}
 
 		/*
@@ -399,10 +404,12 @@ public class Workouts extends JPanel implements ActionListener {
 			return;
 		}
 		if (hrWattsGraph.equals(command)) {
+			// Heart Rate vs Watts Scatter Plot
 			HRWattsScatterPlot();
 			return;
 		}
 		if (pdGraph.equals(command)) {
+			// Power distribution graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getPower());
@@ -412,6 +419,7 @@ public class Workouts extends JPanel implements ActionListener {
 			return;
 		}
 		if (cdGraph.equals(command)) {
+			// Cadence distribution graph
 			DistributionGraph(new DistributionAccessor() {
 				public int getKey(Telemetry t) {
 					return getKey(t.getCadence());
@@ -470,6 +478,12 @@ public class Workouts extends JPanel implements ActionListener {
 	/**
 	 * Load one or more workouts selected in view. We concatenate all data into
 	 * a telemetry array.
+	 * 
+	 * Side effect: Global workoutData points to the last workout data loaded.
+	 * FIX: we should change this
+	 * 
+	 * @return false - no data could be loaded due to a selection error. True :
+	 *         data is ready to use.
 	 */
 	private boolean load() {
 		if (selectedRows == null || selectedRows.isEmpty()) {
@@ -490,13 +504,14 @@ public class Workouts extends JPanel implements ActionListener {
 		int count = 0;
 		for (int i : selectedRows) {
 			workoutData = workoutList.get(i);
+			System.out.println(workoutData);
 			String fileName = workoutData.getTcxFile();
 			try {
 				telemetry[count] = ActivityReader.readTelemetry(workoutDir
 						+ fileName);
 			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				// bah, do nothing
+				logger.error(e1.getLocalizedMessage());
 			}
 			count++;
 		}// for
@@ -504,19 +519,57 @@ public class Workouts extends JPanel implements ActionListener {
 		listChanged = false;
 		return true;
 	}
-	
-	void reload() {
-		
+
+	/**
+	 * Will reanalyze workouts on the selected rows, saving the data to the
+	 * database.
+	 */
+	void reanalyze() {
+		if (selectedRows == null || selectedRows.isEmpty()) {
+			JOptionPane.showMessageDialog(this,
+					"No data to display, select a workout first", "No Data",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
+				+ "/Workouts/";
+
+		telemetry = new ArrayList[selectedRows.size()];
+
+		int count = 0;
+		for (int i : selectedRows) {
+			workoutData = workoutList.get(i);
+			System.out.println(">> " + workoutData);
+			String fileName = workoutData.getTcxFile();
+			int ftp = workoutData.getFtp();
+			try {
+				telemetry[count] = ActivityReader.readTelemetry(workoutDir
+						+ fileName);
+
+				workoutData = TrainingAnalysis.analyze(telemetry[count]);
+				workoutData.setTcxFile(fileName);
+				workoutData.setFtp(ftp);
+				System.out.println(workoutData);
+				
+				userPrefs.updateWorkout(workoutData);				
+			} catch (Exception e1) {
+				logger.error(e1.getLocalizedMessage());
+			}
+			count++;
+
+		}// for
+
+		listChanged = false;
+		return;
 	}
-	
+
 	/*
 	 * We don't destroy workouts view, we just hide it.
 	 */
 	void quit() {
 		frame.setVisible(false);
 	}
-	
-	
 
 	/**
 	 * Create Mean Maximal Power Graph
@@ -651,8 +704,8 @@ public class Workouts extends JPanel implements ActionListener {
 			}// for
 		}// for
 
-		GenericScatterGraph mmp = new GenericScatterGraph(series, "Power",
-				"Cadence");
+		GenericScatterGraph mmp = new GenericScatterGraph(series, userPrefs.messages.getString("poWtt"),
+				userPrefs.messages.getString("cDrpm"));
 		JFrame frame = new JFrame("Cadence Power Scatter Plot");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
@@ -680,8 +733,8 @@ public class Workouts extends JPanel implements ActionListener {
 			}// for
 		}// for
 
-		GenericScatterGraph mmp = new GenericScatterGraph(series, "Power",
-				"Heartrate");
+		GenericScatterGraph mmp = new GenericScatterGraph(series, userPrefs.messages.getString("poWtt"),
+				userPrefs.messages.getString("hrBpm"));
 		JFrame frame = new JFrame("Heart Rate / Power Scatter Plot");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
@@ -779,6 +832,9 @@ public class Workouts extends JPanel implements ActionListener {
 		}
 	}
 
+	/*
+	 * Delete one or more rows of data from the database.
+	 */
 	private void deleteSelectedRows(int[] rows) {
 		DefaultTableModel dm = (DefaultTableModel) table.getModel();
 		for (int i = rows.length - 1; i >= 0; i--) {

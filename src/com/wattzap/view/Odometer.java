@@ -245,7 +245,7 @@ public class Odometer extends JPanel implements MessageCallback {
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
 				if (userPrefs.isVirtualPower()) {
-					vspeedLabel.setText("" + t.getTrainerSpeed());
+					vspeedLabel.setText(String.format("%.1f",t.getTrainerSpeed()));
 				}
 				distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
 			} else {
@@ -254,7 +254,7 @@ public class Odometer extends JPanel implements MessageCallback {
 						t.getDistanceMiles()));
 				// need to round up or down
 				if (userPrefs.isVirtualPower()) {
-					vspeedLabel.setText("" + t.getTrainerSpeed() / KMTOMILES);
+					vspeedLabel.setText(String.format("%.1f",(t.getTrainerSpeed() / KMTOMILES)));
 				}
 			}
 

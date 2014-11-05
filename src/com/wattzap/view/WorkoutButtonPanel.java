@@ -50,7 +50,7 @@ public class WorkoutButtonPanel extends JPanel implements ActionListener {
 		deleteButton.setActionCommand(delete);
 		
 		JButton reloadButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("load"));
+				UserPreferences.INSTANCE.messages.getString("reanal"));
 		reloadButton.setActionCommand(analyze);
 		JButton quitButton = new JButton(
 				UserPreferences.INSTANCE.messages.getString("quit"));
@@ -77,7 +77,7 @@ public class WorkoutButtonPanel extends JPanel implements ActionListener {
 		} else if (quit.equals(command)) {
 			workouts.quit();
 		} else {
-			workouts.reload();
+			workouts.reanalyze();
 		}
 
 	}

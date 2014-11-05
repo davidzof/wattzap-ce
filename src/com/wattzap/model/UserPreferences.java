@@ -310,7 +310,11 @@ public enum UserPreferences {
 	}
 
 	public int getEvalTime() {
-		return getIntCrypt("", "evalTime", evalTime);
+		int i = getIntCrypt("", "evalTime", evalTime);
+		if (i<0) {
+			return 0;
+		}
+		return i;
 	}
 
 	public void setEvalTime(int t) {
