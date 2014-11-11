@@ -135,7 +135,7 @@ public enum UserPreferences {
 			return getDouble("weight", 80.0);
 		} else {
 			// convert to lbs
-			return getDouble("weight", 80.0) / 0.45359237;
+			return getDouble("weight", 80.0) / LBSTOKG;
 		}
 	}
 

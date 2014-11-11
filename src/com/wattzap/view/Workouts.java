@@ -28,14 +28,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -110,6 +109,8 @@ public class Workouts extends JPanel implements ActionListener {
 
 	public Workouts() {
 		super(new GridLayout(1, 0));
+		
+		this.setBorder(BorderFactory.createEmptyBorder(0,10,10,10)); 
 		selectedRows = null;
 
 		DefaultTableModel model = new DefaultTableModel(columnNames, 0);
@@ -348,7 +349,6 @@ public class Workouts extends JPanel implements ActionListener {
 			ActivityReader ar = new ActivityReader();
 
 			File dir = new File(workoutDir);
-			Set<File> fileTree = new HashSet<File>();
 			for (File entry : dir.listFiles()) {
 				if (entry.isFile()) {
 					try {
@@ -381,7 +381,7 @@ public class Workouts extends JPanel implements ActionListener {
 			}
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),
 					"Import", JOptionPane.INFORMATION_MESSAGE);
-			
+
 			return;
 		}
 
@@ -504,7 +504,6 @@ public class Workouts extends JPanel implements ActionListener {
 		int count = 0;
 		for (int i : selectedRows) {
 			workoutData = workoutList.get(i);
-			System.out.println(workoutData);
 			String fileName = workoutData.getTcxFile();
 			try {
 				telemetry[count] = ActivityReader.readTelemetry(workoutDir
@@ -540,7 +539,6 @@ public class Workouts extends JPanel implements ActionListener {
 		int count = 0;
 		for (int i : selectedRows) {
 			workoutData = workoutList.get(i);
-			System.out.println(">> " + workoutData);
 			String fileName = workoutData.getTcxFile();
 			int ftp = workoutData.getFtp();
 			try {
@@ -550,9 +548,8 @@ public class Workouts extends JPanel implements ActionListener {
 				workoutData = TrainingAnalysis.analyze(telemetry[count]);
 				workoutData.setTcxFile(fileName);
 				workoutData.setFtp(ftp);
-				System.out.println(workoutData);
-				
-				userPrefs.updateWorkout(workoutData);				
+				userPrefs.updateWorkout(workoutData); // saves data to RDBMS
+				workoutList.set(i, workoutData); // FIXME updates local cache of workouts but won't fire list changed event?
 			} catch (Exception e1) {
 				logger.error(e1.getLocalizedMessage());
 			}
@@ -704,7 +701,8 @@ public class Workouts extends JPanel implements ActionListener {
 			}// for
 		}// for
 
-		GenericScatterGraph mmp = new GenericScatterGraph(series, userPrefs.messages.getString("poWtt"),
+		GenericScatterGraph mmp = new GenericScatterGraph(series,
+				userPrefs.messages.getString("poWtt"),
 				userPrefs.messages.getString("cDrpm"));
 		JFrame frame = new JFrame("Cadence Power Scatter Plot");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
@@ -733,7 +731,8 @@ public class Workouts extends JPanel implements ActionListener {
 			}// for
 		}// for
 
-		GenericScatterGraph mmp = new GenericScatterGraph(series, userPrefs.messages.getString("poWtt"),
+		GenericScatterGraph mmp = new GenericScatterGraph(series,
+				userPrefs.messages.getString("poWtt"),
 				userPrefs.messages.getString("hrBpm"));
 		JFrame frame = new JFrame("Heart Rate / Power Scatter Plot");
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");

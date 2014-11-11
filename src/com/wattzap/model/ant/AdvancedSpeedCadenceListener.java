@@ -201,7 +201,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 					double ratio = (powerWatts / p.getPower());
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
-					System.out.println("speed " + speed + " ratio " + ratio + " power " + powerWatts + " tpower " + p.getPower());
+					// System.out.println("speed " + speed + " ratio " + ratio + " power " + powerWatts + " tpower " + p.getPower());
 					
 					distanceKM = (speed / 3600) * timeS;
 

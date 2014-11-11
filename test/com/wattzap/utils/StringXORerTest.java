@@ -23,7 +23,7 @@ public class StringXORerTest {
 	@Test
 	public void encodeString() {
 		String s = StringXORer
-				.encode("<html>WattzAp Turbo Trainer Software<br/><br/>Version: 2.2.1<br/>Date: 7th October<br/>(c) 2014, All rights reserved<br/>",
+				.encode("<html>WattzAp Turbo Trainer Software<br/><br/>Version: 2.3<br/>Date: 9th November<br/>(c) 2014, All rights reserved<br/>",
 						cryptKey);
 		System.out.println(s);
 		s = StringXORer.decode(s, cryptKey);

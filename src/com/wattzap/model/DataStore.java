@@ -220,8 +220,6 @@ public class DataStore {
 			psUpdate.setString(17, data.getTcxFile());
 			
 			int i = psUpdate.executeUpdate();
-			
-			System.out.println("i " + i);
 
 			conn.commit();
 		} catch (SQLException e) {

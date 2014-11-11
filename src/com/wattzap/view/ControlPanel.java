@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.Color;
@@ -21,9 +21,12 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -34,6 +37,8 @@ import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 
 /**
+ * Control button panel at bottom of main screen to start/stop routes
+ * 
  * (c) 2014 David George / Wattzap.com
  * 
  * @author David George
@@ -42,15 +47,16 @@ import com.wattzap.model.UserPreferences;
 public class ControlPanel extends JPanel implements ActionListener,
 		ChangeListener, MessageCallback {
 	private static final long serialVersionUID = 1L;
+	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private JSlider startPosition;
 	private int start;
 
 	public ControlPanel() {
-		JButton stopButton = new JButton(UserPreferences.INSTANCE.messages
-				.getString("stop"));
+		JButton stopButton = new JButton(
+				UserPreferences.INSTANCE.messages.getString("stop"));
 		stopButton.setActionCommand("stop");
-		JButton startButton = new JButton(UserPreferences.INSTANCE.messages
-				.getString("start"));
+		JButton startButton = new JButton(
+				UserPreferences.INSTANCE.messages.getString("start"));
 		startButton.setActionCommand("start");
 
 		startButton.addActionListener(this);
@@ -62,14 +68,25 @@ public class ControlPanel extends JPanel implements ActionListener,
 
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
-		
-		
+
+		// Border b = BorderFactory.createLineBorder( Color.black, 10 );
+		Border b = BorderFactory.createEmptyBorder(10, 0, 10, 0);
+		this.setBorder(b);
+
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if ("start".equals(command)) {
+			if (!userPrefs.isAntEnabled() && userPrefs.getMaxPower() == 0) {
+				JOptionPane.showMessageDialog(this,
+						UserPreferences.INSTANCE.messages
+								.getString("ftpWarning"),
+						UserPreferences.INSTANCE.messages.getString("warning"),
+						JOptionPane.WARNING_MESSAGE);
+			}
+
 			MessageBus.INSTANCE.send(Messages.START, new Double(start));
 		} else {
 			MessageBus.INSTANCE.send(Messages.STOP, null);
@@ -96,6 +113,7 @@ public class ControlPanel extends JPanel implements ActionListener,
 				remove(startPosition);
 			}
 			startPosition = new JSlider(JSlider.HORIZONTAL, 0, 0, 0);
+
 			startPosition.addChangeListener(this);
 			startPosition.setPreferredSize(new Dimension(500, 40));
 			Font font = new Font("Serif", Font.ITALIC, 15);

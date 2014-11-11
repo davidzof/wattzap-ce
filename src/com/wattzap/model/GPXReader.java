@@ -108,6 +108,7 @@ public class GPXReader extends RouteReader {
 	 * 
 	 */
 	public void load(String filename) {
+		points = null;
 		gpxFile = new GPXFile(new File(filename));
 		fileName = filename.substring(0, filename.lastIndexOf('.'));
 

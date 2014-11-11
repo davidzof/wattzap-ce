@@ -95,7 +95,7 @@ public class Map extends GPXPanel implements MessageCallback {
 					this.removeGPXFile(gpxFile);
 				}
 				setVisible(false);
-				frame.invalidate();
+				//frame.invalidate();
 				frame.validate();
 				// frame.revalidate(); JDK 1.7 ONLY
 			}
@@ -118,6 +118,11 @@ public class Map extends GPXPanel implements MessageCallback {
 			count = 0;
 			frame.remove(this);
 			RouteReader routeData = (RouteReader) o;
+
+			if (gpxFile != null) {
+				// remove any previously loaded GPX file
+				this.removeGPXFile(gpxFile);
+			}
 			gpxFile = routeData.getGpxFile();
 
 			// TODO - change load message: gpxload, rlvload?
