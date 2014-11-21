@@ -21,6 +21,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.io.IOException;
+import java.util.HashMap;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -48,6 +49,8 @@ import com.wattzap.controller.TrainingController;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
 import com.wattzap.model.ant.Ant;
+import com.wattzap.model.ant.AntListener;
+import com.wattzap.model.ant.CadenceListener;
 import com.wattzap.model.ant.DummySpeedCadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
 import com.wattzap.view.AboutPanel;
@@ -138,7 +141,12 @@ public class Main implements Runnable {
 		//AdvancedSpeedCadenceListener scListener = null;
 		JPanel odo = null;
 		try {
-			new Ant(new AdvancedSpeedCadenceListener(), new HeartRateListener()).register();
+			HashMap<String,AntListener>  antListeners = new HashMap<String,AntListener>(); 
+			AntListener listener = new AdvancedSpeedCadenceListener();
+			antListeners.put(listener.getName(), listener);
+			listener = new HeartRateListener();
+			antListeners.put(listener.getName(), listener);
+			new Ant(antListeners).register();
 			odo = new AntOdometer();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),

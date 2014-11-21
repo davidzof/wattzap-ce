@@ -23,3 +23,8 @@ Video Playback
 
 To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. On Windows download VLC.
 Copy plugins, libvcl.dll and libvlccore.dll to the Wattzap home directory.
+
+Working on the Project
+======================
+
+If you want to contribute to WattzAp.
