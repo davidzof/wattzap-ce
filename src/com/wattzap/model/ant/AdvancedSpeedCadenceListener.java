@@ -12,12 +12,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.ant;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
 import com.wattzap.controller.MessageBus;
@@ -37,11 +36,14 @@ import com.wattzap.model.power.Power;
  * @author David George
  * @date 11 June 2013
  */
-public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
-		implements BroadcastListener<BroadcastDataMessage>, MessageCallback {
+public class AdvancedSpeedCadenceListener extends AntListener implements
+		MessageCallback {
+	public static final String name = "C:SC";
+	private static final int ANT_SPORT_SandC_TYPE = 121; // 0x79
+	private static final int ANT_SPORT_SPEED_PERIOD = 8086;
 
 	private final static Logger logger = LogManager.getLogger("ASCL");
-	
+
 	private static int lastTs = -1;
 	private static int lastTc = -1;
 	private static int sRR = 0; // previous speed rotation measurement
@@ -123,7 +125,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 
 		if (lastTs == -1) {
 			// first time through, initialize counters and return
-			//System.out.println("initialize counters and return");
+			// System.out.println("initialize counters and return");
 			lastTs = tS;
 			lastTc = tC;
 			sRR = sR;
@@ -145,7 +147,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 		int tD; // time delta
 		if (tS < lastTs) {
 			// we have rolled over
-			//System.out.println("rollover");
+			// System.out.println("rollover");
 			tD = tS + (65536 - lastTs);
 			if (tD > 5000) {
 				// Time delta more than 5 seconds is almost certainly bogus,
@@ -164,7 +166,7 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			sRD = sR - sRR;
 		}
 
-		//System.out.println(" sRD " + sRD + " tD " + tD);
+		// System.out.println(" sRD " + sRD + " tD " + tD);
 		double distanceKM = 0;
 		if (tD > 0) {
 			// We have a time value and rotation value, lets calculate the
@@ -197,12 +199,14 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 					distanceKM = (realSpeed / speed) * distanceKM;
 					speed = realSpeed;
 				} else {
-					// power profile, speed is the ratio of our trainer power to the expected power
+					// power profile, speed is the ratio of our trainer power to
+					// the expected power
 					double ratio = (powerWatts / p.getPower());
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
-					// System.out.println("speed " + speed + " ratio " + ratio + " power " + powerWatts + " tpower " + p.getPower());
-					
+					// System.out.println("speed " + speed + " ratio " + ratio +
+					// " power " + powerWatts + " tpower " + p.getPower());
+
 					distanceKM = (speed / 3600) * timeS;
 
 					// System.out.println("speed " + speed + " powerWatts "
@@ -239,10 +243,24 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			t.setLongitude(p.getLongitude());
 		}
 		t.setTime(elapsedTime);
-		
+
 		/*
 		 * Cadence calculations
 		 */
+		int cTD = ((tC - lastTc) & 0xffff);
+		int cDiff = ((cR - cRR) &0xffff);
+		
+		int cadence = 0;
+		if (cTD > 0) {
+			cadence = (60 * 1024 * cDiff) / cTD;
+			cCount = 0;
+		} else if (cCount < 6) {
+			cCount++;
+			return;
+		}
+		
+		
+		/*
 		int cTD; // cadence time delta
 		if (tC < lastTc) {
 			// we have rolled over
@@ -269,20 +287,18 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 				cadence = ((int) (cRD * ((1 / timeC) * 60.0)));
 				cCount = 0;
 			} else if (cCount < 6) {
-				//System.out.println("ACSL cCount " + cCount);
+				// System.out.println("ACSL cCount " + cCount);
 				cCount++;
 			} else {
 				cadence = 0;
 			}
-		}
+		}*/
 
 		lastTs = tS;
 		sRR = sR;
-		//if (tC < lastTc || cTD < 5000) {
-			// no rollover or delta less than 5000.
-			lastTc = tC;
-			cRR = cR;
-		//}
+		lastTc = tC;
+		cRR = cR;
+
 
 		if (t.getSpeedKMH() >= 0.0) {
 			// some sanity checks
@@ -323,5 +339,25 @@ public class AdvancedSpeedCadenceListener extends SpeedCadenceListener
 			distance = 0.0;
 			break;
 		}
+	}
+
+	@Override
+	public int getChannelId() {
+		return UserPreferences.INSTANCE.getSCId();
+	}
+
+	@Override
+	public int getChannelPeriod() {
+		return ANT_SPORT_SPEED_PERIOD;
+	}
+
+	@Override
+	public int getDeviceType() {
+		return ANT_SPORT_SandC_TYPE;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 }

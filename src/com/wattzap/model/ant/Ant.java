@@ -12,10 +12,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.ant;
 
-
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -25,7 +25,6 @@ import org.apache.log4j.Logger;
 import org.cowboycoders.ant.Channel;
 import org.cowboycoders.ant.NetworkKey;
 import org.cowboycoders.ant.Node;
-import org.cowboycoders.ant.events.BroadcastListener;
 import org.cowboycoders.ant.events.MessageCondition;
 import org.cowboycoders.ant.events.MessageConditionFactory;
 import org.cowboycoders.ant.interfaces.AntTransceiver;
@@ -48,19 +47,16 @@ import com.wattzap.model.UserPreferences;
  * @date 30 May 2013
  */
 public class Ant implements MessageCallback {
-	private Channel scChannel = null;
-	private Channel hrChannel = null;
-
 	private Node node = null;
 	private NetworkKey key = null;
 
-	private BroadcastListener<BroadcastDataMessage> SCListener;
-	private BroadcastListener<BroadcastDataMessage> HRListener;
-
+	private AntListener SCListener;
+	private AntListener HRListener;
+	private HashMap<String,AntListener> antListeners;
+	private HashMap<String,Channel> antChannels;
+	
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-	private static final int HRM_CHANNEL_PERIOD = 8070;
-	private static final int ANT_SPORT_SPEED_PERIOD = 8086;
 	private static final int ANT_SPORT_FREQ = 57; // 0x39
 
 	private static Logger logger = LogManager.getLogger("Ant");
@@ -81,28 +77,28 @@ public class Ant implements MessageCallback {
 	 * 
 	 * 0: wildcard, matches any value (slave only)
 	 */
-	private static final int HRM_TRANSMISSION_TYPE = 1;
-
-	/*
-	 * Device type, see ANT+ specs
-	 */
-	private static final int HRM_DEVICE_TYPE = 120; // 0x78
-	private static final int ANT_SPORT_SandC_TYPE = 121; // 0x78
-
-	/*
-	 * You should make a note of the device id and use it in preference to the
-	 * wild card to pair to a specific device.
-	 * 
-	 * 0: wild card, matches all device ids any other number: match specific
-	 * device id
-	 */
-	// private static final int HRM_DEVICE_ID = 31280;
-	// private static final int SC_DEVICE_ID = 26164;
+	private static final int TRANSMISSION_TYPE = 0/*1*/;
 
 	public static final Level LOG_LEVEL = Level.SEVERE;
 
-	public Ant(BroadcastListener<BroadcastDataMessage> scListener,
-			BroadcastListener<BroadcastDataMessage> hrmListener) {
+	public Ant(HashMap<String,AntListener> listeners) {
+		antListeners = listeners;
+		
+		AntTransceiver antchip = null;
+		if (userPrefs.isANTUSB()) {
+			antchip = new AntTransceiver(0, AntTransceiver.ANTUSBM_ID);
+		} else {
+			antchip = new AntTransceiver(0);
+		}
+		// initialises node with chosen driver
+		node = new Node(antchip);
+
+		// ANT+ key
+		key = new NetworkKey(0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45);
+		key.setName("N:ANT+");
+	}
+
+	public Ant(AntListener scListener, AntListener hrmListener) {
 		// optional: enable console logging with Level = LOG_LEVEL
 		setupLogging();
 		/*
@@ -174,13 +170,7 @@ public class Ant implements MessageCallback {
 		}
 	}
 
-	public int getHRMChannelId() {
-		return getChannelId(hrChannel);
-	}
 
-	public int getSCChannelId() {
-		return getChannelId(scChannel);
-	}
 
 	private static int getChannelId(Channel channel) {
 		// build request
@@ -208,25 +198,23 @@ public class Ant implements MessageCallback {
 
 	public void close() {
 		// stop listening
-		if (!scChannel.isFree()) {
-			logger.debug("Stopping ANT device");
-			scChannel.close();
-			hrChannel.close();
-
-			// resets channel configuration
-			scChannel.unassign();
-			hrChannel.unassign();
-
-			// return the channel to the pool of available channels
-			node.freeChannel(scChannel);
-			node.freeChannel(hrChannel);
-
-			// cleans up : gives up control of usb device etc.
-			node.stop();
+		for (Channel channel : antChannels.values()) {
+			if (!channel.isFree()) {
+				logger.debug("Stopping ANT device");
+				channel.close();
+				
+				// resets channel configuration
+				channel.unassign();
+				
+				// return the channel to the pool of available channels
+				node.freeChannel(channel);
+			}
 		}
+		// cleans up : gives up control of usb device etc.
+		node.stop();
 	}
-
-	public void open(int scID, int hrmID) {
+	
+	public void open() {
 		/* must be called before any configuration takes place */
 		node.start();
 
@@ -243,71 +231,131 @@ public class Ant implements MessageCallback {
 
 		// sets network key of network zero
 		node.setNetworkKey(0, key);
-
-		scChannel = node.getFreeChannel();
-
-		// Arbitrary name : useful for identifying channel
-		scChannel.setName("C:SC");
+		
+		antChannels = new HashMap<String,Channel>();
+		for (AntListener listener : antListeners.values()) {
+			Channel channel = node.getFreeChannel();
+			antChannels.put(listener.getName(), channel);
+			
+			// Arbitrary name : useful for identifying channel
+			channel.setName(listener.getName());
+		
+		System.out.println("opening " + listener.getName());
 
 		// choose slave or master type. Constructors exist to set
 		// two-way/one-way and shared/non-shared variants.
 		ChannelType channelType = new SlaveChannelType();
 
 		// use ant network key "N:ANT+"
-		scChannel.assign("N:ANT+", channelType);
+		channel.assign("N:ANT+", channelType);
 
 		// registers our Heart Rate and Speed and Cadence callbacks with the
 		// channel
-		scChannel.registerRxListener(SCListener, BroadcastDataMessage.class);
+		channel.registerRxListener(listener, BroadcastDataMessage.class);
 
 		// ******* start device specific configuration ******
-		scChannel.setId(scID, ANT_SPORT_SandC_TYPE, HRM_TRANSMISSION_TYPE,
-				PAIRING_FLAG);
+		channel.setId(listener.getChannelId(), listener.getDeviceType(),
+				TRANSMISSION_TYPE,  PAIRING_FLAG);
 
-		scChannel.setFrequency(ANT_SPORT_FREQ);
-
-		scChannel.setPeriod(ANT_SPORT_SPEED_PERIOD);
+		channel.setFrequency(ANT_SPORT_FREQ);
+		channel.setPeriod(listener.getChannelPeriod());
 
 		// ******* end device specific configuration ******
 
 		// timeout before we give up looking for device
-		scChannel.setSearchTimeout(Channel.SEARCH_TIMEOUT_NEVER);
+		channel.setSearchTimeout(Channel.SEARCH_TIMEOUT_NEVER);
 
 		// start listening
-		scChannel.open();
+		channel.open();
+		}
 
-		// *** Heart Rate Monitor ***
-
-		hrChannel = node.getFreeChannel();
-
-		// Arbitrary name : useful for identifying channel
-		hrChannel.setName("C:HRM");
-
-		ChannelType channelType2 = new SlaveChannelType(); // use ant
-															// network key
-															// "N:ANT+"
-		hrChannel.assign("N:ANT+", channelType2);
-
-		// registers an instance of our callback with the channel
-		hrChannel.registerRxListener(HRListener, BroadcastDataMessage.class);
-
-		// start device specific configuration
-
-		hrChannel.setId(hrmID, HRM_DEVICE_TYPE, HRM_TRANSMISSION_TYPE,
-				PAIRING_FLAG);
-
-		hrChannel.setFrequency(ANT_SPORT_FREQ);
-
-		hrChannel.setPeriod(HRM_CHANNEL_PERIOD);
-
-		// ******* end device specific configuration
-
-		// timeout before we give up looking for device
-		hrChannel.setSearchTimeout(Channel.SEARCH_TIMEOUT_NEVER);
-
-		// start listening
-		hrChannel.open();
+		
 	}
+
+	
+//	public void open() {
+//		/* must be called before any configuration takes place */
+//		node.start();
+//
+//		/* sends reset request : resets channels to default state */
+//		node.reset();
+//
+//		// specs say wait 500ms after reset before sending any more host
+//		// commands
+//		try {
+//			Thread.sleep(500);
+//		} catch (InterruptedException ex) {
+//
+//		}
+//
+//		// sets network key of network zero
+//		node.setNetworkKey(0, key);
+//
+//		scChannel = node.getFreeChannel();
+//
+//		// Arbitrary name : useful for identifying channel
+//		scChannel.setName(SCListener.getName());
+//		
+//		System.out.println("opening " + SCListener.getName());
+//
+//		// choose slave or master type. Constructors exist to set
+//		// two-way/one-way and shared/non-shared variants.
+//		ChannelType channelType = new SlaveChannelType();
+//
+//		// use ant network key "N:ANT+"
+//		scChannel.assign("N:ANT+", channelType);
+//
+//		// registers our Heart Rate and Speed and Cadence callbacks with the
+//		// channel
+//		scChannel.registerRxListener(SCListener, BroadcastDataMessage.class);
+//
+//		// ******* start device specific configuration ******
+//		scChannel.setId(SCListener.getChannelId(), SCListener.getDeviceType(),
+//				TRANSMISSION_TYPE,  PAIRING_FLAG);
+//
+//		scChannel.setFrequency(ANT_SPORT_FREQ);
+//		scChannel.setPeriod(SCListener.getChannelPeriod());
+//
+//		// ******* end device specific configuration ******
+//
+//		// timeout before we give up looking for device
+//		scChannel.setSearchTimeout(Channel.SEARCH_TIMEOUT_NEVER);
+//
+//		// start listening
+//		scChannel.open();
+//
+//		// *** Heart Rate Monitor ***
+//
+//		hrChannel = node.getFreeChannel();
+//
+//		// Arbitrary name : useful for identifying channel
+//		hrChannel.setName(HRListener.getName());
+//
+//		ChannelType channelType2 = new SlaveChannelType(); // use ant
+//															// network key
+//															// "N:ANT+"
+//		hrChannel.assign("N:ANT+", channelType2);
+//
+//		// registers an instance of our callback with the channel
+//		hrChannel.registerRxListener(HRListener, BroadcastDataMessage.class);
+//
+//		// start device specific configuration
+//
+//		hrChannel.setId(HRListener.getChannelId(), HRListener.getDeviceType(),
+//				TRANSMISSION_TYPE, PAIRING_FLAG);
+//
+//		hrChannel.setFrequency(ANT_SPORT_FREQ);
+//
+//		hrChannel.setPeriod(HRListener.getChannelPeriod());
+//
+//		// ******* end device specific configuration
+//
+//		// timeout before we give up looking for device
+//		hrChannel.setSearchTimeout(Channel.SEARCH_TIMEOUT_NEVER);
+//
+//		// start listening
+//		hrChannel.open();
+//	}
 
 	@Override
 	public void callback(Messages message, Object o) {
@@ -316,8 +364,19 @@ public class Ant implements MessageCallback {
 			close();
 			break;
 		case START:
-			open(userPrefs.getSCId(), userPrefs.getHRMId());
+			open();
 			break;
 		}
+	}
+	
+	public int getHRMChannelId() {
+		Channel channel = antChannels.get(HeartRateListener.name);
+		return getChannelId(channel);
+	}
+
+	public int getSCChannelId() {
+		Channel channel = antChannels.get(AdvancedSpeedCadenceListener.name);
+		return getChannelId(channel);
+
 	}
 }

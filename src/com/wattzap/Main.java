@@ -79,7 +79,7 @@ public class Main implements Runnable {
 		// Debug
 		Level level = setLogLevel();
 		// hard coded for debugging, not important, normally libvlc is found on lib path
-		NativeLibrary.addSearchPath("libvlc", "C:/usr/vlc-2.0.6/");
+		NativeLibrary.addSearchPath("libvlc", ".");
 		// configure the appender
 		String PATTERN = "%r [%t] %p %c %x %m%n";
 		String logFile = userPrefs.getWD() + "/logfile.txt";

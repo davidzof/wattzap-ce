@@ -131,7 +131,8 @@ public class DummySpeedCadenceListener extends Thread implements
 						// power comes from video (gradient)
 						// powerWatts = (int) ((p.getGradient()) +
 						// (Math.random() * 4));
-						powerWatts = (int) p.getGradient();
+						powerWatts = (int) p.getPower();
+						
 
 						// apply some smoothing
 						rPower.add(powerWatts);
@@ -150,6 +151,7 @@ public class DummySpeedCadenceListener extends Thread implements
 							t.setVirtualSpeed(bd.intValue());
 							t.setResistance(UserPreferences.INSTANCE
 									.getResistance());
+							//speed = p.getSpeed(); // FIXME what about RLV
 						}
 					}
 				} else {
