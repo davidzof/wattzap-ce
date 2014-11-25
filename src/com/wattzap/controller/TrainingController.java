@@ -12,15 +12,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.controller;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
@@ -39,6 +43,8 @@ import com.wattzap.view.training.TrainingDisplay;
  * @date 1 January 2014
  */
 public class TrainingController implements ActionListener {
+	private static Logger logger = LogManager.getLogger("TrainingController");
+	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private final TrainingDisplay trainingDisplay;
 	private final JFrame mainFrame;
 	private final TrainingAnalysis analysis = new TrainingAnalysis();
@@ -61,6 +67,10 @@ public class TrainingController implements ActionListener {
 		if (save.equals(command)) {
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			if (data == null || data.size() == 0) {
+				JOptionPane.showMessageDialog(mainFrame, "No data to save",
+						userPrefs.messages.getString("warning"),
+						JOptionPane.WARNING_MESSAGE);
+				logger.warn("No data to save");
 				return;
 			}
 
@@ -74,6 +84,13 @@ public class TrainingController implements ActionListener {
 						dialogButton);
 			}
 			TcxWriter writer = new TcxWriter();
+
+			// saves data to UserDataDirectory
+			// Create a file chooser
+			JFileChooser fc = new JFileChooser();
+
+			// In response to a button click:
+			int returnVal = fc.showOpenDialog(mainFrame);
 
 			String fileName = writer.save(data, gpsData);
 			WorkoutData workoutData = TrainingAnalysis.analyze(data);

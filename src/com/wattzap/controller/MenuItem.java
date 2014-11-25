@@ -30,6 +30,11 @@ public class MenuItem extends JMenuItem implements ActionListener {
 	private static final long serialVersionUID = -9184031206677276673L;
 	Messages message;
 	
+	public  MenuItem(Messages message) {
+		this.message = message;
+		addActionListener(this);
+	}
+	
 	public  MenuItem(Messages message, String s) {
 		super(s);
 		this.message = message;

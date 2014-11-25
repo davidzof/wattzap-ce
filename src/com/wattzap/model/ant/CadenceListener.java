@@ -28,8 +28,7 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 14th November 2014
  * 
- *       http://chet0xhenry-antplus.googlecode.com/hg/MyTracks/src/com/google/
- *       android/apps/mytracks/services/sensors/ant/CadenceCounter.java
+ * (c) 2014 David George / Wattzap.com
  */
 public class CadenceListener extends AntListener {
 	public static String name = "C:CAD";

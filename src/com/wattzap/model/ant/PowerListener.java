@@ -27,9 +27,11 @@ import com.wattzap.model.dto.Telemetry;
  * 
  * @author David George
  * @date 14th November 2014
+ * 
+ * (c) 2014 David George / Wattzap.com
  */
 public class PowerListener extends AntListener {
-	public static String name = "C:CAD";
+	public static String name = "C:POW";
 	private static final byte DEVICE_TYPE = (byte) 11; // 0x7A
 	private static final short MESSAGE_PERIOD = 8182;
 

@@ -45,6 +45,8 @@ import com.wattzap.model.UserPreferences;
  * 
  * @author David George
  * @date 30 May 2013
+ * 
+ * (c) 2013, 2014 David George / Wattzap.com
  */
 public class Ant implements MessageCallback {
 	private Node node = null;

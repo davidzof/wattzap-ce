@@ -113,6 +113,7 @@ public class ControlPanel extends JPanel implements ActionListener,
 				remove(startPosition);
 			}
 			startPosition = new JSlider(JSlider.HORIZONTAL, 0, 0, 0);
+			startPosition.setBounds(0, 0, 500, 100);
 
 			startPosition.addChangeListener(this);
 			startPosition.setPreferredSize(new Dimension(500, 40));

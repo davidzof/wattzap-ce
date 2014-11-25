@@ -15,76 +15,102 @@
  */
 package com.wattzap;
 
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
+import java.awt.Toolkit;
 
-import com.wattzap.view.MainFrame;
-import com.wattzap.view.RouteFilePicker;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
+
+import com.wattzap.controller.MenuItem;
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
+import com.wattzap.model.UserPreferences;
+import com.wattzap.view.AboutPanel;
 import com.wattzap.view.prefs.Preferences;
-import com.wattzap.view.training.TrainingDisplay;
-import com.wattzap.view.training.TrainingPicker;
 
 /**
  * Main menu bar
  * 
- * (c) 2013 David George / Wattzap.com
+ * Externalize menu setup to this class. Registers for Locale change messages so
+ * we can reinitialize text when language changes.
+ * 
+ * (c) 2014 David George / Wattzap.com
  * 
  * @author David George
- * @date 11 June 2013
+ * @date 25 November 2014
  */
-public class MenuBar extends JMenuBar {
-	private static final long serialVersionUID = 8868201635857315675L;
-	private MainFrame frame;
+public class MenuBar /* extends JMenuBar */implements MessageCallback {
+	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
+	private JMenuItem prefMenuItem;
+	private JMenuItem aboutMenuItem;
+	public JMenuItem quitMenuItem;
+	public JMenu appMenu;
+	public JMenu fileMenu;
+	public JMenuItem openMenuItem;
+	private MenuItem closeMenuItem;
 
-	public void init(MainFrame frame) {
-		this.frame = frame;
+	public MenuBar() {
+		appMenu = new JMenu();
 
-		JMenu fileMenu = new JMenu("File");
-		add(fileMenu);
-		JMenuItem openMenuItem = new JMenuItem("Open Course");
-		fileMenu.add(openMenuItem);
-
-		RouteFilePicker picker = new RouteFilePicker(frame);
-		openMenuItem.addActionListener(picker);
-
-		JMenuItem quitMenuItem = new JMenuItem("Quit");
-		fileMenu.add(quitMenuItem);
-		quitMenuItem.addActionListener(frame);
-
-		JMenu appMenu = new JMenu("Application");
-		add(appMenu);
-
+		// Preferences
 		Preferences preferences = new Preferences();
-		JMenuItem prefMenuItem = new JMenuItem("Preferences");
+		prefMenuItem = new JMenuItem();
 		prefMenuItem.addActionListener(preferences);
+
+		// About Dialog
+		aboutMenuItem = new JMenuItem();
+		// NOTE: Sets up timer for unregistered users.
+		AboutPanel about = new AboutPanel();
+		aboutMenuItem.addActionListener(about);
+
+		quitMenuItem = new JMenuItem();
+		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+
+		// Routes
+		fileMenu = new JMenu();
+		openMenuItem = new JMenuItem();
+		fileMenu.add(openMenuItem);
+		openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+
+		closeMenuItem = new MenuItem(Messages.CLOSE);
+		fileMenu.add(closeMenuItem);
+
+		closeMenuItem.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+
 		appMenu.add(prefMenuItem);
-		JMenuItem aboutMenuItem = new JMenuItem("About");
 		appMenu.add(aboutMenuItem);
+		appMenu.add(quitMenuItem);
 
-		frame.setJMenuBar(this);
+		doText();
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
-	public void trainingInit(TrainingDisplay trainingDisplay) {
-		// Submenu: Training
-		JMenu trainingMenu = new JMenu("Training");
-		add(trainingMenu);
-
-		JMenuItem analMenuItem = new JMenuItem("Analyze");
-		trainingMenu.add(analMenuItem);
-
-		JMenuItem trainMenuItem = new JMenuItem("Open Training");
-		trainingMenu.add(trainMenuItem);
-
-		TrainingPicker tPicker = new TrainingPicker(frame);
-		trainMenuItem.addActionListener(tPicker);
-
-		JMenuItem saveMenuItem = new JMenuItem("Save as TCX");
-		trainingMenu.add(saveMenuItem);
-
-		JMenuItem csvMenuItem = new JMenuItem("Save as CSV");
-		trainingMenu.add(csvMenuItem);
-
+	/*
+	 * Setup menubar text
+	 */
+	private void doText() {
+		appMenu.setText("Application");
+		prefMenuItem.setText(userPrefs.messages.getString("preferences"));
+		aboutMenuItem.setText(userPrefs.messages.getString("about"));
+		quitMenuItem.setText(userPrefs.messages.getString("quit"));
+		fileMenu.setText(userPrefs.messages.getString("route"));
+		openMenuItem.setText(userPrefs.messages.getString("open"));
+		closeMenuItem.setText(userPrefs.messages.getString("close"));
 	}
 
+	/**
+	 * Change text of menu bar if we get a LOCALE message
+	 */
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case LOCALE:
+			doText();
+			break;
+		}
+	}
 }

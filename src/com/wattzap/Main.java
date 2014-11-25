@@ -28,7 +28,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
@@ -43,17 +42,13 @@ import org.apache.log4j.PatternLayout;
 
 import com.omniscient.log4jcontrib.swingappender.SwingAppender;
 import com.sun.jna.NativeLibrary;
-import com.wattzap.controller.MenuItem;
-import com.wattzap.controller.Messages;
 import com.wattzap.controller.TrainingController;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
 import com.wattzap.model.ant.Ant;
 import com.wattzap.model.ant.AntListener;
-import com.wattzap.model.ant.CadenceListener;
 import com.wattzap.model.ant.DummySpeedCadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
-import com.wattzap.view.AboutPanel;
 import com.wattzap.view.AntOdometer;
 import com.wattzap.view.ControlPanel;
 import com.wattzap.view.MainFrame;
@@ -62,7 +57,6 @@ import com.wattzap.view.Odometer;
 import com.wattzap.view.Profile;
 import com.wattzap.view.RouteFilePicker;
 import com.wattzap.view.VideoPlayer;
-import com.wattzap.view.prefs.Preferences;
 import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
@@ -77,6 +71,7 @@ import com.wattzap.view.training.TrainingPicker;
 public class Main implements Runnable {
 	private static Logger logger = LogManager.getLogger("Main");
 	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
+
 
 	public static void main(String[] args) {
 		// Debug
@@ -183,48 +178,15 @@ public class Main implements Runnable {
 
 		// Menu Bar
 		JMenuBar menuBar = new JMenuBar();
-
-		JMenu appMenu = new JMenu("Application");
-		menuBar.add(appMenu);
-		// Preferences
-		Preferences preferences = new Preferences();
-		JMenuItem prefMenuItem = new JMenuItem(
-				userPrefs.messages.getString("preferences"));
-		prefMenuItem.addActionListener(preferences);
-		appMenu.add(prefMenuItem);
-
-		JMenuItem aboutMenuItem = new JMenuItem(
-				userPrefs.messages.getString("about"));
-		appMenu.add(aboutMenuItem);
-		// NOTE: Sets up timer for unregistered users.
-		AboutPanel about = new AboutPanel();
-		aboutMenuItem.addActionListener(about);
-
-		JMenuItem quitMenuItem = new JMenuItem(
-				userPrefs.messages.getString("quit"));
-		appMenu.add(quitMenuItem);
-		quitMenuItem.addActionListener(frame);
-		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-
-		// Route
-		JMenu fileMenu = new JMenu(userPrefs.messages.getString("route"));
-		menuBar.add(fileMenu);
-		JMenuItem openMenuItem = new JMenuItem(
-				userPrefs.messages.getString("open"));
-		fileMenu.add(openMenuItem);
-		openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-
+		//
+		MenuBar mB = new MenuBar();
+		
+		menuBar.add(mB.appMenu);
+		mB.quitMenuItem.addActionListener(frame);
+		menuBar.add(mB.fileMenu);
 		RouteFilePicker picker = new RouteFilePicker(frame);
-		openMenuItem.addActionListener(picker);
-
-		MenuItem closeMenuItem = new MenuItem(Messages.CLOSE,
-				userPrefs.messages.getString("close"));
-		fileMenu.add(closeMenuItem);
-
-		closeMenuItem.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+		mB.openMenuItem.addActionListener(picker);
+		
 
 		// Submenu: Training
 		JMenu trainingMenu = new JMenu(userPrefs.messages.getString("training"));
@@ -243,14 +205,10 @@ public class Main implements Runnable {
 			TrainingPicker tPicker = new TrainingPicker(frame);
 			trainMenuItem.addActionListener(tPicker);
 		}
-		JMenu analizeMenuItem = new JMenu(
+		JMenuItem analizeMenuItem = new JMenuItem(
 				userPrefs.messages.getString("analyze"));
 		trainingMenu.add(analizeMenuItem);
-		
-		JMenuItem analMenuItem = new JMenuItem(
-				userPrefs.messages.getString("analyze"));
-		analMenuItem.setActionCommand(TrainingController.analyze);
-		analizeMenuItem.add(analMenuItem);
+		analizeMenuItem.setActionCommand(TrainingController.analyze);
 	
 		JMenuItem saveMenuItem = new JMenuItem(
 				userPrefs.messages.getString("save"));
@@ -267,7 +225,7 @@ public class Main implements Runnable {
 		recoverMenuItem.setActionCommand(TrainingController.recover);
 		trainingMenu.add(recoverMenuItem);
 
-		analMenuItem.addActionListener(trainingController);
+		analizeMenuItem.addActionListener(trainingController);
 		saveMenuItem.addActionListener(trainingController);
 		recoverMenuItem.addActionListener(trainingController);
 		

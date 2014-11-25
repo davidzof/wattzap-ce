@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model;
 
 import java.awt.Rectangle;
@@ -21,6 +21,8 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.UUID;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.model.power.Power;
 import com.wattzap.model.power.PowerProfiles;
@@ -43,18 +45,14 @@ public enum UserPreferences {
 	public ResourceBundle messages;
 	private boolean antEnabled = true;
 	private boolean antUSBM = false;
-	
+
 	private UserPreferences() {
 		user = System.getProperty("user.name");
 		String wd = getWD();
 		ds = new DataStore(wd, cryptKey);
 
-		Locale currentLocale;
-
-		currentLocale = Locale.getDefault();
-		currentLocale = Locale.ENGLISH;
+		Locale currentLocale = getLocale();
 		messages = ResourceBundle.getBundle("MessageBundle", currentLocale);
-
 	}
 
 	public void setAntEnabled(boolean v) {
@@ -68,7 +66,7 @@ public enum UserPreferences {
 	public void addWorkout(WorkoutData data) {
 		ds.saveWorkOut(user, data);
 	}
-	
+
 	public void updateWorkout(WorkoutData data) {
 		ds.updateWorkout(user, data);
 	}
@@ -117,13 +115,12 @@ public enum UserPreferences {
 		int x = getInt("", "videoX", 0);
 		int y = getInt("", "videoY", 650);
 
-		
 		Rectangle r = new Rectangle(x, y, width, height);
 		return r;
 	}
 
 	public void setVideoBounds(Rectangle r) {
-		
+
 		setInt("", "videoHeight", r.height);
 		setInt("", "videoWidth", r.width);
 		setInt("", "videoX", r.x);
@@ -149,7 +146,7 @@ public enum UserPreferences {
 			setDouble("weight", weight);
 		} else {
 			// convert from lbs
-			setDouble("weight", weight * 0.45359237);
+			setDouble("weight", weight * LBSTOKG);
 		}
 	}
 
@@ -158,7 +155,7 @@ public enum UserPreferences {
 			return getDouble("bikeweight", 10.0);
 		} else {
 			// convert from lbs
-			return getDouble("bikeweight", 10.0) / 0.45359237;
+			return getDouble("bikeweight", 10.0) / LBSTOKG;
 		}
 	}
 
@@ -172,7 +169,7 @@ public enum UserPreferences {
 			setDouble("bikeweight", weight);
 		} else {
 			// convert to lbs
-			setDouble("bikeweight", weight * 0.45359237);
+			setDouble("bikeweight", weight * LBSTOKG);
 		}
 	}
 
@@ -212,7 +209,7 @@ public enum UserPreferences {
 	public void setUnits(boolean value) {
 		setBoolean("units", value);
 	}
-	
+
 	public boolean isANTUSB() {
 		return getBoolean("antusbm", false);
 	}
@@ -235,6 +232,18 @@ public enum UserPreferences {
 
 	public void setVirtualPower(boolean value) {
 		setBoolean("virtualPower", value);
+	}
+
+	public void setLocale(String value) {
+		set(user, "locale", value);
+		messages = ResourceBundle.getBundle("MessageBundle", getLocale());
+		MessageBus.INSTANCE.send(Messages.LOCALE, null);
+	}
+
+	public Locale getLocale() {
+		String iso3 = get(user, "locale", Locale.getDefault().getISO3Country());
+		Locale locale = new Locale(iso3);
+		return locale;
 	}
 
 	public Power getPowerProfile() {
@@ -311,7 +320,7 @@ public enum UserPreferences {
 
 	public int getEvalTime() {
 		int i = getIntCrypt("", "evalTime", evalTime);
-		if (i<0) {
+		if (i < 0) {
 			return 0;
 		}
 		return i;

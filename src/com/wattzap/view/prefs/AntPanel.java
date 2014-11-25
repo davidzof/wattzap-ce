@@ -18,6 +18,8 @@ package com.wattzap.view.prefs;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.HashMap;
 
 import javax.swing.JButton;
@@ -37,6 +39,7 @@ import com.wattzap.model.ant.Ant;
 import com.wattzap.model.ant.AntListener;
 import com.wattzap.model.ant.CadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
+import com.wattzap.model.ant.SpeedListener;
 import com.wattzap.model.dto.Telemetry;
 
 /**
@@ -45,12 +48,15 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 25th August 2013
  */
-public class AntPanel extends JPanel implements ActionListener, MessageCallback {
+public class AntPanel extends JPanel implements ActionListener, ItemListener,
+		MessageCallback {
 	private static final long serialVersionUID = 1L;
 	private JTextField sandcField;
 	private JTextField hrmIdField;
 	private JTextField cadenceField;
+	private JTextField speedField;
 	private JLabel speedLabel;
+	private JLabel sandcLabel;
 	private JLabel hrm;
 	private JLabel cadenceLabel;
 	private JLabel status;
@@ -58,45 +64,67 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 	private int hrmID;
 	private int scID;
 	JCheckBox antUSBM;
+	JCheckBox scCheckBox;
+	JCheckBox cadCheckBox;
+	JCheckBox speedCheckBox;
+	JCheckBox powCheckBox;
+	JCheckBox hrmCheckBox;
+	JButton pairButton;
+	// Interface Text
+	private final JLabel sCIDlabel;
+	private final JLabel cadIdLabel;
+	private final JLabel speedIdLabel;
+	private final JLabel hrLabel;
 
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
-	private  HashMap<String,AntListener> antListeners;
-	
+	private HashMap<String, AntListener> antListeners;
+
 	public AntPanel() {
 		super();
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
 
 		// speed and cadence sensor
-		JLabel sCIDlabel = new JLabel();
-		sCIDlabel.setText("Speed and Cadence ID");
+		sCIDlabel = new JLabel();
+
 		sandcField = new JTextField(10);
 		sandcField.setText("" + userPrefs.getSCId());
 		add(sCIDlabel);
-		add(sandcField, "wrap");
-
-		JLabel speed = new JLabel();
-		speed.setText(userPrefs.messages.getString("speed"));
-		speedLabel = new JLabel();
-		speedLabel.setText("0 km/h");
-		add(speed);
-		add(speedLabel, "wrap");
+		add(sandcField);
+		sandcLabel = new JLabel();
+		sandcLabel.setText("0 km/h");
+		add(sandcLabel, "w 60!");
+		scCheckBox = new JCheckBox();
+		add(scCheckBox, "gapleft 30, wrap");
+		scCheckBox.addItemListener(this);
 
 		// Cadence Sensor
-		JLabel label5 = new JLabel();
-		label5.setText("Cadence ID");
+		cadIdLabel = new JLabel();
 		cadenceField = new JTextField(10);
-		cadenceField.setText("ccc");
-		add(label5);
-		add(cadenceField, "wrap");
-
-		JLabel label6 = new JLabel();
-		label6.setText(userPrefs.messages.getString("cadence"));
+		cadenceField.setText(""); // cadence ID
+		add(cadIdLabel);
+		add(cadenceField);
 		cadenceLabel = new JLabel();
 		cadenceLabel.setText("0 rpm");
-		add(label6);
-		add(cadenceLabel, "wrap");
+		add(cadenceLabel, "w 60!");
+		cadCheckBox = new JCheckBox();
+		cadCheckBox.addItemListener(this);
+		add(cadCheckBox, "gapleft 30, wrap");
 
+		// Speed Sensor
+		speedIdLabel = new JLabel();
+
+		speedField = new JTextField(10);
+		speedField.setText(""); // cadence ID
+		add(speedIdLabel);
+		add(speedField);
+		speedLabel = new JLabel();
+		speedLabel.setText("0 km/h");
+		add(speedLabel, "w 60!");
+		speedCheckBox = new JCheckBox();
+		add(speedCheckBox, "gapleft 30, wrap");
+
+		// Heart Rate Strap
 		JLabel label2 = new JLabel();
 		label2.setText("HRM Id");
 		hrmIdField = new JTextField(10);
@@ -104,29 +132,28 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 		add(label2);
 		add(hrmIdField, "wrap");
 
-		JLabel label4 = new JLabel();
-		label4.setText(userPrefs.messages.getString("heartrate"));
+		hrLabel = new JLabel();
 		hrm = new JLabel();
 		hrm.setText("0 bpm");
-		add(label4);
+		add(hrLabel);
 		add(hrm, "wrap");
 
 		antUSBM = new JCheckBox("ANTUSB-m Stick");
 		antUSBM.setSelected(userPrefs.isANTUSB());
-		antUSBM.setActionCommand("antusbm");
-		antUSBM.addActionListener(this);
+		antUSBM.addItemListener(this);
 
 		add(antUSBM, "wrap");
 
-		JButton pairButton = new JButton("Pair");
+		pairButton = new JButton("Pair");
 		pairButton.setPreferredSize(new Dimension(60, 30));
-		pairButton.setActionCommand("start");
+		pairButton.setActionCommand("pair");
 		pairButton.addActionListener(this);
 
 		JButton stopButton = new JButton(userPrefs.messages.getString("stop"));
 		stopButton.setPreferredSize(new Dimension(60, 30));
 		stopButton.setActionCommand("stop");
 		stopButton.addActionListener(this);
+
 		add(pairButton);
 		add(stopButton, "wrap");
 
@@ -135,8 +162,12 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 		add(status, "span");
 
 		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.CADENCE, this);
 		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
+
+		setText();
 	}
 
 	@Override
@@ -151,18 +182,53 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 			break;
 		case SPEEDCADENCE:
 			if (userPrefs.isMetric()) {
+				sandcLabel.setText(String.format("%.1f", t.getSpeedKMH())
+						+ " km/h");
+			} else {
+				sandcLabel.setText(String.format("%.1f", t.getSpeedMPH())
+						+ " mph");
+			}
+			break;
+		case SPEED:
+			double speed = t.getSpeedKMH();
+			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeedKMH())
 						+ " km/h");
 			} else {
 				speedLabel.setText(String.format("%.1f", t.getSpeedMPH())
 						+ " mph");
 			}
+
 			break;
 		case CADENCE:
 			int cadence = t.getCadence();
 			cadenceLabel.setText(Integer.toString(cadence) + " rpm");
-			
+
 			break;
+		}
+	}
+
+	@Override
+	public void itemStateChanged(ItemEvent e) {
+		Object source = e.getItemSelectable();
+		System.out.println("source " + source);
+		if (source == scCheckBox) {
+			if (scCheckBox.isSelected()) {
+				cadCheckBox.setSelected(false);
+				speedCheckBox.setSelected(false);
+			}
+		} else if (source == cadCheckBox) {
+			if (cadCheckBox.isSelected()) {
+				scCheckBox.setSelected(false);
+			}
+
+		} else if (source == antUSBM) {
+			if (antUSBM.isSelected()) {
+				userPrefs.setAntUSBM(true);
+			} else {
+				userPrefs.setAntUSBM(false);
+
+			}
 		}
 	}
 
@@ -170,12 +236,14 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 
-		if ("start".equals(command)) {
-			antListeners = new HashMap<String,AntListener>(); 
+		if ("pair".equals(command)) {
+			antListeners = new HashMap<String, AntListener>();
 
 			AntListener listener = new AdvancedSpeedCadenceListener();
 			antListeners.put(listener.getName(), listener);
 			listener = new CadenceListener();
+			antListeners.put(listener.getName(), listener);
+			listener = new SpeedListener();
 			antListeners.put(listener.getName(), listener);
 			listener = new HeartRateListener();
 			antListeners.put(listener.getName(), listener);
@@ -183,27 +251,28 @@ public class AntPanel extends JPanel implements ActionListener, MessageCallback 
 			// FIXME will need to set all ids to zero first
 			antDevice.open();
 			status.setText("Attempting pairing...");
-			// MessageBus.INSTANCE.send(Messages.START, new Double(0));
-
-		} else if ("antusbm".equals(command)) {
-			if (antUSBM.isSelected()) {
-				userPrefs.setAntUSBM(true);
-			} else {
-				userPrefs.setAntUSBM(false);
-
-			}
 
 		} else {
 			status.setText("Pairing complete...");
-			// MessageBus.INSTANCE.send(Messages.STOP, null);
 			MessageBus.INSTANCE.unregister();
 			hrmID = antDevice.getHRMChannelId();
 			hrmIdField.setText("" + hrmID);
 			scID = antDevice.getSCChannelId();
 			sandcField.setText("" + scID);
+			cadenceField.setText("12345");
+			speedField.setText("12345");
+			
 			antDevice.close();
 			antListeners = null;
 		}
+
+	}
+
+	private void setText() {
+		sCIDlabel.setText("Speed and Cadence ID");
+		cadIdLabel.setText("Cadence ID");
+		speedIdLabel.setText("Speed ID");
+		hrLabel.setText(userPrefs.messages.getString("heartrate"));
 
 	}
 

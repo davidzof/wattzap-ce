@@ -23,10 +23,14 @@ import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Locale;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -53,6 +57,9 @@ public class Preferences extends JFrame implements ActionListener {
 	JCheckBox units;
 	JLabel weightLabel;
 	JLabel bikeWeightLabel;
+	private final JComboBox languageList = new JComboBox();
+	// Supported languages for dropdown
+	private final Locale[] locales = {new Locale("fr"), new Locale("en"), new Locale("de")};
 
 	TurboPanel trainerPanel;
 	AntPanel antPanel;
@@ -172,6 +179,23 @@ public class Preferences extends JFrame implements ActionListener {
 		units.setActionCommand("units");
 		units.addActionListener(this);
 		tab.add(units);
+		
+		
+		JLabel langLabel = new JLabel();
+		langLabel.setText("Select Language");
+		tab.add(langLabel);
+		
+		int index = 0;
+		Locale defaultLocale = userPrefs.getLocale();
+		for (Locale locale : locales) {
+			languageList.addItem(locale.getDisplayLanguage());
+			if (locale.equals(defaultLocale)) {
+				languageList.setSelectedIndex(index);
+			}
+				
+			index++;
+		}
+		tab.add(languageList, "span");
 	}
 
 	@Override
@@ -213,22 +237,36 @@ public class Preferences extends JFrame implements ActionListener {
 	}
 
 	public void updatePreferences() {
+		
+		//Number number = format.parse("1,234");
+		//double d = number.doubleValue();
+		
+		
 		userPrefs.setVirtualPower(trainerPanel.isVirtualPower());
+		
+		int lang = languageList.getSelectedIndex();
+		Locale locale = locales[lang];
+		userPrefs.setLocale(locale.getISO3Language());
+		NumberFormat format = NumberFormat.getInstance(userPrefs.getLocale());
 
 		try {
-			userPrefs.setWeight(Double.parseDouble(weight.getText()));
-			userPrefs.setBikeWeight(Double.parseDouble(bikeWeight.getText()));
-		} catch (NumberFormatException nfe) {
-			JOptionPane.showMessageDialog(this, nfe.getMessage(),
+			Number number = format.parse(weight.getText());
+			userPrefs.setWeight(number.doubleValue());
+			number = format.parse(bikeWeight.getText());
+			userPrefs.setBikeWeight(number.doubleValue());
+		} catch (ParseException pe) {
+			JOptionPane.showMessageDialog(this, pe.getMessage(),
 					"Weight format error: ", JOptionPane.ERROR_MESSAGE);
 		}
+		
 		try {
-			userPrefs.setWheelsize(Integer.parseInt(wheelSize.getText()));
-		} catch (NumberFormatException nfe) {
+			Number number = format.parse(wheelSize.getText());
+			userPrefs.setWheelsize(number.intValue());
+		} catch (ParseException pe) {
 			JOptionPane
 					.showMessageDialog(
 							this,
-							nfe.getMessage(),
+							pe.getMessage(),
 							"Wheelsize format error, should be a whole number of millimeters: ",
 							JOptionPane.ERROR_MESSAGE);
 		}

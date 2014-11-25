@@ -27,6 +27,8 @@ import com.wattzap.model.dto.Telemetry;
  * 
  * @author David George
  * @date 11 June 2013
+ * 
+ * (c) 2013, 2014 David George / Wattzap.com
  */
 public class HeartRateListener extends AntListener {
 	public static String name = "C:HRM";

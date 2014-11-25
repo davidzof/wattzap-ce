@@ -111,7 +111,7 @@ MessageCallback {
 		canvas = new java.awt.Canvas();
 		canvas.setBackground(Color.BLACK);
 		this.add(canvas, java.awt.BorderLayout.CENTER);
-		mediaPlayerFactory.newVideoSurface(canvas);
+		mediaPlayerFactory.newVideoSurface(canvas); 
 
 		FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(
 				this);
@@ -119,7 +119,6 @@ MessageCallback {
 		mPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(canvas));
 
 		setBounds(UserPreferences.INSTANCE.getVideoBounds());
-
 		setVisible(false);
 	}
 
