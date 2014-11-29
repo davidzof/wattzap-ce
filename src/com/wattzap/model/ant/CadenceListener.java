@@ -19,8 +19,6 @@ import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.Messages;
-import com.wattzap.model.UserPreferences;
-import com.wattzap.model.dto.Telemetry;
 
 /**
  * Cadence Sensor
@@ -28,7 +26,7 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 14th November 2014
  * 
- * (c) 2014 David George / Wattzap.com
+ *       (c) 2014 David George / Wattzap.com
  */
 public class CadenceListener extends AntListener {
 	public static String name = "C:CAD";
@@ -37,6 +35,7 @@ public class CadenceListener extends AntListener {
 	private int lastCount = -1;
 	private int lastTime = -1;
 	private int cCount = 0;
+	private int lastCadence;
 
 	@Override
 	public void receiveMessage(BroadcastDataMessage message) {
@@ -46,31 +45,44 @@ public class CadenceListener extends AntListener {
 		int count = (message.getUnsignedData()[7] << 8)
 				| message.getUnsignedData()[6];
 
+		int cadence = getCadence(time, count);
+		if (cadence < 0 || cadence > 250) {
+			return;
+		}
+		MessageBus.INSTANCE.send(Messages.CADENCE, cadence);
+	}
+
+	int getCadence(int time, int count) {
+
 		if (lastCount == -1) {
 			// first time thru, set
 			lastCount = count;
 			lastTime = time;
-			return;
+			lastCadence = 0;
+			return -1;
 		}
-		
+
 		int tDiff = ((time - lastTime) & 0xffff);
-		int cDiff = ((count - lastCount) &0xffff);
-		
+		int cDiff = ((count - lastCount) & 0xffff);
+
 		int cadence = 0;
 		if (tDiff > 0) {
 			cadence = (60 * 1024 * cDiff) / tDiff;
 			cCount = 0;
 		} else if (cCount < 6) {
 			cCount++;
-			return;
+			return -1;
 		}
 
 		lastTime = time;
 		lastCount = count;
+
+		if (cadence == lastCadence) {
+			return -1; // don't bother sending repeating values
+		}
+		lastCadence = cadence;
 		
-		Telemetry t = new Telemetry();
-		t.setCadence(cadence);
-		MessageBus.INSTANCE.send(Messages.CADENCE, t);
+		return cadence;
 	}
 
 	@Override

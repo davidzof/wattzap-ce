@@ -82,7 +82,8 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		setPreferredSize(new Dimension(screenSize.width / 2, 400));
 		setLayout(new BorderLayout());
 
-		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		MessageBus.INSTANCE.register(Messages.CADENCE, this);
 		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
@@ -165,10 +166,8 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		if (antEnabled) {
 			values[1] = t.getHeartRate();
 
-			if (t.getCadence() != -1) {
-				cadence = t.getCadence();
-			}
-			values[2] = cadence;
+	
+			values[2] = t.getCadence();
 		}
 
 		// training
@@ -321,8 +320,9 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 	@Override
 	public void callback(Messages message, Object o) {
+		
 		switch (message) {
-		case SPEEDCADENCE:
+		case SPEED:
 			if (numElements > 0) {
 				// TODO: this is a race hazard, this method can be called before
 				// setup, hence this test.
@@ -330,15 +330,20 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				Telemetry t = (Telemetry) o;
 				// recover last heart rate data
 				t.setHeartRate(heartRate);
+				t.setCadence(cadence);
+				
 				update(t);
 			}
-
+			break;
+			
+		case CADENCE:
+			cadence = (Integer) o;
 			break;
 
 		case HEARTRATE:
-			Telemetry t = (Telemetry) o;
-			heartRate = t.getHeartRate();
+			heartRate = (Integer) 0;
 			break;
+			
 		case STOP:
 			if (data != null && !data.isEmpty()) {
 				Telemetry lastPoint = data.get(data.size() - 1);
@@ -349,6 +354,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				aggregateTime += split;
 			}
 			break;
+			
 		case START:
 			if (chart == null) {
 				createModels(null);

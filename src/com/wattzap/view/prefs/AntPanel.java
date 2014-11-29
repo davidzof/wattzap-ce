@@ -26,7 +26,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -51,30 +50,45 @@ import com.wattzap.model.dto.Telemetry;
 public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		MessageCallback {
 	private static final long serialVersionUID = 1L;
-	private JTextField sandcField;
-	private JTextField hrmIdField;
-	private JTextField cadenceField;
-	private JTextField speedField;
-	private JLabel speedLabel;
+	private Ant antDevice;
+
+	// device id display
+	private JLabel sandcField;
+	private JLabel cadenceField;
+	private JLabel speedField;
+	private JLabel hrmIdField;
+	private JLabel powIdField;
+
+	// Device values
 	private JLabel sandcLabel;
+	private JLabel speedLabel;
 	private JLabel hrm;
 	private JLabel cadenceLabel;
+	private JLabel powLabel;
 	private JLabel status;
-	private Ant antDevice;
+
 	private int hrmID;
 	private int scID;
+	private int speedID;
+	private int cadenceID;
+	private int powID;
+
+	// Checkboxen
 	JCheckBox antUSBM;
 	JCheckBox scCheckBox;
 	JCheckBox cadCheckBox;
 	JCheckBox speedCheckBox;
 	JCheckBox powCheckBox;
 	JCheckBox hrmCheckBox;
+
 	JButton pairButton;
+
 	// Interface Text
 	private final JLabel sCIDlabel;
 	private final JLabel cadIdLabel;
 	private final JLabel speedIdLabel;
-	private final JLabel hrLabel;
+	private final JLabel hrmIdLabel;
+	private final JLabel powIdLabel;
 
 	private UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private HashMap<String, AntListener> antListeners;
@@ -86,57 +100,75 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 
 		// speed and cadence sensor
 		sCIDlabel = new JLabel();
-
-		sandcField = new JTextField(10);
-		sandcField.setText("" + userPrefs.getSCId());
-		add(sCIDlabel);
-		add(sandcField);
+		sandcField = new JLabel();
+		sandcField.setText(": " + userPrefs.getSCId());
 		sandcLabel = new JLabel();
 		sandcLabel.setText("0 km/h");
-		add(sandcLabel, "w 60!");
 		scCheckBox = new JCheckBox();
+		add(sCIDlabel);
+		add(sandcField);
+		add(sandcLabel, "w 80!");
 		add(scCheckBox, "gapleft 30, wrap");
 		scCheckBox.addItemListener(this);
+		scCheckBox.setVisible(false);
 
 		// Cadence Sensor
 		cadIdLabel = new JLabel();
-		cadenceField = new JTextField(10);
-		cadenceField.setText(""); // cadence ID
-		add(cadIdLabel);
-		add(cadenceField);
+		cadenceField = new JLabel();
+		cadenceField.setText(": " + userPrefs.getCadenceId()); // cadence ID
 		cadenceLabel = new JLabel();
 		cadenceLabel.setText("0 rpm");
-		add(cadenceLabel, "w 60!");
 		cadCheckBox = new JCheckBox();
 		cadCheckBox.addItemListener(this);
+		cadCheckBox.setVisible(false);
+		add(cadIdLabel);
+		add(cadenceField);
+		add(cadenceLabel, "w 80!");
 		add(cadCheckBox, "gapleft 30, wrap");
 
 		// Speed Sensor
 		speedIdLabel = new JLabel();
 
-		speedField = new JTextField(10);
-		speedField.setText(""); // cadence ID
-		add(speedIdLabel);
-		add(speedField);
+		speedField = new JLabel();
+		speedField.setText(": " + userPrefs.getSpeedId()); // speed Sensor
 		speedLabel = new JLabel();
 		speedLabel.setText("0 km/h");
-		add(speedLabel, "w 60!");
 		speedCheckBox = new JCheckBox();
+		add(speedIdLabel);
+		add(speedField);
+		add(speedLabel, "w 80!");
 		add(speedCheckBox, "gapleft 30, wrap");
+		speedCheckBox.addItemListener(this);
+		speedCheckBox.setVisible(false);
+
+		// Power Meter
+		powIdLabel = new JLabel();
+		powIdField = new JLabel();
+		powIdField.setText(": " + userPrefs.getPowerId()); // cadence ID
+		powLabel = new JLabel();
+		powLabel.setText("0 watts");
+		powCheckBox = new JCheckBox();
+		add(powIdLabel);
+		add(powIdField);
+		add(powLabel, "w 80!");
+		add(powCheckBox, "gapleft 30, wrap");
+		powCheckBox.addItemListener(this);
+		powCheckBox.setVisible(false);
 
 		// Heart Rate Strap
-		JLabel label2 = new JLabel();
-		label2.setText("HRM Id");
-		hrmIdField = new JTextField(10);
-		hrmIdField.setText("" + userPrefs.getHRMId());
-		add(label2);
-		add(hrmIdField, "wrap");
-
-		hrLabel = new JLabel();
+		hrmIdLabel = new JLabel();
+		hrmIdField = new JLabel();
+		hrmIdField.setText(": " + userPrefs.getHRMId());
+		hrmCheckBox = new JCheckBox();
 		hrm = new JLabel();
 		hrm.setText("0 bpm");
-		add(hrLabel);
-		add(hrm, "wrap");
+
+		add(hrmIdLabel);
+		add(hrmIdField);
+		add(hrm);
+		add(hrmCheckBox, "gapleft 30, wrap");
+		hrmCheckBox.addItemListener(this);
+		hrmCheckBox.setVisible(false);
 
 		antUSBM = new JCheckBox("ANTUSB-m Stick");
 		antUSBM.setSelected(userPrefs.isANTUSB());
@@ -161,7 +193,6 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		status.setText("");
 		add(status, "span");
 
-		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
 		MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.CADENCE, this);
 		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
@@ -172,36 +203,32 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 
 	@Override
 	public void callback(Messages message, Object o) {
-		Telemetry t = (Telemetry) o;
+		
 		switch (message) {
 		case HEARTRATE:
-			int hr = t.getHeartRate();
+			int heartRate = (Integer) o;
+			int hr = heartRate;
 			if (hr != -1) {
 				hrm.setText(Integer.toString(hr) + " bpm");
 			}
 			break;
-		case SPEEDCADENCE:
-			if (userPrefs.isMetric()) {
-				sandcLabel.setText(String.format("%.1f", t.getSpeedKMH())
-						+ " km/h");
-			} else {
-				sandcLabel.setText(String.format("%.1f", t.getSpeedMPH())
-						+ " mph");
-			}
-			break;
 		case SPEED:
-			double speed = t.getSpeedKMH();
+			Telemetry t = (Telemetry) o;
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeedKMH())
 						+ " km/h");
+				sandcLabel.setText(String.format("%.1f", t.getSpeedKMH())
+						+ " km/h");
 			} else {
 				speedLabel.setText(String.format("%.1f", t.getSpeedMPH())
+						+ " mph");
+				sandcLabel.setText(String.format("%.1f", t.getSpeedMPH())
 						+ " mph");
 			}
 
 			break;
 		case CADENCE:
-			int cadence = t.getCadence();
+			int cadence = (Integer) o;
 			cadenceLabel.setText(Integer.toString(cadence) + " rpm");
 
 			break;
@@ -211,7 +238,6 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 	@Override
 	public void itemStateChanged(ItemEvent e) {
 		Object source = e.getItemSelectable();
-		System.out.println("source " + source);
 		if (source == scCheckBox) {
 			if (scCheckBox.isSelected()) {
 				cadCheckBox.setSelected(false);
@@ -221,7 +247,10 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			if (cadCheckBox.isSelected()) {
 				scCheckBox.setSelected(false);
 			}
-
+		} else if (source == speedCheckBox) {
+			if (speedCheckBox.isSelected()) {
+				scCheckBox.setSelected(false);
+			}
 		} else if (source == antUSBM) {
 			if (antUSBM.isSelected()) {
 				userPrefs.setAntUSBM(true);
@@ -255,13 +284,30 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		} else {
 			status.setText("Pairing complete...");
 			MessageBus.INSTANCE.unregister();
-			hrmID = antDevice.getHRMChannelId();
-			hrmIdField.setText("" + hrmID);
-			scID = antDevice.getSCChannelId();
-			sandcField.setText("" + scID);
-			cadenceField.setText("12345");
-			speedField.setText("12345");
-			
+			hrmID = antDevice.getChannelId(HeartRateListener.name);
+			if (hrmID > 0) {
+				hrmCheckBox.setVisible(true);
+			}
+			hrmIdField.setText(": " + hrmID);
+
+			scID = antDevice.getChannelId(AdvancedSpeedCadenceListener.name);
+			if (scID > 0) {
+				scCheckBox.setVisible(true);
+			}
+			sandcField.setText(": " + scID);
+
+			cadenceID = antDevice.getChannelId(CadenceListener.name);
+			if (cadenceID > 0) {
+				cadCheckBox.setVisible(true);
+			}
+			cadenceField.setText(": " + cadenceID);
+
+			speedID = antDevice.getChannelId(SpeedListener.name);
+			if (speedID > 0) {
+				speedCheckBox.setVisible(true);
+			}
+			speedField.setText(": " + speedID);
+
 			antDevice.close();
 			antListeners = null;
 		}
@@ -272,8 +318,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		sCIDlabel.setText("Speed and Cadence ID");
 		cadIdLabel.setText("Cadence ID");
 		speedIdLabel.setText("Speed ID");
-		hrLabel.setText(userPrefs.messages.getString("heartrate"));
-
+		hrmIdLabel.setText("HRM Id");
 	}
 
 	public void close() {
@@ -284,10 +329,30 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 	}
 
 	public int getSCId() {
-		return scID;
+		if (scCheckBox.isSelected()) {
+			return scID;
+		}
+		return 0;
 	}
 
 	public int getHRMId() {
-		return hrmID;
+		if (hrmCheckBox.isSelected()) {
+			return hrmID;
+		}
+		return 0;
+	}
+
+	public int getSpeedId() {
+		if (speedCheckBox.isSelected()) {
+			return speedID;
+		}
+		return 0;
+	}
+
+	public int getCadenceId() {
+		if (cadCheckBox.isSelected()) {
+			return cadenceID;
+		}
+		return 0;
 	}
 }

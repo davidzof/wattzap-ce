@@ -58,7 +58,7 @@ public class Map extends GPXPanel implements MessageCallback {
 		this.frame = frame;
 		setVisible(false);
 
-		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 	}
@@ -67,7 +67,7 @@ public class Map extends GPXPanel implements MessageCallback {
 	public void callback(Messages message, Object o) {
 
 		switch (message) {
-		case SPEEDCADENCE:
+		case SPEED:
 
 			Telemetry t = (Telemetry) o;
 

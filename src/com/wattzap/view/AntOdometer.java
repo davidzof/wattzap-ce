@@ -184,7 +184,8 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 		initLabels(userPrefs.isMetric());
 		MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
-		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		MessageBus.INSTANCE.register(Messages.CADENCE, this);
 		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
@@ -205,8 +206,9 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 	@Override
 	public void callback(Messages message, Object o) {
+
 		switch (message) {
-		case SPEEDCADENCE:
+		case SPEED:
 			Telemetry t = (Telemetry) o;
 
 			if (startTime == 0) {
@@ -236,20 +238,8 @@ public class AntOdometer extends JPanel implements MessageCallback {
 					powerLabel.setText("" + t.getPower());
 				}
 
-				i = current.isCadenceInRange(t.getCadence());
-				if (i < 0) {
-					cadenceLabel.setForeground(skyBlue);
-					cadenceLabel.setText("" + t.getCadence());
-				} else if (i > 0) {
-					cadenceLabel.setForeground(Color.RED);
-					cadenceLabel.setText("" + t.getCadence());
-				} else {
-					cadenceLabel.setForeground(Color.WHITE);
-					cadenceLabel.setText("" + t.getCadence());
-				}
 			} else {
 				powerLabel.setText("" + t.getPower());
-				cadenceLabel.setText("" + t.getCadence());
 			}
 
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
@@ -275,22 +265,43 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 			break;
 
-		case HEARTRATE:
-			t = (Telemetry) o;
+		case CADENCE:
+			int cadence = (Integer) o;
 			if (current != null) {
-				int i = current.isHRInRange(t.getHeartRate());
+
+				int i = current.isCadenceInRange(cadence);
 				if (i < 0) {
-					hrLabel.setForeground(skyBlue);
-					hrLabel.setText("" + t.getHeartRate());
+					cadenceLabel.setForeground(skyBlue);
+					cadenceLabel.setText("" + cadence);
 				} else if (i > 0) {
-					hrLabel.setForeground(Color.RED);
-					hrLabel.setText("" + t.getHeartRate());
+					cadenceLabel.setForeground(Color.RED);
+					cadenceLabel.setText("" + cadence);
 				} else {
-					hrLabel.setForeground(Color.WHITE);
-					hrLabel.setText("" + t.getHeartRate());
+					cadenceLabel.setForeground(Color.WHITE);
+					cadenceLabel.setText("" + cadence);
 				}
 			} else {
-				hrLabel.setText(Integer.toString(t.getHeartRate()));
+				cadenceLabel.setText("" + cadence);
+			}
+
+			break;
+
+		case HEARTRATE:
+			int heartRate = (Integer) o;
+			if (current != null) {
+				int i = current.isHRInRange(heartRate);
+				if (i < 0) {
+					hrLabel.setForeground(skyBlue);
+					hrLabel.setText("" + heartRate);
+				} else if (i > 0) {
+					hrLabel.setForeground(Color.RED);
+					hrLabel.setText("" + heartRate);
+				} else {
+					hrLabel.setForeground(Color.WHITE);
+					hrLabel.setText("" + heartRate);
+				}
+			} else {
+				hrLabel.setText(Integer.toString(heartRate));
 			}
 			break;
 		case TRAININGITEM:

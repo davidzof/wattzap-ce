@@ -371,14 +371,8 @@ public class Ant implements MessageCallback {
 		}
 	}
 	
-	public int getHRMChannelId() {
-		Channel channel = antChannels.get(HeartRateListener.name);
+	public int getChannelId(String name) {
+		Channel channel = antChannels.get(name);
 		return getChannelId(channel);
-	}
-
-	public int getSCChannelId() {
-		Channel channel = antChannels.get(AdvancedSpeedCadenceListener.name);
-		return getChannelId(channel);
-
 	}
 }

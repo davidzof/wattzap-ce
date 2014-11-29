@@ -280,6 +280,30 @@ public enum UserPreferences {
 	public void setSCId(int i) {
 		setInt(user, "sandcId", i);
 	}
+	
+	public int getSpeedId() {
+		return getInt(user, "speedId", 0);
+	}
+
+	public void setSpeedId(int i) {
+		setInt(user, "speedId", i);
+	}
+	
+	public int getCadenceId() {
+		return getInt(user, "cadenceId", 0);
+	}
+
+	public void setCadenceId(int i) {
+		setInt(user, "cadenceId", i);
+	}
+	
+	public int getPowerId() {
+		return getInt(user, "powerId", 0);
+	}
+
+	public void setPowerId(int i) {
+		setInt(user, "powerId", i);
+	}
 
 	public int getHRMId() {
 		return getInt(user, "hrmid", 0);

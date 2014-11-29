@@ -20,7 +20,6 @@ import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
-import com.wattzap.model.dto.Telemetry;
 
 /**
  * Heart Rate ANT+ processor.
@@ -28,14 +27,14 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 11 June 2013
  * 
- * (c) 2013, 2014 David George / Wattzap.com
+ *       (c) 2013, 2014 David George / Wattzap.com
  */
 public class HeartRateListener extends AntListener {
 	public static String name = "C:HRM";
 	private static final int HRM_CHANNEL_PERIOD = 8070;
 	private static final int HRM_DEVICE_TYPE = 120; // 0x78
-	public static int heartRate = 0;
-	
+	private int lastHeartRate = 0;
+
 	@Override
 	public void receiveMessage(BroadcastDataMessage message) {
 
@@ -47,17 +46,17 @@ public class HeartRateListener extends AntListener {
 		 * should be converted to ints for any arithmetic / display -
 		 * getUnsignedData() is a utility method to do this.
 		 */
-		int rate = message.getUnsignedData()[7];
-		System.out.println("rate " + rate);
-		if (rate > 0 || rate < 220) {
-			heartRate = rate;
+		int heartRate = message.getUnsignedData()[7];
 
-			Telemetry t = new Telemetry();
-			t.setHeartRate(rate);
-			MessageBus.INSTANCE.send(Messages.HEARTRATE, t);
+		if (heartRate > 0 || heartRate < 220) {
+			if (heartRate == lastHeartRate) {
+				return; // don't bother sending repeating values
+			}
+			lastHeartRate = heartRate;
+			MessageBus.INSTANCE.send(Messages.HEARTRATE, heartRate);
 		}
 	}
-	
+
 	@Override
 	public int getChannelId() {
 		return UserPreferences.INSTANCE.getHRMId();
@@ -65,14 +64,14 @@ public class HeartRateListener extends AntListener {
 
 	@Override
 	public int getChannelPeriod() {
-		return HRM_CHANNEL_PERIOD ;
+		return HRM_CHANNEL_PERIOD;
 	}
 
 	@Override
 	public int getDeviceType() {
-		return HRM_DEVICE_TYPE ;
+		return HRM_DEVICE_TYPE;
 	}
-	
+
 	@Override
 	public String getName() {
 		return name;

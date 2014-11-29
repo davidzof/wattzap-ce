@@ -208,7 +208,7 @@ public class Odometer extends JPanel implements MessageCallback {
 
 		initLabels(userPrefs.isMetric());
 
-		MessageBus.INSTANCE.register(Messages.SPEEDCADENCE, this);
+		MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 	}
@@ -228,7 +228,7 @@ public class Odometer extends JPanel implements MessageCallback {
 	@Override
 	public void callback(Messages message, Object o) {
 		switch (message) {
-		case SPEEDCADENCE:
+		case SPEED:
 			Telemetry t = (Telemetry) o;
 
 			if (startTime == 0) {

@@ -47,8 +47,10 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
 import com.wattzap.model.ant.Ant;
 import com.wattzap.model.ant.AntListener;
+import com.wattzap.model.ant.CadenceListener;
 import com.wattzap.model.ant.DummySpeedCadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
+import com.wattzap.model.ant.SpeedListener;
 import com.wattzap.view.AntOdometer;
 import com.wattzap.view.ControlPanel;
 import com.wattzap.view.MainFrame;
@@ -136,11 +138,30 @@ public class Main implements Runnable {
 		//AdvancedSpeedCadenceListener scListener = null;
 		JPanel odo = null;
 		try {
-			HashMap<String,AntListener>  antListeners = new HashMap<String,AntListener>(); 
-			AntListener listener = new AdvancedSpeedCadenceListener();
-			antListeners.put(listener.getName(), listener);
-			listener = new HeartRateListener();
-			antListeners.put(listener.getName(), listener);
+			HashMap<String,AntListener>  antListeners = new HashMap<String,AntListener>();
+			int id = userPrefs.getSCId();
+			if (id > 0) {
+				AntListener listener = new AdvancedSpeedCadenceListener();
+				antListeners.put(listener.getName(), listener);
+			}
+
+			id = userPrefs.getSpeedId();
+			if (id > 0) {
+				AntListener listener = new SpeedListener();
+				antListeners.put(listener.getName(), listener);
+			}
+
+			id = userPrefs.getCadenceId();
+			if (id > 0) {
+				AntListener listener = new CadenceListener();
+				antListeners.put(listener.getName(), listener);
+			}
+
+			id = userPrefs.getHRMId();
+			if (id > 0) {
+				AntListener listener = new HeartRateListener();
+				antListeners.put(listener.getName(), listener);
+			}
 			new Ant(antListeners).register();
 			odo = new AntOdometer();
 		} catch (Exception e) {

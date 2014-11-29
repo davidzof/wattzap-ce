@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.prefs;
 
 import java.awt.BorderLayout;
@@ -59,7 +59,8 @@ public class Preferences extends JFrame implements ActionListener {
 	JLabel bikeWeightLabel;
 	private final JComboBox languageList = new JComboBox();
 	// Supported languages for dropdown
-	private final Locale[] locales = {new Locale("fr"), new Locale("en"), new Locale("de")};
+	private final Locale[] locales = { new Locale("fr"), new Locale("en"),
+			new Locale("de") };
 
 	TurboPanel trainerPanel;
 	AntPanel antPanel;
@@ -89,22 +90,23 @@ public class Preferences extends JFrame implements ActionListener {
 		// Trainer Profiles
 		trainerPanel = new TurboPanel();
 
-		jtp.addTab(UserPreferences.INSTANCE.messages
-				.getString("personal_data"), userPanel);
+		jtp.addTab(
+				UserPreferences.INSTANCE.messages.getString("personal_data"),
+				userPanel);
 		jtp.addTab("Trainer", trainerPanel);
 		jtp.addTab("ANT+", antPanel);
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
-		JButton saveButton = new JButton(UserPreferences.INSTANCE.messages
-				.getString("saveclose"));
+		JButton saveButton = new JButton(
+				UserPreferences.INSTANCE.messages.getString("saveclose"));
 		saveButton.setPreferredSize(new Dimension(150, 30));
 		saveButton.setActionCommand("save");
 		saveButton.addActionListener(this);
 		buttonPanel.add(saveButton);
 
-		JButton cancelButton = new JButton(UserPreferences.INSTANCE.messages
-				.getString("cancel"));
+		JButton cancelButton = new JButton(
+				UserPreferences.INSTANCE.messages.getString("cancel"));
 		cancelButton.setPreferredSize(new Dimension(120, 30));
 		cancelButton.setActionCommand("cancel");
 		cancelButton.addActionListener(this);
@@ -112,11 +114,13 @@ public class Preferences extends JFrame implements ActionListener {
 		contentPane.add(buttonPanel, BorderLayout.SOUTH);
 
 		pack();
-		
+
 		// position centered above main window
 		Rectangle bounds = this.getBounds();
 		Rectangle mainBounds = UserPreferences.INSTANCE.getMainBounds();
-		this.setBounds(mainBounds.x+((mainBounds.width - bounds.width)/2), mainBounds.y+((mainBounds.height - bounds.height)/2), bounds.width, bounds.height);
+		this.setBounds(mainBounds.x + ((mainBounds.width - bounds.width) / 2),
+				mainBounds.y + ((mainBounds.height - bounds.height) / 2),
+				bounds.width, bounds.height);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		// dispose();
 	}
@@ -136,11 +140,12 @@ public class Preferences extends JFrame implements ActionListener {
 					.getString("your_weight") + " (kg) ");
 			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
 					.getString("bike_weight") + " (kg) ");
-			weight.setText(String.format("%.1f",userPrefs.getWeight()));
-			bikeWeight.setText(String.format("%.1f",userPrefs.getBikeWeight()));
+			weight.setText(String.format("%.1f", userPrefs.getWeight()));
+			bikeWeight
+					.setText(String.format("%.1f", userPrefs.getBikeWeight()));
 		} else {
 			weightLabel.setText(UserPreferences.INSTANCE.messages
-					.getString("your_weight")+ " (lbs)");
+					.getString("your_weight") + " (lbs)");
 			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
 					.getString("bike_weight") + " (lbs)");
 			weight.setText(String.format("%.0f", userPrefs.getWeight()));
@@ -167,8 +172,7 @@ public class Preferences extends JFrame implements ActionListener {
 		tab.add(maxHR, "span");
 
 		JLabel pwrLabel = new JLabel();
-		pwrLabel.setText(UserPreferences.INSTANCE.messages
-				.getString("ftp"));
+		pwrLabel.setText(UserPreferences.INSTANCE.messages.getString("ftp"));
 		tab.add(pwrLabel);
 		maxPwr = new JTextField(20);
 		maxPwr.setText("" + userPrefs.getMaxPower());
@@ -179,12 +183,11 @@ public class Preferences extends JFrame implements ActionListener {
 		units.setActionCommand("units");
 		units.addActionListener(this);
 		tab.add(units);
-		
-		
+
 		JLabel langLabel = new JLabel();
 		langLabel.setText("Select Language");
 		tab.add(langLabel);
-		
+
 		int index = 0;
 		Locale defaultLocale = userPrefs.getLocale();
 		for (Locale locale : locales) {
@@ -192,7 +195,7 @@ public class Preferences extends JFrame implements ActionListener {
 			if (locale.equals(defaultLocale)) {
 				languageList.setSelectedIndex(index);
 			}
-				
+
 			index++;
 		}
 		tab.add(languageList, "span");
@@ -215,15 +218,17 @@ public class Preferences extends JFrame implements ActionListener {
 						.getString("bike_weight") + " (kg) ");
 				userPrefs.setUnits(true);
 				weight.setText(String.format("%.1f", userPrefs.getWeight()));
-				bikeWeight.setText(String.format("%.1f", userPrefs.getBikeWeight()));
+				bikeWeight.setText(String.format("%.1f",
+						userPrefs.getBikeWeight()));
 			} else {
 				weightLabel.setText(UserPreferences.INSTANCE.messages
-						.getString("your_weight")+ " (lbs)");
+						.getString("your_weight") + " (lbs)");
 				bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
 						.getString("bike_weight") + " (lbs)");
 				userPrefs.setUnits(false);
 				weight.setText(String.format("%.1f", userPrefs.getWeight()));
-				bikeWeight.setText(String.format("%.1f", userPrefs.getBikeWeight()));
+				bikeWeight.setText(String.format("%.1f",
+						userPrefs.getBikeWeight()));
 			}
 
 		} else if ("cancel".equals(command)) {
@@ -237,13 +242,12 @@ public class Preferences extends JFrame implements ActionListener {
 	}
 
 	public void updatePreferences() {
-		
-		//Number number = format.parse("1,234");
-		//double d = number.doubleValue();
-		
-		
+
+		// Number number = format.parse("1,234");
+		// double d = number.doubleValue();
+
 		userPrefs.setVirtualPower(trainerPanel.isVirtualPower());
-		
+
 		int lang = languageList.getSelectedIndex();
 		Locale locale = locales[lang];
 		userPrefs.setLocale(locale.getISO3Language());
@@ -258,7 +262,7 @@ public class Preferences extends JFrame implements ActionListener {
 			JOptionPane.showMessageDialog(this, pe.getMessage(),
 					"Weight format error: ", JOptionPane.ERROR_MESSAGE);
 		}
-		
+
 		try {
 			Number number = format.parse(wheelSize.getText());
 			userPrefs.setWheelsize(number.intValue());
@@ -299,9 +303,11 @@ public class Preferences extends JFrame implements ActionListener {
 			userPrefs.setResistance(1);
 		}
 
-		// set ANT Ids
 		userPrefs.setSCId(antPanel.getSCId());
+		userPrefs.setSpeedId(antPanel.getSpeedId());
+		userPrefs.setCadenceId(antPanel.getCadenceId());
 		userPrefs.setHRMId(antPanel.getHRMId());
+
 		antPanel.close();
 	}
 }
