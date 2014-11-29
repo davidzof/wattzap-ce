@@ -38,6 +38,7 @@ import com.wattzap.model.ant.Ant;
 import com.wattzap.model.ant.AntListener;
 import com.wattzap.model.ant.CadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
+import com.wattzap.model.ant.PowerListener;
 import com.wattzap.model.ant.SpeedListener;
 import com.wattzap.model.dto.Telemetry;
 
@@ -225,6 +226,9 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 				sandcLabel.setText(String.format("%.1f", t.getSpeedMPH())
 						+ " mph");
 			}
+			if (t.getPower() != -1) {
+				powLabel.setText(t.getPower() + " watts");
+			}
 
 			break;
 		case CADENCE:
@@ -276,6 +280,8 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			antListeners.put(listener.getName(), listener);
 			listener = new HeartRateListener();
 			antListeners.put(listener.getName(), listener);
+			listener = new PowerListener();
+			antListeners.put(listener.getName(), listener);
 			antDevice = new Ant(antListeners);
 			// FIXME will need to set all ids to zero first
 			antDevice.open();
@@ -307,6 +313,12 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 				speedCheckBox.setVisible(true);
 			}
 			speedField.setText(": " + speedID);
+			
+			powID = antDevice.getChannelId(PowerListener.name);
+			if (powID > 0) {
+				powCheckBox.setVisible(true);
+			}
+			powIdField.setText(": " + powID);
 
 			antDevice.close();
 			antListeners = null;
@@ -318,6 +330,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		sCIDlabel.setText("Speed and Cadence ID");
 		cadIdLabel.setText("Cadence ID");
 		speedIdLabel.setText("Speed ID");
+		powIdLabel.setText("Power ID");
 		hrmIdLabel.setText("HRM Id");
 	}
 
@@ -325,7 +338,6 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		status.setText("");
 		speedLabel.setText("");
 		hrm.setText("");
-
 	}
 
 	public int getSCId() {
@@ -352,6 +364,13 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 	public int getCadenceId() {
 		if (cadCheckBox.isSelected()) {
 			return cadenceID;
+		}
+		return 0;
+	}
+	
+	public int getPwrId() {
+		if (powCheckBox.isSelected()) {
+			return powID;
 		}
 		return 0;
 	}

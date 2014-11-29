@@ -307,6 +307,7 @@ public class Preferences extends JFrame implements ActionListener {
 		userPrefs.setSpeedId(antPanel.getSpeedId());
 		userPrefs.setCadenceId(antPanel.getCadenceId());
 		userPrefs.setHRMId(antPanel.getHRMId());
+		userPrefs.setPowerId(antPanel.getPwrId());
 
 		antPanel.close();
 	}

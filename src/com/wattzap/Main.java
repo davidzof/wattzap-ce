@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap;
 
 import java.awt.Color;
@@ -50,6 +50,7 @@ import com.wattzap.model.ant.AntListener;
 import com.wattzap.model.ant.CadenceListener;
 import com.wattzap.model.ant.DummySpeedCadenceListener;
 import com.wattzap.model.ant.HeartRateListener;
+import com.wattzap.model.ant.PowerListener;
 import com.wattzap.model.ant.SpeedListener;
 import com.wattzap.view.AntOdometer;
 import com.wattzap.view.ControlPanel;
@@ -74,11 +75,11 @@ public class Main implements Runnable {
 	private static Logger logger = LogManager.getLogger("Main");
 	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-
 	public static void main(String[] args) {
 		// Debug
 		Level level = setLogLevel();
-		// hard coded for debugging, not important, normally libvlc is found on lib path
+		// hard coded for debugging, not important, normally libvlc is found on
+		// lib path
 		NativeLibrary.addSearchPath("libvlc", ".");
 		// configure the appender
 		String PATTERN = "%r [%t] %p %c %x %m%n";
@@ -135,10 +136,10 @@ public class Main implements Runnable {
 		frame.setBounds(userPrefs.getMainBounds());
 
 		// Must be declared above Odometer
-		//AdvancedSpeedCadenceListener scListener = null;
+		// AdvancedSpeedCadenceListener scListener = null;
 		JPanel odo = null;
 		try {
-			HashMap<String,AntListener>  antListeners = new HashMap<String,AntListener>();
+			HashMap<String, AntListener> antListeners = new HashMap<String, AntListener>();
 			int id = userPrefs.getSCId();
 			if (id > 0) {
 				AntListener listener = new AdvancedSpeedCadenceListener();
@@ -160,6 +161,12 @@ public class Main implements Runnable {
 			id = userPrefs.getHRMId();
 			if (id > 0) {
 				AntListener listener = new HeartRateListener();
+				antListeners.put(listener.getName(), listener);
+			}
+
+			id = userPrefs.getPowerId();
+			if (id > 0) {
+				AntListener listener = new PowerListener();
 				antListeners.put(listener.getName(), listener);
 			}
 			new Ant(antListeners).register();
@@ -201,13 +208,12 @@ public class Main implements Runnable {
 		JMenuBar menuBar = new JMenuBar();
 		//
 		MenuBar mB = new MenuBar();
-		
+
 		menuBar.add(mB.appMenu);
 		mB.quitMenuItem.addActionListener(frame);
 		menuBar.add(mB.fileMenu);
 		RouteFilePicker picker = new RouteFilePicker(frame);
 		mB.openMenuItem.addActionListener(picker);
-		
 
 		// Submenu: Training
 		JMenu trainingMenu = new JMenu(userPrefs.messages.getString("training"));
@@ -230,7 +236,7 @@ public class Main implements Runnable {
 				userPrefs.messages.getString("analyze"));
 		trainingMenu.add(analizeMenuItem);
 		analizeMenuItem.setActionCommand(TrainingController.analyze);
-	
+
 		JMenuItem saveMenuItem = new JMenuItem(
 				userPrefs.messages.getString("save"));
 		saveMenuItem.setActionCommand(TrainingController.save);
@@ -249,7 +255,7 @@ public class Main implements Runnable {
 		analizeMenuItem.addActionListener(trainingController);
 		saveMenuItem.addActionListener(trainingController);
 		recoverMenuItem.addActionListener(trainingController);
-		
+
 		viewMenuItem.addActionListener(trainingController);
 
 		frame.add(trainingDisplay, "cell 0 0");

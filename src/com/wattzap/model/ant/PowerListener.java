@@ -18,9 +18,13 @@ package com.wattzap.model.ant;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 
 import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
+import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
+import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
+import com.wattzap.model.power.Power;
 
 /**
  * Power Meter
@@ -28,22 +32,124 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 14th November 2014
  * 
- * (c) 2014 David George / Wattzap.com
+ *       (c) 2014 David George / Wattzap.com
  */
-public class PowerListener extends AntListener {
+public class PowerListener extends AntListener implements MessageCallback {
 	public static String name = "C:POW";
-	private static final byte DEVICE_TYPE = (byte) 11; // 0x7A
+	private static final byte DEVICE_TYPE = (byte) 0x0B;
 	private static final short MESSAGE_PERIOD = 8182;
+
+	private boolean simulSpeed;
+	private static long elapsedTime;
+	private double distance = 0.0;
+
+	RouteReader routeData;
+	private double mass;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+
+	// initialize for pairing
+	private double wheelSize = userPrefs.getWheelSizeCM();
+	private int resistance = userPrefs.getResistance();
+	private Power power = userPrefs.getPowerProfile();
+
+	public PowerListener() {
+		MessageBus.INSTANCE.register(Messages.START, this);
+		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
+		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
+	}
 
 	@Override
 	public void receiveMessage(BroadcastDataMessage message) {
-		if (message.getUnsignedData()[0] == 16) {
+		if (message.getUnsignedData()[0] == 0x10) {
 			// simple power message
-			int watt = (message.getUnsignedData()[7] << 8)
+			int powerWatts = (message.getUnsignedData()[7] << 8)
 					| message.getUnsignedData()[6];
 			int rpm = (byte) (message.getUnsignedData()[3] & 0xFF);
-			System.out.println("rev count " + watt + " evTime " + rpm + " "
+			System.out.println("watt " + powerWatts + " cadence " + rpm + " "
 					+ message.getUnsignedData()[0]);
+
+			double speed = 0;
+			double distanceKM = 0;
+			double timeS = 0;
+			
+			Telemetry t = new Telemetry();
+			t.setPower(powerWatts);
+
+			// if we have GPX Data and Simulspeed is enabled calculate speed
+			// based on power and gradient using magic sauce
+			if (simulSpeed && routeData != null) {
+				Point p = routeData.getPoint(distance);
+				if (routeData.routeType() == RouteReader.SLOPE) {
+					if (p == null) {
+						// end of the road
+						distance = 0.0;
+						return;
+					}
+					if (powerWatts > 0) {
+						// only works when power is positive, this is most of
+						// the time on a turbo
+						double realSpeed = power.getRealSpeed(mass,
+								p.getGradient() / 100, powerWatts);
+
+						realSpeed = (realSpeed * 3600) / 1000;
+						distanceKM = (realSpeed / speed) * distanceKM;
+						speed = realSpeed;
+					}
+				} else {
+					// power profile, speed is the ratio of our trainer power to
+					// the expected power
+					double ratio = (powerWatts / p.getPower());
+					// speed is video speed * power ratio
+					speed = p.getSpeed() * ratio;
+					distanceKM = (speed / 3600) * timeS;
+				}
+			} else {
+				speed = power.getRealSpeed(mass,
+						0, powerWatts);
+
+			}
+
+			t.setDistanceMeters(distance * 1000);
+			if (routeData != null) {
+				Point p = routeData.getPoint(distance);
+				if (p == null) {
+					// end of the road
+					distance = 0.0;
+					return;
+				}
+				t.setElevation(p.getElevation());
+				t.setGradient(p.getGradient());
+				t.setLatitude(p.getLatitude());
+				t.setLongitude(p.getLongitude());
+			}
+			t.setSpeed(speed);
+			t.setTime(elapsedTime);
+			distance += distanceKM;
+
+			MessageBus.INSTANCE.send(Messages.SPEED, t);
+
+		}
+	}
+
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case START:
+			// get up to date values
+			mass = userPrefs.getTotalWeight();
+			wheelSize = userPrefs.getWheelSizeCM();
+			resistance = userPrefs.getResistance();
+			power = userPrefs.getPowerProfile();
+			simulSpeed = userPrefs.isVirtualPower();
+			elapsedTime = System.currentTimeMillis();
+			break;
+		case STARTPOS:
+			distance = (Double) o;
+			break;
+		case GPXLOAD:
+			this.routeData = (RouteReader) o;
+			distance = 0.0;
+			break;
 		}
 	}
 
