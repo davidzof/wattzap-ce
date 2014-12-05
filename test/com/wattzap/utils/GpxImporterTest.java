@@ -81,7 +81,7 @@ public class GpxImporterTest {
 			Telemetry firstPoint = gpxData.get(0);
 
 			String fileName = UserPreferences.INSTANCE.getUserDataDirectory()
-					+ "/Workouts/"
+					+ TcxWriter.WORKOUTDIR
 					+ TcxWriter.getWorkoutName(firstPoint.getTime());
 
 			r = new FileReader(fileName);

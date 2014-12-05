@@ -93,7 +93,7 @@ public abstract class RouteReader {
 
 	public abstract double getDistanceMeters();
 
-	public abstract int routeType();
+	public abstract  int routeType();
 
 	public abstract double getMaxSlope();
 

@@ -85,10 +85,10 @@ public class AdvancedSpeedCadenceListener extends AntListener {
 
 		// Bytes 4 and 5: TTTT / 1024 = milliSeconds since the last
 		// rollover for speed
-		int tS = data[4] + (data[5] << 8);
-
+		int tS = data[4] | (data[5] << 8);
+		
 		// Bytes 6 and 7: speed rotation count.
-		int sR = data[6] + (data[7] << 8);
+		int sR = data[6] | (data[7] << 8);
 
 		logger.debug("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR);
 

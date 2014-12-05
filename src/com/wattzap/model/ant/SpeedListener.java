@@ -27,6 +27,7 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.power.Power;
+import com.wattzap.utils.Rolling;
 
 /**
  * Speed Sensor
@@ -44,7 +45,8 @@ public class SpeedListener extends AntListener implements MessageCallback {
 	private int lastCount = -1;
 	private int lastTime = -1;
 	private int cCount = 0;
-
+	private boolean initializing = false;
+	private Rolling powerRatio;
 	private boolean simulSpeed;
 	private static long elapsedTime;
 	private double distance = 0.0;
@@ -72,24 +74,52 @@ public class SpeedListener extends AntListener implements MessageCallback {
 		int count = (message.getUnsignedData()[7] << 8)
 				| message.getUnsignedData()[6];
 		logger.debug("time " + time + " count " + count);
-		
+
 		Telemetry t = getTelemetry(time, count);
 		if (t != null) {
 			MessageBus.INSTANCE.send(Messages.SPEED, t);
 		}
 	}
 
+	/**
+	 * Works out Power, Distance, Speed and other values from the instantaneous
+	 * roller speed.
+	 * 
+	 * @param time
+	 *            Time since last reading
+	 * @param count
+	 *            Number of wheel rotations
+	 * @return Telemetry or null if no reliable data could be calculated.
+	 */
 	Telemetry getTelemetry(int time, int count) {
 		if (lastCount == -1) {
-			// first time thru, set
+			// first time thru, initialize counters
 			lastCount = count;
 			lastTime = time;
+			return null;
+		} else if (initializing && lastCount != count) {
+			// reset counters when we see first change, some devices seem to
+			// have garbage in the pipe at startup.
+			initializing = false;
+			lastCount = count;
+			lastTime = time;
+			elapsedTime = System.currentTimeMillis();
 			return null;
 		}
 
 		int tDiff = ((time - lastTime) & 0xffff);
-		int sDiff = ((count - lastCount) & 0xffff);
+		if (tDiff > 5000) {
+			/*
+			 * these values occur sometimes in the data stream with the combo
+			 * speed and cadence listener. Apparently they are none-standard
+			 * battery level messages. Log and return.
+			 */
+			logger.error("Bogus value: time " + time + " tDiff " + tDiff
+					+ " count " + count);
+			return null;
+		}
 
+		int sDiff = ((count - lastCount) & 0xffff);
 		double speed = 0;
 		double distanceKM = 0;
 		Telemetry t = new Telemetry();
@@ -123,9 +153,12 @@ public class SpeedListener extends AntListener implements MessageCallback {
 						speed = realSpeed;
 					}
 				} else {
-					// power profile, speed is the ratio of our trainer power to
-					// the expected power
-					double ratio = (powerWatts / p.getPower());
+					/*
+					 * Power Profile: speed is the ratio of our trainer power to
+					 * the expected power, we also apply a bit of smoothing
+					 */
+					double ratio = powerRatio.add(powerWatts / p.getPower());
+
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
 					distanceKM = (speed / 3600) * timeS;
@@ -134,6 +167,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 
 			cCount = 0;
 		} else if (cCount < 6) {
+			// a zero value may just be due to too fast sensor update, wait 6 messages before sending zero
 			cCount++;
 			return null;
 		}
@@ -157,7 +191,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 		t.setTime(elapsedTime);
 		distance += distanceKM;
 
-		logger.debug("sending " +t);
+		logger.debug("sending " + t);
 		return t;
 	}
 
@@ -171,7 +205,9 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			resistance = userPrefs.getResistance();
 			power = userPrefs.getPowerProfile();
 			simulSpeed = userPrefs.isVirtualPower();
-			elapsedTime = System.currentTimeMillis();
+			initializing = true;
+			lastCount = -1;
+			powerRatio = new Rolling(10);
 			break;
 		case STARTPOS:
 			distance = (Double) o;

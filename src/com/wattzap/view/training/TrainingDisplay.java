@@ -341,7 +341,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			break;
 
 		case HEARTRATE:
-			heartRate = (Integer) 0;
+			heartRate = (Integer) o;
 			break;
 			
 		case STOP:

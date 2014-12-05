@@ -85,13 +85,6 @@ public class TrainingController implements ActionListener {
 			}
 			TcxWriter writer = new TcxWriter();
 
-			// saves data to UserDataDirectory
-			// Create a file chooser
-			JFileChooser fc = new JFileChooser();
-
-			// In response to a button click:
-			int returnVal = fc.showOpenDialog(mainFrame);
-
 			String fileName = writer.save(data, gpsData);
 			WorkoutData workoutData = TrainingAnalysis.analyze(data);
 			workoutData.setTcxFile(fileName);

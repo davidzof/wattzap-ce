@@ -27,7 +27,7 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.power.Power;
 
 /**
- * Power Meter
+ * Power Meter. Converts power to speed based on rider's mass.
  * 
  * @author David George
  * @date 14th November 2014
@@ -42,6 +42,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 	private boolean simulSpeed;
 	private static long elapsedTime;
 	private double distance = 0.0;
+	private boolean cadenceSensor;
 
 	RouteReader routeData;
 	private double mass;
@@ -56,6 +57,11 @@ public class PowerListener extends AntListener implements MessageCallback {
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
+		
+		int id = userPrefs.getCadenceId();
+		if (id > 0) {
+			cadenceSensor = true; // cadence done by cadence sensor
+		}
 	}
 
 	@Override
@@ -127,6 +133,9 @@ public class PowerListener extends AntListener implements MessageCallback {
 			distance += distanceKM;
 
 			MessageBus.INSTANCE.send(Messages.SPEED, t);
+			if (cadenceSensor == false && rpm != -1) {
+				MessageBus.INSTANCE.send(Messages.CADENCE, rpm);
+			}
 
 		}
 	}

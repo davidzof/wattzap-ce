@@ -47,6 +47,7 @@ import com.wattzap.model.dto.Telemetry;
 public class TcxWriter /* implements TrackWriter */{
 	protected static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 	protected static final String FILE_TIMESTAMP_FORMAT = "yyyyMMMdd-HHmmss";
+	public final static String WORKOUTDIR = "/Workouts/";
 
 	// These are the only sports allowed by the TCX v2 specification for fields
 	// of type Sport_t.
@@ -276,10 +277,10 @@ public class TcxWriter /* implements TrackWriter */{
 		Telemetry firstPoint = data.get(0);
 		Telemetry lastPoint = data.get(data.size() - 1);
 
-		fileName = getWorkoutName(firstPoint
+		fileName = UserPreferences.INSTANCE.getUserDataDirectory()
+				+ WORKOUTDIR + getWorkoutName(firstPoint
 				.getTime());
-		File file = new File(UserPreferences.INSTANCE.getUserDataDirectory()
-				+ "/Workouts/" + fileName);
+		File file = new File(fileName);
 
 		try {
 			// make sure parent directory exists
