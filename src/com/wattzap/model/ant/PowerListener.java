@@ -25,6 +25,7 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.power.Power;
+import com.wattzap.utils.Rolling;
 
 /**
  * Power Meter. Converts power to speed based on rider's mass.
@@ -40,12 +41,13 @@ public class PowerListener extends AntListener implements MessageCallback {
 	private static final short MESSAGE_PERIOD = 8182;
 
 	private boolean simulSpeed;
-	private static long elapsedTime;
+	private long lastTime;
 	private double distance = 0.0;
 	private boolean cadenceSensor;
 
 	RouteReader routeData;
 	private double mass;
+	private Rolling averagePower;
 	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	// initialize for pairing
@@ -70,13 +72,22 @@ public class PowerListener extends AntListener implements MessageCallback {
 			// simple power message
 			int powerWatts = (message.getUnsignedData()[7] << 8)
 					| message.getUnsignedData()[6];
+			powerWatts = (int)averagePower.add(powerWatts);
 			int rpm = (byte) (message.getUnsignedData()[3] & 0xFF);
-			System.out.println("watt " + powerWatts + " cadence " + rpm + " "
-					+ message.getUnsignedData()[0]);
+//			System.out.println("watt " + powerWatts + " cadence " + rpm + " "
+	//				+ message.getUnsignedData()[0]);
 
+			if (lastTime == -1) {
+				lastTime = System.currentTimeMillis();
+				return;
+			}
+			
 			double speed = 0;
 			double distanceKM = 0;
 			double timeS = 0;
+			long currentTime = System.currentTimeMillis();
+			long tDiff = currentTime-lastTime;
+			lastTime = currentTime;
 			
 			Telemetry t = new Telemetry();
 			t.setPower(powerWatts);
@@ -94,12 +105,11 @@ public class PowerListener extends AntListener implements MessageCallback {
 					if (powerWatts > 0) {
 						// only works when power is positive, this is most of
 						// the time on a turbo
-						double realSpeed = power.getRealSpeed(mass,
-								p.getGradient() / 100, powerWatts);
-
-						realSpeed = (realSpeed * 3600) / 1000;
-						distanceKM = (realSpeed / speed) * distanceKM;
-						speed = realSpeed;
+						speed = (power.getRealSpeed(mass,
+								p.getGradient() / 100, powerWatts)) * 3.6;
+						// d = s * t
+						distanceKM = (speed * tDiff)/360000;
+						//System.out.println("speed " + speed + " distanceKM " + distanceKM + " watts " + powerWatts + " mass " + mass + " tDiff " + tDiff);
 					}
 				} else {
 					// power profile, speed is the ratio of our trainer power to
@@ -112,6 +122,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 			} else {
 				speed = power.getRealSpeed(mass,
 						0, powerWatts);
+				distanceKM = (speed * tDiff)/360000;
 
 			}
 
@@ -129,7 +140,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 				t.setLongitude(p.getLongitude());
 			}
 			t.setSpeed(speed);
-			t.setTime(elapsedTime);
+			t.setTime(currentTime);
 			distance += distanceKM;
 
 			MessageBus.INSTANCE.send(Messages.SPEED, t);
@@ -150,7 +161,8 @@ public class PowerListener extends AntListener implements MessageCallback {
 			resistance = userPrefs.getResistance();
 			power = userPrefs.getPowerProfile();
 			simulSpeed = userPrefs.isVirtualPower();
-			elapsedTime = System.currentTimeMillis();
+			lastTime = -1;
+			averagePower = new Rolling(10);
 			break;
 		case STARTPOS:
 			distance = (Double) o;

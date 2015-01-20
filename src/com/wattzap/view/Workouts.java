@@ -59,6 +59,7 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.utils.ActivityReader;
+import com.wattzap.utils.TcxWriter;
 import com.wattzap.view.graphs.DistributionGraph;
 import com.wattzap.view.graphs.GenericScatterGraph;
 import com.wattzap.view.graphs.MMPGraph;
@@ -76,6 +77,7 @@ public class Workouts extends JPanel implements ActionListener {
 	private List<WorkoutData> workoutList;
 	private List<Integer> selectedRows;
 	WorkoutData workoutData = null;
+	public final static String IMPORTDIR = "/Imports/";
 
 	private boolean listChanged = true;
 	private final JTable table;
@@ -344,7 +346,7 @@ public class Workouts extends JPanel implements ActionListener {
 			// All workouts to be imported are dumped into an "Imports"
 			// directory
 			String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
-					+ "/Imports/";
+					+ IMPORTDIR;
 
 			ActivityReader ar = new ActivityReader();
 
@@ -497,7 +499,7 @@ public class Workouts extends JPanel implements ActionListener {
 		}
 
 		String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
-				+ "/Workouts/";
+				+ TcxWriter.WORKOUTDIR;
 
 		telemetry = new ArrayList[selectedRows.size()];
 
@@ -532,7 +534,7 @@ public class Workouts extends JPanel implements ActionListener {
 		}
 
 		String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()
-				+ "/Workouts/";
+				+ TcxWriter.WORKOUTDIR;
 
 		telemetry = new ArrayList[selectedRows.size()];
 
@@ -843,7 +845,7 @@ public class Workouts extends JPanel implements ActionListener {
 			userPrefs.deleteWorkout(fileName);
 
 			String path = UserPreferences.INSTANCE.getUserDataDirectory()
-					+ "/Workouts/" + fileName;
+					+ TcxWriter.WORKOUTDIR + fileName;
 
 			File file = new File(path);
 			if (file.delete()) {

@@ -16,16 +16,21 @@
 package com.wattzap.model;
 
 import java.awt.Rectangle;
+import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.UUID;
+
+import uk.co.caprica.vlcj.logger.Logger;
 
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.Messages;
 import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.model.power.Power;
 import com.wattzap.model.power.PowerProfiles;
+import com.wattzap.utils.TcxWriter;
+import com.wattzap.view.Workouts;
 
 /**
  * Singleton helper to read/write user preferences to a backing store
@@ -53,6 +58,20 @@ public enum UserPreferences {
 
 		Locale currentLocale = getLocale();
 		messages = ResourceBundle.getBundle("MessageBundle", currentLocale);
+		
+		// check User data directories exist
+		String udDir = getUserDataDirectory();
+		File f = new File(udDir + TcxWriter.WORKOUTDIR);
+		if (!f.exists()) {
+			f.mkdirs();
+			Logger.info("created " + udDir);
+		}
+
+		f = new File(udDir + Workouts.IMPORTDIR);
+		if (!f.exists()) {
+			f.mkdirs();
+			Logger.info("created " + udDir);
+		}
 	}
 
 	public void setAntEnabled(boolean v) {
@@ -241,7 +260,7 @@ public enum UserPreferences {
 	}
 
 	public Locale getLocale() {
-		String iso3 = get(user, "locale", Locale.getDefault().getISO3Country());
+		String iso3 = get(user, "locale", Locale.getDefault().getISO3Language());	
 		Locale locale = new Locale(iso3);
 		return locale;
 	}

@@ -145,10 +145,10 @@ public class SpeedListener extends AntListener implements MessageCallback {
 					if (powerWatts > 0) {
 						// only works when power is positive, this is most of
 						// the time on a turbo
-						double realSpeed = power.getRealSpeed(mass,
-								p.getGradient() / 100, powerWatts);
+						double realSpeed = (power.getRealSpeed(mass,
+								p.getGradient() / 100, powerWatts)) * 3.6;
 
-						realSpeed = (realSpeed * 3600) / 1000;
+//						realSpeed = (realSpeed * 3.600) / 1000;
 						distanceKM = (realSpeed / speed) * distanceKM;
 						speed = realSpeed;
 					}

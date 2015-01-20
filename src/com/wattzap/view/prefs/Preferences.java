@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
+import java.util.MissingResourceException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -189,10 +190,17 @@ public class Preferences extends JFrame implements ActionListener {
 		tab.add(langLabel);
 
 		int index = 0;
-		Locale defaultLocale = userPrefs.getLocale();
+		String lang = "eng"; // default
+		try {
+			lang = userPrefs.getLocale().getISO3Language();
+			System.out.println("lang " + lang);
+		} catch (MissingResourceException e) {
+			// do nothing
+		}
 		for (Locale locale : locales) {
 			languageList.addItem(locale.getDisplayLanguage());
-			if (locale.equals(defaultLocale)) {
+System.out.println(locale.getISO3Country());
+			if (lang.equals(locale.getISO3Language())) {
 				languageList.setSelectedIndex(index);
 			}
 
@@ -250,7 +258,7 @@ public class Preferences extends JFrame implements ActionListener {
 
 		int lang = languageList.getSelectedIndex();
 		Locale locale = locales[lang];
-		userPrefs.setLocale(locale.getISO3Language());
+		userPrefs.setLocale(locale.toString());
 		NumberFormat format = NumberFormat.getInstance(userPrefs.getLocale());
 
 		try {
