@@ -16,7 +16,7 @@
 package com.wattzap.model.power;
 
 /*
- * Blackburn Basic Mag
+ * Blackburn Fluid
  * 
  * Resistance Options - these seem high
  * 1: 14.493 * speed + 0.0416648 * speed ^3

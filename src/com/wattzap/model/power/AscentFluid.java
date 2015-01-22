@@ -16,24 +16,16 @@
 package com.wattzap.model.power;
 
 /*
- * CycleOps power curve for this trainer
+ * Ascent Fluid
+ * Power: 10km/h=50w, 20km/h=112w, 30km/h=232w, 40km/h=415w, 50km/h=700w, 60km/h=1100w
  * 
- * http://thebikegeek.blogspot.fr/2009/12/while-we-wait-for-better-and-better.html
- Armann: 1.5981 x + 0.006942 x^3
- *  
- *  or mayble
- *  
- *  y = 0.0115x3 - 0.0137x2 + 8.9788x
- *  0.00276 - 0.00529 + 5.58
- *  
- *   * mph to kmh = 1.60934, 2.5899752356, 4.168150745660504
- *  
+ * Function: y = 0.00442x³ -0.04x² + 4.95833x
  */
 @PowerAnnotation
-public class CyclopsFluid2 extends Power {
-	private static final double a = 0.00276;
-	private static final double b = 0.00529;
-	private static final double c = 5.58;
+public class AscentFluid extends Power {
+	private static final double a = 0.00422;
+	private static final double b = -0.04;
+	private static final double c = 4.95833;
 	private static final double d = 0;
 	private static final Cubic cubic = new Cubic();
 
@@ -41,7 +33,6 @@ public class CyclopsFluid2 extends Power {
 
 		double power = (c * speed) + (b * speed * speed)
 				+ (a * speed * speed * speed);
-
 		return (int) power;
 	}
 

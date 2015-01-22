@@ -15,45 +15,50 @@
 */
 package com.wattzap.model.power;
 
+
 /*
- * CycleOps power curve for this trainer
+ * (c) 2013 David George / Wattzap.com
  * 
- * http://thebikegeek.blogspot.fr/2009/12/while-we-wait-for-better-and-better.html
- Armann: 1.5981 x + 0.006942 x^3
- *  
- *  or mayble
- *  
- *  y = 0.0115x3 - 0.0137x2 + 8.9788x
- *  0.00276 - 0.00529 + 5.58
- *  
- *   * mph to kmh = 1.60934, 2.5899752356, 4.168150745660504
- *  
+ * @author David George
+ * @date 21 November 2013
+ * 
+ * 10km/h=44w, 20km/h=142w, 30km/h=367w, 40km/h=756, 50km/h=1376w, 60km/h=2200w
+ * 
+ * Elite Qubo Fluid
+ * 
+ 
+ * y = 0.00932x³ +
+    0.019x² +
+    3.27833x 
  */
 @PowerAnnotation
-public class CyclopsFluid2 extends Power {
-	private static final double a = 0.00276;
-	private static final double b = 0.00529;
-	private static final double c = 5.58;
+public class EliteQuboFluid extends Power {
+	private static final double a = 0.00932;
+	private static final double b = 0.019;
+	private static final double c = 3.27833;
 	private static final double d = 0;
-	private static final Cubic cubic = new Cubic();
-
+	private final Cubic cubic = new Cubic();
+	
 	public int getPower(double speed, int resistance) {
-
-		double power = (c * speed) + (b * speed * speed)
-				+ (a * speed * speed * speed);
-
+		double power = (a * (speed * speed * speed)) + (b * (speed * speed)) + (c * speed) ;
+		
 		return (int) power;
 	}
 
 	public String description() {
-		return "CycleOps Fluid2";
+		return "Elite Qubo Fluid";
 	}
 
+	@Override
+	public int getResistance(double gradient) {
+		return 1;
+	}
+	
 	@Override
 	public int getResitanceLevels() {
 		return 1;
 	}
-
+	
 	public double getSpeed(int power, int resistance) {
 		cubic.solve(a, b, c, d - power);
 		return cubic.x1;

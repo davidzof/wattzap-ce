@@ -16,24 +16,18 @@
 package com.wattzap.model.power;
 
 /*
- * CycleOps power curve for this trainer
+ * Cylcletek M1
+ * 16.1  32.2  48.2  64.4 kmh
+ * 33    244   794   2093
  * 
- * http://thebikegeek.blogspot.fr/2009/12/while-we-wait-for-better-and-better.html
- Armann: 1.5981 x + 0.006942 x^3
- *  
- *  or mayble
- *  
- *  y = 0.0115x3 - 0.0137x2 + 8.9788x
- *  0.00276 - 0.00529 + 5.58
- *  
- *   * mph to kmh = 1.60934, 2.5899752356, 4.168150745660504
+ * y = 0.00662x³ + 0.02344x² -0.04456x
  *  
  */
 @PowerAnnotation
-public class CyclopsFluid2 extends Power {
-	private static final double a = 0.00276;
-	private static final double b = 0.00529;
-	private static final double c = 5.58;
+public class CycletekM1 extends Power {
+	private static final double a = 0.00662;
+	private static final double b = 0.02344;
+	private static final double c = -0.04456;
 	private static final double d = 0;
 	private static final Cubic cubic = new Cubic();
 
@@ -46,7 +40,7 @@ public class CyclopsFluid2 extends Power {
 	}
 
 	public String description() {
-		return "CycleOps Fluid2";
+		return "Cycletek M1";
 	}
 
 	@Override
