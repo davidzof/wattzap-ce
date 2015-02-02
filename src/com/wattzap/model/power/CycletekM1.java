@@ -17,6 +17,11 @@ package com.wattzap.model.power;
 
 /*
  * Cylcletek M1
+ *  
+ * @author David George
+ * @date 2 January 2015
+ * 
+ * 
  * 16.1  32.2  48.2  64.4 kmh
  * 33    244   794   2093
  * 

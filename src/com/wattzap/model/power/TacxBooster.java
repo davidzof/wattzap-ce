@@ -15,6 +15,10 @@
 */
 package com.wattzap.model.power;
 
+/*
+ * @author David George
+ * @date 11 November 2013
+ */
 @PowerAnnotation
 public class TacxBooster extends Power {
 	private final double[] slope = {  5.5, 7.034, 8.567, 10.1, 11.667, 13.167, 14.7, 16.234, 17.767, 19.333};

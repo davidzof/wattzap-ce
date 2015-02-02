@@ -15,6 +15,11 @@
 */
 package com.wattzap.model.power;
 
+/*
+ *
+ * @author David George
+ * @date 11 November 2013
+ */
 public abstract class Power {
 	private int neutral = getNeutral();
 	private double posDivider = 1;

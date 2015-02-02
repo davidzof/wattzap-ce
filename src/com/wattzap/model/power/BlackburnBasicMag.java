@@ -33,6 +33,8 @@ package com.wattzap.model.power;
  * 
  * http://www.1upusa.com/product-trainer.html
  * 
+ * @author David George
+ * @date 2 September 2013
  */
 public class BlackburnBasicMag extends Power {
 	private final Cubic cubic = new Cubic();

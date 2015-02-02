@@ -18,6 +18,9 @@ package com.wattzap.model.power;
 /*
  * CycleOps power curve for this trainer
  * 
+ * @author David George
+ * @date 2 September 2013
+ * 
  * http://thebikegeek.blogspot.fr/2009/12/while-we-wait-for-better-and-better.html
  Armann: 1.5981 x + 0.006942 x^3
  *  

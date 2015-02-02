@@ -16,41 +16,41 @@
 package com.wattzap.model.power;
 
 /*
- * Blackburn Fluid
- * 
- * Resistance Options - these seem high
- * 1: 14.493 * speed + 0.0416648 * speed ^3
- *
+ * CatEye CS1000
+ *  
  * @author David George
- * @date 2 September 2013
+ * @date 2 February 2015
+ * 
+ * Power: 16.1km/h=49w,	32.2km/h=170, 48.3km/h=473 64.4km/h=1082w
+ * 
+ * Function: y = 0.00467x³ -0.0913x² + 3.30228x + 0
  */
-
-public class BlackburnFluid extends Power {
-	private static final double a = 0.0416648;
-	private static final double b = 0;
-	private static final double c = 14.493;
+@PowerAnnotation
+public class CatEyeCS1000 extends Power {
+	private static final double a = 0.00467;
+	private static final double b = -0.0913;
+	private static final double c = 3.30228;
 	private static final double d = 0;
-	private final Cubic cubic = new Cubic();
+	private static final Cubic cubic = new Cubic();
 
 	public int getPower(double speed, int resistance) {
-		double power = 0.0;
 
-		power = (c * speed) + (a * speed * speed * speed);
-
+		double power = (c * speed) + (b * speed * speed)
+				+ (a * speed * speed * speed);
 		return (int) power;
 	}
 
-	public double getSpeed(int power, int resistance) {
-		cubic.solve(a, b, c, d - power);
-		return cubic.x1;
-	}
-
 	public String description() {
-		return "Blackburn Fluid";
+		return "CatEye CS1000";
 	}
 
 	@Override
 	public int getResitanceLevels() {
 		return 1;
+	}
+
+	public double getSpeed(int power, int resistance) {
+		cubic.solve(a, b, c, d - power);
+		return cubic.x1;
 	}
 }

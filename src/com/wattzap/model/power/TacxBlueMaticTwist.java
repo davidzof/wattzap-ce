@@ -20,7 +20,7 @@ package com.wattzap.model.power;
  * 
  * 
  * @author David George
- * @date 11 June 2013 From
+ * @date 11 June 2013
  */
 @PowerAnnotation
 public class TacxBlueMaticTwist extends Power {

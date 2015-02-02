@@ -20,6 +20,9 @@ package com.wattzap.model.power;
  * Power: 10km/h=50w, 20km/h=112w, 30km/h=232w, 40km/h=415w, 50km/h=700w, 60km/h=1100w
  * 
  * Function: y = 0.00442x³ -0.04x² + 4.95833x
+ * 
+ * @author David George
+ * @date 2 January 2015
  */
 @PowerAnnotation
 public class AscentFluid extends Power {
@@ -37,7 +40,7 @@ public class AscentFluid extends Power {
 	}
 
 	public String description() {
-		return "CycleOps Fluid2";
+		return "Ascent Fluid";
 	}
 
 	@Override

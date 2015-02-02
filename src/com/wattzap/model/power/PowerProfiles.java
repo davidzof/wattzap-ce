@@ -29,8 +29,9 @@ import com.wattzap.utils.ReflexiveClassLoader;
  * Load all available power profiles
  * 
  * @author David George
+ * @date 11 November 2013
  * 
- *         (c) 2013 David George / Wattzap.com
+ * (c) 2013 David George / Wattzap.com
  * 
  */
 public enum PowerProfiles {
