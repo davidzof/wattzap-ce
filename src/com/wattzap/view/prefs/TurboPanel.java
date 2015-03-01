@@ -105,7 +105,6 @@ public class TurboPanel extends JPanel implements ActionListener {
 		String d = getProfileDescription();
 		PowerProfiles pp = PowerProfiles.INSTANCE;
 		Power p = pp.getProfile(d);
-		System.out.println(p);
 		if (resistanceLevels != null) {
 			remove(resistanceLevels);
 			resistanceLabel.setVisible(false);

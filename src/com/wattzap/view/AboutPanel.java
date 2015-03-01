@@ -58,7 +58,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 	private static final String decodeKey = "CAFEBABE";
 	// <html>WattzAp Virtual Turbo Trainer<br/><br/>Version: x.x.x 
 	// <br/>Date: xx xxx xxx<br/>(c) xxxx, All rights reserved<br/>
-	private static final String blurb = "fykyKC5/FSQ3NTwEMmEWMDEjKWUWMyMsLSQ0ZREuJDE0IDQgfiMwan19JDdtfxQgMTIvKix7YndtcnonMG58ASI1I39ieDYtYw8pMycsICAxfSQ3bX9qJmphdHVzdW5lAi0qZTAoJS03MmY3JzInNzUkInkgM217";
+	private static final String blurb = "fykyKC5/FSQ3NTwEMmEWMDEjKWUWMyMsLSQ0ZREuJDE0IDQgfiMwan19JDdtfxQgMTIvKix7YndtdXonMG58ASI1I39idDYtYwcjJzA0Izc6fSQ3bX9qJmphdHVzdG5lAi0qZTAoJS03MmY3JzInNzUkInkgM217";
 	// Your software is registered
 	private static final String registered = "Gi4zN2IyLSM3Nic3J2ErNmMzIyIrMjYgMSQi";
 	// Incorrect registration key

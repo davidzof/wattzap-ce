@@ -92,6 +92,8 @@ public class SpeedListener extends AntListener implements MessageCallback {
 	 * @return Telemetry or null if no reliable data could be calculated.
 	 */
 	Telemetry getTelemetry(int time, int count) {
+		
+		
 		if (lastCount == -1) {
 			// first time thru, initialize counters
 			lastCount = count;
@@ -108,6 +110,8 @@ public class SpeedListener extends AntListener implements MessageCallback {
 		}
 
 		int tDiff = ((time - lastTime) & 0xffff);
+		int sDiff = ((count - lastCount) & 0xffff);
+		
 		if (tDiff > 5000) {
 			/*
 			 * these values occur sometimes in the data stream with the combo
@@ -116,10 +120,11 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			 */
 			logger.error("Bogus value: time " + time + " tDiff " + tDiff
 					+ " count " + count);
+			lastCount = -1;
 			return null;
 		}
 
-		int sDiff = ((count - lastCount) & 0xffff);
+		
 		double speed = 0;
 		double distanceKM = 0;
 		Telemetry t = new Telemetry();

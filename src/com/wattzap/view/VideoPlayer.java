@@ -29,7 +29,6 @@ import javax.swing.JPanel;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import uk.co.caprica.vlcj.binding.internal.libvlc_marquee_position_e;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.DefaultFullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -63,8 +62,7 @@ import com.wattzap.utils.Rolling;
  * @author David George
  * @date 11 June 2013
  */
-public class VideoPlayer extends JFrame implements /* ChangeListener, */
-MessageCallback {
+public class VideoPlayer extends JFrame implements MessageCallback {
 	private static final long serialVersionUID = 8813937587710441310L;
 	private EmbeddedMediaPlayer mPlayer;
 	private MediaPlayerFactory mediaPlayerFactory;
@@ -111,7 +109,7 @@ MessageCallback {
 		canvas = new java.awt.Canvas();
 		canvas.setBackground(Color.BLACK);
 		this.add(canvas, java.awt.BorderLayout.CENTER);
-		mediaPlayerFactory.newVideoSurface(canvas); 
+		mediaPlayerFactory.newVideoSurface(canvas);
 
 		FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(
 				this);
@@ -131,6 +129,7 @@ MessageCallback {
 			mPlayer.start();
 			mPlayer.enableOverlay(true);
 			mPlayer.mute();
+
 			fps = mPlayer.getFps();
 			len = mPlayer.getLength();
 
@@ -168,13 +167,13 @@ MessageCallback {
 			mPlayer.pause();
 			return;
 		}
-		
-		 //mPlayer.setMarqueeText("hello world");
-         //mPlayer.setMarqueeOpacity(127);
-         //mPlayer.setMarqueeColour(Color.RED);
-         //mPlayer.setMarqueePosition(libvlc_marquee_position_e.centre);
-         //mPlayer.enableMarquee(true);
-         
+
+		// mPlayer.setMarqueeText("hello world");
+		// mPlayer.setMarqueeOpacity(127);
+		// mPlayer.setMarqueeColour(Color.RED);
+		// mPlayer.setMarqueePosition(libvlc_marquee_position_e.centre);
+		// mPlayer.enableMarquee(true);
+
 		long mapTime = p.getTime();
 		long videoTime = (int) (len * mPlayer.getPosition());
 		if (videoTime == 0) {
@@ -188,12 +187,12 @@ MessageCallback {
 			if (mapTime > videoTime + 250) {
 				perCent = ((float) videoTime / mapTime);
 				// map too fast
-				//System.out.println("map too fast, speed up video");
+				// System.out.println("map too fast, speed up video");
 				if (perCent > lastCent) {
-					//System.out.println("rate of change decreasing");
+					// System.out.println("rate of change decreasing");
 					diff -= 0.01f;
 				} else {
-					//System.out.println("rate of change increasing");
+					// System.out.println("rate of change increasing");
 					// rate of change is increasing
 					if (perCent < 0.9 || perCent > 1.1) {
 						diff += 0.06f;
@@ -205,9 +204,9 @@ MessageCallback {
 				// video too fast
 				perCent = ((float) mapTime / videoTime);
 
-				//System.out.println("video too fast, speed up map");
+				// System.out.println("video too fast, speed up map");
 				if (perCent < lastCent) {
-					//System.out.println("rate of change increasing");
+					// System.out.println("rate of change increasing");
 					if (perCent < 0.9 || perCent > 1.1) {
 						// 10% out, use bigger changes
 						diff -= 0.06f;
@@ -217,7 +216,7 @@ MessageCallback {
 				} else {
 					// rate of change is decreasing
 					diff += 0.01f;
-					//System.out.println("rate of change decreasing");
+					// System.out.println("rate of change decreasing");
 				}
 			}
 
@@ -333,12 +332,24 @@ MessageCallback {
 					mainFrame.repaint();
 					mPlayer.enableOverlay(false);
 					mPlayer.prepareMedia(videoFile + ext);
+				
+					long DurationInSeconds;// gives us video time
+					mPlayer.parseMedia();
+					DurationInSeconds = (mPlayer.getMediaMeta().getLength());
+					//System.out.println("duration " + DurationInSeconds);
+					
 
 					add(odo, java.awt.BorderLayout.SOUTH);
 					videoLoaded = true;
 					// revalidate(); Java 1.7 code
 					revalidate(this);
 					setVisible(true);
+		
+					fps = mPlayer.getFps();
+					len = mPlayer.getLength();
+					//System.out.println("fps " + fps + " len " + len);
+					
+					
 					break;
 				}
 			}

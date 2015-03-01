@@ -108,7 +108,7 @@ public class TrainingData {
 	public boolean isNext(double distanceMeters) {
 		if (currentPoint + 1 < training.size()
 				&& distanceMeters > training.get(currentPoint + 1).getDistanceMeters()) {
-			System.out.println("distance " + distanceMeters + " tp distance " + training.get(currentPoint + 1).getDistanceMeters() + " POWER " + training.get(currentPoint + 1).getDistanceMeters());
+			//System.out.println("distance " + distanceMeters + " tp distance " + training.get(currentPoint + 1).getDistanceMeters() + " POWER " + training.get(currentPoint + 1).getDistanceMeters());
 			return true;
 		}
 		return false;

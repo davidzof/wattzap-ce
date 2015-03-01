@@ -193,13 +193,11 @@ public class Preferences extends JFrame implements ActionListener {
 		String lang = "eng"; // default
 		try {
 			lang = userPrefs.getLocale().getISO3Language();
-			System.out.println("lang " + lang);
 		} catch (MissingResourceException e) {
 			// do nothing
 		}
 		for (Locale locale : locales) {
 			languageList.addItem(locale.getDisplayLanguage());
-System.out.println(locale.getISO3Country());
 			if (lang.equals(locale.getISO3Language())) {
 				languageList.setSelectedIndex(index);
 			}

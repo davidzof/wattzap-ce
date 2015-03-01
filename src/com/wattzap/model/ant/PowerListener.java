@@ -38,12 +38,14 @@ import com.wattzap.utils.Rolling;
 public class PowerListener extends AntListener implements MessageCallback {
 	public static String name = "C:POW";
 	private static final byte DEVICE_TYPE = (byte) 0x0B;
-	private static final short MESSAGE_PERIOD = 8182;
+	private static final short MESSAGE_PERIOD = 8182; // 4hz 8182/32768
 
 	private boolean simulSpeed;
 	private long lastTime;
 	private double distance = 0.0;
 	private boolean cadenceSensor;
+
+	private int count = -1;
 
 	RouteReader routeData;
 	private double mass;
@@ -59,7 +61,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
-		
+
 		int id = userPrefs.getCadenceId();
 		if (id > 0) {
 			cadenceSensor = true; // cadence done by cadence sensor
@@ -70,25 +72,30 @@ public class PowerListener extends AntListener implements MessageCallback {
 	public void receiveMessage(BroadcastDataMessage message) {
 		if (message.getUnsignedData()[0] == 0x10) {
 			// simple power message
-			int powerWatts = (message.getUnsignedData()[7] << 8)
-					| message.getUnsignedData()[6];
-			powerWatts = (int)averagePower.add(powerWatts);
-			int rpm = (byte) (message.getUnsignedData()[3] & 0xFF);
-//			System.out.println("watt " + powerWatts + " cadence " + rpm + " "
-	//				+ message.getUnsignedData()[0]);
+			int powerWatts = 0;
+			if (message.getUnsignedData()[1] != count) {
+				powerWatts = (message.getUnsignedData()[7] << 8)
+						| message.getUnsignedData()[6];
+				count = message.getUnsignedData()[1] & 0xFF;
+			}
+
+			int rpm = -1;
+			if (message.getUnsignedData()[3] != 255) {
+				rpm = (byte) (message.getUnsignedData()[3] & 0xFF);
+			}
 
 			if (lastTime == -1) {
 				lastTime = System.currentTimeMillis();
 				return;
 			}
-			
+
 			double speed = 0;
 			double distanceKM = 0;
 			double timeS = 0;
 			long currentTime = System.currentTimeMillis();
-			long tDiff = currentTime-lastTime;
+			long tDiff = currentTime - lastTime;
 			lastTime = currentTime;
-			
+
 			Telemetry t = new Telemetry();
 			t.setPower(powerWatts);
 
@@ -108,8 +115,10 @@ public class PowerListener extends AntListener implements MessageCallback {
 						speed = (power.getRealSpeed(mass,
 								p.getGradient() / 100, powerWatts)) * 3.6;
 						// d = s * t
-						distanceKM = (speed * tDiff)/360000;
-						//System.out.println("speed " + speed + " distanceKM " + distanceKM + " watts " + powerWatts + " mass " + mass + " tDiff " + tDiff);
+						distanceKM = (speed * tDiff) / 360000;
+						// System.out.println("speed " + speed + " distanceKM "
+						// + distanceKM + " watts " + powerWatts + " mass " +
+						// mass + " tDiff " + tDiff);
 					}
 				} else {
 					// power profile, speed is the ratio of our trainer power to
@@ -120,9 +129,8 @@ public class PowerListener extends AntListener implements MessageCallback {
 					distanceKM = (speed / 3600) * timeS;
 				}
 			} else {
-				speed = power.getRealSpeed(mass,
-						0, powerWatts);
-				distanceKM = (speed * tDiff)/360000;
+				speed = power.getRealSpeed(mass, 0, powerWatts);
+				distanceKM = (speed * tDiff) / 360000;
 
 			}
 
@@ -162,7 +170,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 			power = userPrefs.getPowerProfile();
 			simulSpeed = userPrefs.isVirtualPower();
 			lastTime = -1;
-			averagePower = new Rolling(10);
+			averagePower = new Rolling(1);
 			break;
 		case STARTPOS:
 			distance = (Double) o;
