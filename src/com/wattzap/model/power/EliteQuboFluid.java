@@ -26,10 +26,7 @@ package com.wattzap.model.power;
  * 
  * Elite Qubo Fluid
  * 
- 
- * y = 0.00932x³ +
-    0.019x² +
-    3.27833x 
+ * y = 0.00932x³ + 0.019x² + 3.27833x 
  */
 @PowerAnnotation
 public class EliteQuboFluid extends Power {

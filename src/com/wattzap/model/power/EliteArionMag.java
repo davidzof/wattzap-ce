@@ -39,7 +39,7 @@ public class EliteArionMag extends Power {
 	public int getPower(double speed, int resistance) {
 		double power = 0.0;
 
-		switch (resistance) {
+		switch (++resistance) {
 		case 1:
 			power = (5.95833 * speed) + (0.08875 * speed * speed)
 					+ (-0.00146 * speed * speed * speed);
@@ -60,7 +60,7 @@ public class EliteArionMag extends Power {
 	public double getSpeed(int power, int resistance) {
 		double speed = 0;
 
-		switch (resistance) {
+		switch (++resistance) {
 		case 1:
 			cubic.solve(-0.00146, 0.08875, 5.95833, 0 - power);
 			speed = cubic.x2;
