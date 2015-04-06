@@ -17,23 +17,24 @@ package com.wattzap.model.power;
 
 
 /*
- * (c) 2013 David George / Wattzap.com
+ * (c) 2015 David George / Wattzap.com
  * 
  * @author David George
- * @date 21 November 2013
+ * @date 31 March 2015
  * 
- * 10km/h=44w, 20km/h=142w, 30km/h=367w, 40km/h=756, 50km/h=1376w, 60km/h=2200w
- * 
- * Elite Qubo Fluid
- * 
- * y = 0.00932x³ + 0.019x² + 3.27833x 
- */
+ *  Elite Travel Generic Wind trainer
+ *  
+ *  y = 0.002x3 - 0.01x2 + 1.8191x + 0.8516
+ *  
+ *  http://www.mhstar.co.uk/Ebay/mhstarukltd/Sport/5661-0020B/3.jpg
+ *  
+ *  */
 @PowerAnnotation
-public class EliteQuboFluid extends Power {
-	private static final double a = 0.00932;
-	private static final double b = 0.019;
-	private static final double c = 3.27833;
-	private static final double d = 0;
+public class EliteTravelWind extends Power {
+	private static final double a = 0.002;
+	private static final double b = -0.01;
+	private static final double c = 1.8191;
+	private static final double d = 0.8516;
 	private final Cubic cubic = new Cubic();
 	
 	public int getPower(double speed, int resistance) {
@@ -43,7 +44,7 @@ public class EliteQuboFluid extends Power {
 	}
 
 	public String description() {
-		return "Elite Qubo Fluid";
+		return "Elite Travel Generic Wind Trainer";
 	}
 
 	@Override
