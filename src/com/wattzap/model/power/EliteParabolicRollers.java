@@ -18,10 +18,10 @@ package com.wattzap.model.power;
 /*
  * Elite Paraboloic Rollers
  * 
- * (c) 2013 Pierre Engles / Wattzap.com
+ * (c) 2015 Pierre Engles / Wattzap.com
  * 
- * @author David George
- * @date 11 November 2013
+ * @author Pierre Engles
+ * @date 09 April 2015
  * 
  * Has 1 levels:
  * 
