@@ -45,10 +45,12 @@ public class SpeedListener extends AntListener implements MessageCallback {
 	private int lastCount = -1;
 	private int lastTime = -1;
 	private int cCount = 0;
+	private double lastNotNullSpeed = 0;
 	private boolean initializing = false;
 	private Rolling powerRatio;
 	private boolean simulSpeed;
 	private static long elapsedTime;
+	private static long elapsedTimestamp = 0;
 	private double distance = 0.0;
 
 	RouteReader routeData;
@@ -99,18 +101,20 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			lastCount = count;
 			lastTime = time;
 			return null;
-		} else if (initializing && lastCount != count) {
-			// reset counters when we see first change, some devices seem to
-			// have garbage in the pipe at startup.
-			initializing = false;
-			lastCount = count;
-			lastTime = time;
-			elapsedTime = System.currentTimeMillis();
+		} else if (initializing) {
+			if (lastCount != count) {
+				// reset counters when we see first change, some devices seem to
+				// have garbage in the pipe at startup.
+				initializing = false;
+				lastCount = count;
+				lastTime = time;
+				elapsedTime = System.currentTimeMillis();
+			}
 			return null;
 		}
 
 		int tDiff = ((time - lastTime) & 0xffff);
-		int sDiff = ((count - lastCount) & 0xffff);
+		double sDiff = (double)((int)((count - lastCount) & 0xffff));
 		
 		if (tDiff > 5000) {
 			/*
@@ -124,17 +128,44 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			return null;
 		}
 
-		
+		if(tDiff == 0){
+			//no new value received from sensor could be normal at slow speed if cCount < 6 
+			cCount++;
+		} else {
+			//a new value received from sensor clear cCount
+			cCount = 0;
+		}
+
 		double speed = 0;
 		double distanceKM = 0;
 		Telemetry t = new Telemetry();
-		if (tDiff > 0) {
+		
+		//allow trainer speed null for down
+		long timestamp = System.currentTimeMillis();
+		if (tDiff == 0  && elapsedTimestamp > 0 && routeData.getPoint(distance).getGradient() < 0) {
+			tDiff = (int) (timestamp - elapsedTimestamp)*1024/1000;
+		}
+
+		elapsedTimestamp = timestamp;
+		if (tDiff > 0 ) {
+			if(sDiff == 0){
+				if(cCount < 12){
+					//no new value received from sensor could be normal at slow speed if cCount < 12 (3 sec)
+					//in this case we keep old speed
+					double tmpDist = lastNotNullSpeed * (((double) tDiff) / 1024) / 3600.0;
+					sDiff = (tmpDist * 100000.0 / wheelSize); 
+					logger.debug("sDiff calculate from lastNotNullSpeed("+lastNotNullSpeed+") tmpDist("+tmpDist+"): "+ sDiff+" wheelSize:"+wheelSize );
+				}
+			}
+			
 			double timeS = ((double) tDiff) / 1024;
 			elapsedTime += (int) (timeS * 1000);
 			distanceKM = (sDiff * wheelSize) / 100000;
 
 			speed = distanceKM / (timeS / (3600));
+			lastNotNullSpeed = speed;
 			int powerWatts = power.getPower(speed, resistance);
+			logger.debug("speed: "+speed+" power:"+powerWatts+ " distanceKM:"+distanceKM+" timeS:"+timeS+" tDiff:"+tDiff+" sDiff:"+sDiff);
 			t.setPower(powerWatts);
 
 			// if we have GPX Data and Simulspeed is enabled calculate speed
@@ -147,14 +178,18 @@ public class SpeedListener extends AntListener implements MessageCallback {
 						distance = 0.0;
 						return null;
 					}
-					if (powerWatts > 0) {
+					if (powerWatts >= 0) {
 						// only works when power is positive, this is most of
 						// the time on a turbo
 						double realSpeed = (power.getRealSpeed(mass,
 								p.getGradient() / 100, powerWatts)) * 3.6;
 
 //						realSpeed = (realSpeed * 3.600) / 1000;
-						distanceKM = (realSpeed / speed) * distanceKM;
+						if(distanceKM > 0){
+							distanceKM = (realSpeed / speed) * distanceKM;
+						} else {
+							distanceKM = (realSpeed / 3600) * timeS;
+						}
 						speed = realSpeed;
 					}
 				} else {
@@ -168,12 +203,14 @@ public class SpeedListener extends AntListener implements MessageCallback {
 					speed = p.getSpeed() * ratio;
 					distanceKM = (speed / 3600) * timeS;
 				}
+				if(distanceKM == 0){
+					//the down is to small for have speed. we stop chrono (rollback the increase of elapsedTime)
+					elapsedTime -= (int) (timeS * 1000);
+				}	
 			}
 
-			cCount = 0;
 		} else if (cCount < 6) {
 			// a zero value may just be due to too fast sensor update, wait 6 messages before sending zero
-			cCount++;
 			return null;
 		}
 
