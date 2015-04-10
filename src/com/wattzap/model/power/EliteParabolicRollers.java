@@ -38,7 +38,7 @@ public class EliteParabolicRollers extends Power {
 		double power = 0.0;
 			if(speed > 0){
 				power = 3.05 + (4.577 * speed) + (0.01798 * speed * speed)
-					+ (-0.00002038 * speed * speed * speed);
+					+ (0.00002038 * speed * speed * speed);
 			}
 		return (int) power;
 	}
@@ -47,7 +47,7 @@ public class EliteParabolicRollers extends Power {
 		double speed = 0;
 		if(power > 0){
 			cubic.solve(0.00002038, 0.01798, 4.577, 3.05 - power);
-			speed = cubic.x2;
+			speed = cubic.x1;
 		}
 		return speed;
 	}
