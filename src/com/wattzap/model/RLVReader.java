@@ -30,14 +30,14 @@ import com.wattzap.model.dto.TrainingItem;
  */
 @RouteAnnotation
 public class RLVReader extends RouteReader {
-	public static final int RLV_VIDEO_INFO = 2010;
-	public static final int RLV_FRAME_DISTANCE_MAPPING = 2020;
-	public static final int RLV_INFOBOX = 2030;
-	public static final int RLV_COURSE_INFO = 2040;
-	public static final int RLV_FINGERPRINT = 2000; // RLV (.rlv)
-	public static final int PGMF_FINGERPRINT = 1000;
-	public static final int PGMF_INFORMATION = 1010;
-	public static final int PGMF_PROGRAM = 1020;
+	private static final int RLV_VIDEO_INFO = 2010;
+	private static final int RLV_FRAME_DISTANCE_MAPPING = 2020;
+	private static final int RLV_INFOBOX = 2030;
+	private static final int RLV_COURSE_INFO = 2040;
+	private static final int RLV_FINGERPRINT = 2000; // RLV (.rlv)
+	private static final int PGMF_FINGERPRINT = 1000;
+	private static final int PGMF_INFORMATION = 1010;
+	private static final int PGMF_PROGRAM = 1020;
 
 	private Charset iso88591charset = Charset.forName("ISO-8859-1");
 	private double totalDistance = 0.0;
@@ -119,7 +119,7 @@ public class RLVReader extends RouteReader {
 	public void load(String filename) {
 		totalDistance = 0.0;
 		maxSlope = 0;
-		minSlope = 0;
+		minSlope = 0; // TODO, if min slope is say 5% then this will give wrong value
 		maxPower = 0;
 
 		filename = filename.substring(0, filename.lastIndexOf('.'));
