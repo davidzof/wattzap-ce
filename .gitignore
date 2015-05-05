@@ -1,3 +1,7 @@
 out/
 dist-ce/
 .idea/
+bin/
+src-pe/
+plugins/
+jre6/

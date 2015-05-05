@@ -44,9 +44,9 @@ public class TTSReader extends RouteReader {
 	private static String currentFile;
 	private static int imageId;
 
-	private static double maxSlope;
-	private static double minSlope;
-	private static XYSeries series;
+	private double maxSlope;
+	private double minSlope;
+	private XYSeries series;
 
 	private double totalDistance = 0.0;
 
@@ -249,13 +249,6 @@ public class TTSReader extends RouteReader {
 		strings.put(6001, "infobox #1");
 	}
 
-	private interface Formatter {
-
-		String format(int version, byte[] data);
-	}
-
-	private static final Map<Integer, Formatter> formatters = new HashMap<Integer, Formatter>();
-
 	private enum StringType {
 
 		NONPRINTABLE, BLOCK, STRING, IMAGE, CRC
@@ -341,7 +334,8 @@ public class TTSReader extends RouteReader {
 					break;
 				case STRING:
 					if (strings.containsKey(blockType + stringId)) {
-						logger.info("[" + strings.get(blockType + stringId) + "]");
+						logger.info("[" + strings.get(blockType + stringId)
+								+ "]");
 					} else {
 						logger.info("[" + blockType + "." + stringId + "]");
 					}
@@ -418,7 +412,6 @@ public class TTSReader extends RouteReader {
 	}
 
 	private void blockProcessing(int blockType, int version, byte[] data) {
-
 		switch (blockType) {
 		case PROGRAM_DATA:
 			programData(version, data);
@@ -454,8 +447,9 @@ public class TTSReader extends RouteReader {
 	 * Block routines
 	 */
 	private void videoInfo(int version, byte[] data) {
+		// first three values could be shorts and then?
 	}
-	
+
 	private void segmentRange(int version, byte[] data) {
 		if (data.length % 10 != 0) {
 			logger.error("Segment Range data wrong length " + data.length);

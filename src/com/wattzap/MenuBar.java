@@ -61,6 +61,7 @@ public class MenuBar /* extends JMenuBar */implements MessageCallback {
 		// About Dialog
 		aboutMenuItem = new JMenuItem();
 		// NOTE: Sets up timer for unregistered users.
+		// TODO - choose between OS and non OS edtion
 		AboutPanel about = new AboutPanel();
 		aboutMenuItem.addActionListener(about);
 
