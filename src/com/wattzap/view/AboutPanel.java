@@ -192,20 +192,12 @@ public class AboutPanel extends JFrame implements ActionListener {
 		if (StringXORer.decode(registerMsg, decodeKey).equals(command)) {
 			String key = regKey.getText();
 			try {
-				if (!key.isEmpty()
-						&& Registration.register(key, serial.toString().trim())) {
-
 					userPrefs.setRegistrationKey(key);
 					message.setText(StringXORer.decode(successMsg, decodeKey));
-				} else {
-					message.setText(StringXORer.decode(incorrectKey, decodeKey));
-				}
-
 			} catch (Exception ex) {
 				logger.info(StringXORer.decode(keyError, decodeKey) + " "
 						+ ex.getLocalizedMessage());
 				message.setText(StringXORer.decode(keyError, decodeKey));
-
 			}
 		} else if (StringXORer.decode(debugMsg, decodeKey).equals(command)) {
 			userPrefs.setDebug(debug.isSelected());

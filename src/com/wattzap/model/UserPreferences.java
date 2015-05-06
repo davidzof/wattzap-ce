@@ -347,10 +347,6 @@ public enum UserPreferences {
     }
 
     public boolean isRegistered() {
-//        if (get("", "rsnn", null) == null) {
-//            // return false;
-//            return false;
-//        }
         return true;
     }
 
