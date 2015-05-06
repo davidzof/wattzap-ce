@@ -234,6 +234,8 @@ public class Odometer extends JPanel implements MessageCallback {
 			if (startTime == 0) {
 				startTime = t.getTime();
 			}
+			
+			System.out.println("telemetry " +t);
 
 			// Power
 			powerLabel.setText("" + t.getPower());
