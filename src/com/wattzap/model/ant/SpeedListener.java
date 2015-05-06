@@ -142,7 +142,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 		
 		//allow trainer speed null for down
 		long timestamp = System.currentTimeMillis();
-		if (tDiff == 0  && elapsedTimestamp > 0 && routeData.getPoint(distance).getGradient() < 0) {
+		if (tDiff == 0  && elapsedTimestamp > 0 && getGradient() < 0) {
 			tDiff = (int) (timestamp - elapsedTimestamp)*1024/1000;
 		}
 
@@ -235,6 +235,15 @@ public class SpeedListener extends AntListener implements MessageCallback {
 
 		logger.debug("sending " + t);
 		return t;
+	}
+
+	private double getGradient() {
+		if (routeData != null) {
+			if (routeData.getPoint(distance) != null) {
+				return routeData.getPoint(distance).getGradient();
+			}
+		}
+		return 0;
 	}
 
 	@Override
