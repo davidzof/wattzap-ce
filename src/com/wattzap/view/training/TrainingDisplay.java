@@ -19,6 +19,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,9 +29,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.swing.JComponent;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -79,7 +78,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	private static Logger logger = LogManager.getLogger("Training Display");
 
 	public TrainingDisplay(Dimension screenSize) {
-		setPreferredSize(new Dimension(screenSize.width / 2, 400));
+		setPreferredSize(new Dimension(screenSize.width , screenSize.height));
 		setLayout(new BorderLayout());
 
 		MessageBus.INSTANCE.register(Messages.SPEED, this);
@@ -104,15 +103,15 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 		Color darkOrange = new Color(246, 46, 00);
 		descriptor.addItem(userPrefs.messages.getString("power"), darkOrange,
-				1.0f, Color.red, null, null);
+				4.0f, Color.red, null, null);
 		numElements = 1;
 
 		if (antEnabled) {
 			Color green = new Color(28, 237, 00);
 			descriptor.addItem(userPrefs.messages.getString("heartrate"),
-					green, 1.0f, Color.green, null, null);
+					green, 4.0f, Color.green, null, null);
 			descriptor.addItem(userPrefs.messages.getString("cadence"),
-					Color.blue, 1.0f, Color.blue, null, null);
+					Color.blue, 4.0f, Color.blue, null, null);
 			numElements += 2;
 		}
 
@@ -140,7 +139,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				}
 			}
 			descriptor
-					.setDetailsItems(new String[] { "<html><font size='+2'><b>Info" });
+					.setDetailsItems(new String[] { "<html><font size='+8'><b>Info" });
 		}
 
 		support = ChartFactory.createSimpleXYChart(descriptor);
@@ -165,8 +164,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		values[0] = t.getPower();
 		if (antEnabled) {
 			values[1] = t.getHeartRate();
-
-	
 			values[2] = t.getCadence();
 		}
 
@@ -181,8 +178,8 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 						MessageBus.INSTANCE
 								.send(Messages.TRAININGITEM, current);
-						// Sound beep on training change
-						Toolkit.getDefaultToolkit().beep();
+						notifyNewTrainingInterval();
+
 					}
 				}
 			} else {
@@ -192,7 +189,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 					current = tData.getNext(t.getDistanceMeters());
 					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 					// Sound beep on training change
-					Toolkit.getDefaultToolkit().beep();
+					notifyNewTrainingInterval();
 
 				}
 			}
@@ -220,6 +217,40 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		support.addValues(time, values);
 
 		add(t);
+	}
+
+	private void notifyNewTrainingInterval() {
+		// Sound beep on training change
+		Toolkit.getDefaultToolkit().beep();
+		// Display new training interva informations
+		String newTrainingIntervalInformations = "<html><font size='+8'><b>"+
+				current.getDescription() + "<br></b></font>"
+				+ "<html><font size='+6'><b>"+current.getPowerMsg() + current.getHRMsg()
+				+ current.getCadenceMsg() + "</b></font></html>";
+		final JOptionPane optionPane = new JOptionPane(newTrainingIntervalInformations, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[]{}, null);
+
+		final JDialog dialog = new JDialog();
+		dialog.setTitle(userPrefs.messages.getString("new_interval"));
+		//dialog.setModal(true);
+		dialog.setLocationRelativeTo(null);
+		dialog.setContentPane(optionPane);
+
+		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		dialog.pack();
+
+		//create timer to dispose of dialog after 5 seconds
+		Timer timer = new Timer(5000, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				dialog.dispose();
+			}
+		});
+		timer.setRepeats(false);//the timer should only go off once
+
+		//start timer to close JDialog as dialog modal we must start the timer before its visible
+		timer.start();
+
+		dialog.setVisible(true);
 	}
 
 	/*
