@@ -106,6 +106,10 @@ public class Telemetry implements Serializable {
 		return speed/KMTOMILES;
 	}
 
+	public double getSpeedMetersPerSecond() {
+		return getSpeedKMH() / 3.6;
+	}
+
 	public void setCadence(int cadence) {
 		this.cadence = cadence;
 	}
