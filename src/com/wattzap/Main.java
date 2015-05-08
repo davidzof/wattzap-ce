@@ -32,6 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
+import com.wattzap.view.javafx.GaugeView;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.FileAppender;
@@ -273,6 +274,10 @@ public class Main implements Runnable {
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
+
+		// show Gauge view (javafx)
+		GaugeView gaugeView = new GaugeView();
+		gaugeView.show();
 	}
 
 	private static Level setLogLevel() {
