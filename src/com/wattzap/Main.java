@@ -32,7 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
-import com.wattzap.view.javafx.GaugeView;
+import com.wattzap.view.javafx.GaugesView;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.FileAppender;
@@ -276,8 +276,8 @@ public class Main implements Runnable {
 		frame.setVisible(true);
 
 		// show Gauge view (javafx)
-		GaugeView gaugeView = new GaugeView();
-		gaugeView.show();
+		GaugesView gaugesView = new GaugesView();
+		gaugesView.show();
 	}
 
 	private static Level setLogLevel() {
