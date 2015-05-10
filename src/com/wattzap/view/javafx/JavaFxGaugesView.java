@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Created by nicolas on 08/05/2015.
  */
-public class GaugesView implements MessageCallback {
+public class JavaFxGaugesView implements MessageCallback {
 
     private static final double MIN_RPM = 0;
     public static final int MAX_HR = 220;
@@ -36,7 +36,7 @@ public class GaugesView implements MessageCallback {
     private static Gauge heartRateGauge;
     private TrainingItem current;
 
-    public GaugesView() {
+    public JavaFxGaugesView() {
         // register message bus events
         MessageBus.INSTANCE.register(Messages.SPEED, this);
         MessageBus.INSTANCE.register(Messages.CADENCE, this);
@@ -50,7 +50,7 @@ public class GaugesView implements MessageCallback {
     }
 
     public void show() {
-        SwingUtilities.invokeLater(() -> GaugesView.initAndShowGUI());
+        SwingUtilities.invokeLater(() -> JavaFxGaugesView.initAndShowGUI());
     }
 
     private static void initAndShowGUI() {

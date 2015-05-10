@@ -32,7 +32,8 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
-import com.wattzap.view.javafx.GaugesView;
+import com.wattzap.view.javafx.JavaFxGaugesView;
+import com.wattzap.view.training.JavaSwingGaugesView;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.FileAppender;
@@ -275,8 +276,12 @@ public class Main implements Runnable {
 		// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
 
-		// show Gauge view (javafx)
-		GaugesView gaugesView = new GaugesView();
+		// show Gauge view (javafx version)
+//		JavaFxGaugesView gaugesView = new JavaFxGaugesView();
+//		gaugesView.show();
+
+		// show Gauge view (swing version)
+		JavaSwingGaugesView gaugesView = new JavaSwingGaugesView();
 		gaugesView.show();
 	}
 
