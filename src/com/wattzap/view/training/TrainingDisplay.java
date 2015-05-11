@@ -150,24 +150,22 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		chart.revalidate();
 	}
 
-	private void update(Telemetry t) {
-		if (time == t.getTime()) {
+	private void update(Telemetry telemetry) {
+		if (time == telemetry.getTime()) {
 			// no change
 			return;
 		}
-		time = t.getTime();
+		time = telemetry.getTime();
 
 		if (startTime == 0) {
 			startTime = time; // start time
 		}
 
 		long[] values = new long[numElements];
-		values[0] = t.getPower();
+		values[0] = telemetry.getPower();
 		if (antEnabled) {
-			values[1] = t.getHeartRate();
-
-	
-			values[2] = t.getCadence();
+			values[1] = telemetry.getHeartRate();
+			values[2] = telemetry.getCadence();
 		}
 
 		// training
@@ -187,9 +185,9 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				}
 			} else {
 				// distance based training
-				if (tData.isNext(t.getDistanceMeters())) {
+				if (tData.isNext(telemetry.getDistanceMeters())) {
 					
-					current = tData.getNext(t.getDistanceMeters());
+					current = tData.getNext(telemetry.getDistanceMeters());
 					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 					// Sound beep on training change
 					Toolkit.getDefaultToolkit().beep();
@@ -219,7 +217,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		// use telemetry time
 		support.addValues(time, values);
 
-		add(t);
+		add(telemetry);
 	}
 
 	/*
@@ -327,7 +325,8 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				// TODO: this is a race hazard, this method can be called before
 				// setup, hence this test.
 
-				Telemetry t = (Telemetry) o;
+				// get a clone
+				Telemetry t = new Telemetry((Telemetry) o);
 				// recover last heart rate data
 				t.setHeartRate(heartRate);
 				t.setCadence(cadence);

@@ -234,8 +234,6 @@ public class Odometer extends JPanel implements MessageCallback {
 			if (startTime == 0) {
 				startTime = t.getTime();
 			}
-			
-			System.out.println("telemetry " +t);
 
 			// Power
 			powerLabel.setText("" + t.getPower());
@@ -247,7 +245,8 @@ public class Odometer extends JPanel implements MessageCallback {
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
 				if (userPrefs.isVirtualPower()) {
-					vspeedLabel.setText(String.format("%.1f",t.getTrainerSpeed()));
+					vspeedLabel.setText(String.format("%.1f",
+							t.getTrainerSpeed()));
 				}
 				distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
 			} else {
@@ -256,7 +255,8 @@ public class Odometer extends JPanel implements MessageCallback {
 						t.getDistanceMiles()));
 				// need to round up or down
 				if (userPrefs.isVirtualPower()) {
-					vspeedLabel.setText(String.format("%.1f",(t.getTrainerSpeed() / KMTOMILES)));
+					vspeedLabel.setText(String.format("%.1f",
+							(t.getTrainerSpeed() / KMTOMILES)));
 				}
 			}
 
@@ -270,8 +270,7 @@ public class Odometer extends JPanel implements MessageCallback {
 							(totalDistance / 1000) - t.getDistanceKM()));
 				} else {
 					elevationLabel.setText(String.format("%.1f",
-							((totalDistance / 1000) - t.getDistanceMiles())
-									));
+							((totalDistance / 1000) - t.getDistanceMiles())));
 				}
 
 				break;

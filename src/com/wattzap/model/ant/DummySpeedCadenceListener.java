@@ -132,7 +132,6 @@ public class DummySpeedCadenceListener extends Thread implements
 						// powerWatts = (int) ((p.getGradient()) +
 						// (Math.random() * 4));
 						powerWatts = (int) p.getPower();
-						
 
 						// apply some smoothing
 						rPower.add(powerWatts);
@@ -151,7 +150,7 @@ public class DummySpeedCadenceListener extends Thread implements
 							t.setVirtualSpeed(bd.intValue());
 							t.setResistance(UserPreferences.INSTANCE
 									.getResistance());
-							//speed = p.getSpeed(); // FIXME what about RLV
+							// speed = p.getSpeed(); // FIXME what about RLV
 						}
 					}
 				} else {
@@ -166,7 +165,7 @@ public class DummySpeedCadenceListener extends Thread implements
 					p = routeData.getPoint(distance);
 					if (p == null) {
 						// end of the road
-						t.setDistanceMeters(distance  * 1000);
+						t.setDistanceMeters(distance * 1000);
 						distance = 0.0;
 						t.setSpeed(0);
 						t.setTime(System.currentTimeMillis());
