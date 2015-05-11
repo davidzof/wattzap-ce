@@ -63,7 +63,7 @@ public class TTSReader extends RouteReader {
 
 	private static Logger logger = LogManager.getLogger("TTS Reader");
 
-	private static GPXFile gpxFile = new GPXFile();
+	private GPXFile gpxFile = null;
 
 	private static int[] key = { 0xD6, 0x9C, 0xD8, 0xBC, 0xDA, 0xA9, 0xDC,
 			0xB0, 0xDE, 0xB6, 0xE0, 0x95, 0xE2, 0xC3, 0xE4, 0x97, 0xE6, 0x92,
@@ -256,6 +256,7 @@ public class TTSReader extends RouteReader {
 
 	private void loadHeaders() {
 		pointList = new ArrayList<Point>();
+		gpxFile = new GPXFile();
 		series = new XYSeries("");
 
 		int[] key2 = rehashKey(key, 17);
@@ -644,7 +645,7 @@ public class TTSReader extends RouteReader {
 		} else if (frameRate >= 100) {
 			frameRate = frameRate / 10.0;
 		}
-		logger.debug("Frame Rate " + frameRate);
+		logger.info("Frame Rate " + frameRate);
 
 		for (int i = 0; i < data.length / 8; i++) {
 			Point p = new Point();

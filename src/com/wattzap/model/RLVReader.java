@@ -25,12 +25,14 @@ import org.apache.log4j.Logger;
 import org.jfree.data.xy.XYSeries;
 
 import com.gpxcreator.gpxpanel.GPXFile;
+import com.gpxcreator.gpxpanel.Route;
+import com.gpxcreator.gpxpanel.Waypoint;
+import com.gpxcreator.gpxpanel.WaypointGroup;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.Messages;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.TrainingData;
 import com.wattzap.model.dto.TrainingItem;
-
 
 /*
  * Wrapper class for Tacx Real Life Video Routes
@@ -66,6 +68,8 @@ public class RLVReader extends RouteReader {
 
 	private int programType;
 
+	private GPXFile gpxFile;
+
 	// Time / Distance based
 	int timeDist;
 	public final static int TIME = 0;
@@ -98,7 +102,7 @@ public class RLVReader extends RouteReader {
 	@Override
 	public GPXFile getGpxFile() {
 		// TODO Auto-generated method stub
-		return null;
+		return gpxFile;
 	}
 
 	@Override
@@ -128,7 +132,7 @@ public class RLVReader extends RouteReader {
 
 	@Override
 	public void load(String filename) {
-		//logger.setLevel(Level.DEBUG);
+		// logger.setLevel(Level.DEBUG);
 		totalDistance = 0.0;
 		maxSlope = 0;
 		minSlope = 0;
@@ -141,16 +145,30 @@ public class RLVReader extends RouteReader {
 		ArrayList<Point> pgmfSegment = readPGMF(filename + ".pgmf");
 		ArrayList<Point> rlvSegment = readRLV(filename + ".rlv");
 		ArrayList<Point> tcxSegment = readTCX(filename + ".tcx");
+		gpxFile = null;
 
-		if(tcxSegment != null && tcxSegment.size() > 0){
-			double pgmfDist = pgmfSegment.get(pgmfSegment.size()-1).getDistanceFromStart();
-			double tcxDist = tcxSegment.get(tcxSegment.size()-1).getDistanceFromStart();
-			logger.debug("pgmd Dist: "+pgmfDist+" tcx distance: "+tcxDist);
-			for(int i=0; i<tcxSegment.size(); i++){
-				tcxSegment.get(i).setDistanceFromStart(tcxSegment.get(i).getDistanceFromStart()*pgmfDist/tcxDist);
+		WaypointGroup path = null;
+		if (tcxSegment != null && tcxSegment.size() > 0) {
+			double pgmfDist = pgmfSegment.get(pgmfSegment.size() - 1)
+					.getDistanceFromStart();
+			double tcxDist = tcxSegment.get(tcxSegment.size() - 1)
+					.getDistanceFromStart();
+			logger.debug("pgmd Dist: " + pgmfDist + " tcx distance: " + tcxDist);
+			for (int i = 0; i < tcxSegment.size(); i++) {
+				tcxSegment.get(i).setDistanceFromStart(
+						tcxSegment.get(i).getDistanceFromStart() * pgmfDist
+								/ tcxDist);
 			}
-			tcxDist = tcxSegment.get(tcxSegment.size()-1).getDistanceFromStart();
-			logger.debug("pgmd Dist: "+pgmfDist+" tcx distance: "+tcxDist);
+			tcxDist = tcxSegment.get(tcxSegment.size() - 1)
+					.getDistanceFromStart();
+			logger.debug("pgmd Dist: " + pgmfDist + " tcx distance: " + tcxDist);
+
+			// create mapping data
+			gpxFile = new GPXFile();
+			gpxFile.addRoute();
+			List<Route> routes = gpxFile.getRoutes();
+			Route route = routes.get(0);
+			path = route.getPath();
 		}
 
 		/*
@@ -280,7 +298,7 @@ public class RLVReader extends RouteReader {
 
 			logger.debug("RLV mode DISTANCE " + timeDist);
 			int c1 = 0;
-				
+
 			Point tcxPoint = null;
 			Point lastTcxPoint = null;
 			int c3 = 0;
@@ -296,7 +314,7 @@ public class RLVReader extends RouteReader {
 
 				speed = (distance * 3.6 * frameRate) / framesInRecord;
 				// Merge with PGMF Points
-				
+
 				double d = 0;
 				while (c1 < pgmfSegment.size()) {
 					Point pgmfPoint = pgmfSegment.get(c1);
@@ -308,38 +326,79 @@ public class RLVReader extends RouteReader {
 					}
 					pgmfPoint.setSpeed(speed);
 					// t = d / s
-					d = pgmfPoint.getDistanceFromStart()
-							- runningDistance;
+					d = pgmfPoint.getDistanceFromStart() - runningDistance;
 					long time = (long) (d * 3600 / speed);
 
 					time += startTime;
 					pgmfPoint.setTime(time);
 
-					//put position from tcx
-					if(tcxSegment != null && tcxSegment.size() > 0){
-						if(tcxPoint == null) tcxPoint = tcxSegment.get(0);
-						while(tcxPoint.getDistanceFromStart() < pgmfPoint.getDistanceFromStart() && c3 < tcxSegment.size() -1 ){
+					// put position from tcx
+					if (tcxSegment != null && tcxSegment.size() > 0) {
+						if (tcxPoint == null)
+							tcxPoint = tcxSegment.get(0);
+						while (tcxPoint.getDistanceFromStart() < pgmfPoint
+								.getDistanceFromStart()
+								&& c3 < tcxSegment.size() - 1) {
 							lastTcxPoint = tcxPoint;
 							tcxPoint = tcxSegment.get(++c3);
 						}
-						if(lastTcxPoint == null || tcxPoint.getDistanceFromStart() == lastTcxPoint.getDistanceFromStart()){
+						if (lastTcxPoint == null
+								|| tcxPoint.getDistanceFromStart() == lastTcxPoint
+										.getDistanceFromStart()) {
 							pgmfPoint.setLatitude(tcxPoint.getLatitude());
 							pgmfPoint.setLongitude(tcxPoint.getLongitude());
 						} else {
-							double dist = tcxPoint.getDistanceFromStart() - lastTcxPoint.getDistanceFromStart();
-						logger.debug("last: "+lastTcxPoint.getDistanceFromStart()+" pgmf: "+pgmfPoint.getDistanceFromStart()+" point:"+tcxPoint.getDistanceFromStart());
-							pgmfPoint.setLatitude((tcxPoint.getLatitude()*(dist - (tcxPoint.getDistanceFromStart() - pgmfPoint.getDistanceFromStart())) + lastTcxPoint.getLatitude()*(dist -(pgmfPoint.getDistanceFromStart() - lastTcxPoint.getDistanceFromStart())) )/dist);
-							pgmfPoint.setLongitude((tcxPoint.getLongitude()*(dist - (tcxPoint.getDistanceFromStart() - pgmfPoint.getDistanceFromStart())) + lastTcxPoint.getLongitude()*(dist-(pgmfPoint.getDistanceFromStart() - lastTcxPoint.getDistanceFromStart())) )/dist);
+							double dist = tcxPoint.getDistanceFromStart()
+									- lastTcxPoint.getDistanceFromStart();
+							logger.debug("last: "
+									+ lastTcxPoint.getDistanceFromStart()
+									+ " pgmf: "
+									+ pgmfPoint.getDistanceFromStart()
+									+ " point:"
+									+ tcxPoint.getDistanceFromStart());
+							pgmfPoint
+									.setLatitude((tcxPoint.getLatitude()
+											* (dist - (tcxPoint
+													.getDistanceFromStart() - pgmfPoint
+													.getDistanceFromStart())) + lastTcxPoint
+											.getLatitude()
+											* (dist - (pgmfPoint
+													.getDistanceFromStart() - lastTcxPoint
+													.getDistanceFromStart())))
+											/ dist);
+							pgmfPoint
+									.setLongitude((tcxPoint.getLongitude()
+											* (dist - (tcxPoint
+													.getDistanceFromStart() - pgmfPoint
+													.getDistanceFromStart())) + lastTcxPoint
+											.getLongitude()
+											* (dist - (pgmfPoint
+													.getDistanceFromStart() - lastTcxPoint
+													.getDistanceFromStart())))
+											/ dist);
 						}
+
+						// GPX Data
+						Waypoint wayPoint = new Waypoint(
+								pgmfPoint.getLatitude(),
+								pgmfPoint.getLongitude());
+						wayPoint.setEle(pgmfPoint.getElevation());
+						path.addWaypoint(wayPoint);
 					}
-					
 
-
-					logger.debug("c2:"+c2+" c1:"+c1+" frame: "+frame+" distanceFromstart: "+pgmfPoint.getDistanceFromStart()+" time: " + time + " distance (frameInRecord): " + distance+ " framesInRecord: "+framesInRecord+" speed: "+speed+ " lat:"+pgmfPoint.getLatitude()+ " lon:"+pgmfPoint.getLongitude());
+					logger.debug("c2:" + c2 + " c1:" + c1 + " frame: " + frame
+							+ " distanceFromstart: "
+							+ pgmfPoint.getDistanceFromStart() + " time: "
+							+ time + " distance (frameInRecord): " + distance
+							+ " framesInRecord: " + framesInRecord + " speed: "
+							+ speed + " lat:" + pgmfPoint.getLatitude()
+							+ " lon:" + pgmfPoint.getLongitude());
 
 					c1++;
 				}// while
-
+				if (gpxFile != null) {
+					gpxFile.updateAllProperties();
+				}
 				runningDistance += distance;
 				startTime = (long) ((float) (frame * 1000) / frameRate);
 				lastFrame = frame;
@@ -347,6 +406,7 @@ public class RLVReader extends RouteReader {
 			points = pgmfSegment.toArray(new Point[pgmfSegment.size()]);
 			break;
 		}// switch
+
 	}
 
 	public void close() {
@@ -356,23 +416,26 @@ public class RLVReader extends RouteReader {
 
 		ArrayList<Point> pl = new ArrayList<Point>();
 
-		try{
+		try {
 			TcxParser parser = new TcxParser();
 			Trail trail = parser.parse(new File(fileName));
-			logger.debug("tcx tracks: "+trail.getTracks().size());
+			logger.debug("tcx tracks: " + trail.getTracks().size());
 			List<Track> tracks = trail.getTracks();
 			Point last = null;
-			for(Track track : tracks){
+			for (Track track : tracks) {
 				List<TrackPoint> points = track.getPoints();
-				for(TrackPoint point : points){
+				for (TrackPoint point : points) {
 					Point p = new Point();
 					p.setLatitude(point.getLatitude());
 					p.setLongitude(point.getLongitude());
 					p.setElevation(point.getAltitude());
-					if(last != null){
-						double leg = GPXReader.distance(p.getLatitude(), last.getLatitude(), p.getLongitude(),
-                                                	last.getLongitude(), last.getElevation(), p.getElevation());
-						p.setDistanceFromStart(last.getDistanceFromStart()+leg);
+					if (last != null) {
+						double leg = GPXReader.distance(p.getLatitude(),
+								last.getLatitude(), p.getLongitude(),
+								last.getLongitude(), last.getElevation(),
+								p.getElevation());
+						p.setDistanceFromStart(last.getDistanceFromStart()
+								+ leg);
 					} else {
 						p.setDistanceFromStart(0);
 					}
@@ -382,11 +445,13 @@ public class RLVReader extends RouteReader {
 			}
 		} catch (ParserException pe) {
 			StringWriter sw = new StringWriter();
-			try{
+			try {
 				pe.getCause().printStackTrace(new PrintWriter(sw));
-			} catch(Exception e){}
+			} catch (Exception e) {
+			}
 			String exceptionAsString = sw.toString();
-			logger.error("ParserException : " + pe + ":"+ exceptionAsString + " file:"+fileName);
+			logger.error("ParserException : " + pe + ":" + exceptionAsString
+					+ " file:" + fileName);
 		}
 		return pl;
 	}
@@ -882,4 +947,3 @@ public class RLVReader extends RouteReader {
 
 	}
 }
-
