@@ -65,6 +65,7 @@ public class Preferences extends JFrame implements ActionListener {
 
 	TurboPanel trainerPanel;
 	AntPanel antPanel;
+	SocialPanel socialPanel;
 	UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	public Preferences() {
@@ -75,7 +76,6 @@ public class Preferences extends JFrame implements ActionListener {
 		JTabbedPane jtp = new JTabbedPane();
 
 		Container contentPane = getContentPane();
-		// MigLayout layout1 = new MigLayout();
 		contentPane.setLayout(new BorderLayout());
 		contentPane.add(jtp, BorderLayout.CENTER);
 
@@ -96,6 +96,10 @@ public class Preferences extends JFrame implements ActionListener {
 				userPanel);
 		jtp.addTab("Trainer", trainerPanel);
 		jtp.addTab("ANT+", antPanel);
+		
+		// Social Sharing
+		socialPanel = new SocialPanel();
+		jtp.addTab("Social", socialPanel);
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
@@ -316,5 +320,9 @@ public class Preferences extends JFrame implements ActionListener {
 		userPrefs.setPowerId(antPanel.getPwrId());
 
 		antPanel.close();
+		
+		// Social Panel
+		userPrefs.setSLUser(socialPanel.getSLUser());
+		userPrefs.setSLPass(socialPanel.getSLPass());
 	}
 }

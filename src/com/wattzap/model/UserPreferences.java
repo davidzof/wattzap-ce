@@ -58,7 +58,7 @@ public enum UserPreferences {
 
 		Locale currentLocale = getLocale();
 		messages = ResourceBundle.getBundle("MessageBundle", currentLocale);
-		
+
 		// check User data directories exist
 		String udDir = getUserDataDirectory();
 		File f = new File(udDir + TcxWriter.WORKOUTDIR);
@@ -229,6 +229,24 @@ public enum UserPreferences {
 		setBoolean("units", value);
 	}
 
+	// Social
+	public String getSLUser() {
+		return get(user, "sl_user", "");
+	}
+
+	public void setSLUser(String slUser) {
+		set(user, "sl_user", slUser);
+	}
+
+	public String getSLPass() {
+		return get(user, "sl_pass", "");
+	}
+
+	public void setSLPass(String slPass) {
+		set(user, "sl_pass", slPass);
+	}
+
+	// ANT
 	public boolean isANTUSB() {
 		return getBoolean("antusbm", false);
 	}
@@ -260,7 +278,7 @@ public enum UserPreferences {
 	}
 
 	public Locale getLocale() {
-		String iso3 = get(user, "locale", Locale.getDefault().getISO3Language());	
+		String iso3 = get(user, "locale", Locale.getDefault().getISO3Language());
 		Locale locale = new Locale(iso3);
 		return locale;
 	}
@@ -299,7 +317,7 @@ public enum UserPreferences {
 	public void setSCId(int i) {
 		setInt(user, "sandcId", i);
 	}
-	
+
 	public int getSpeedId() {
 		return getInt(user, "speedId", 0);
 	}
@@ -307,7 +325,7 @@ public enum UserPreferences {
 	public void setSpeedId(int i) {
 		setInt(user, "speedId", i);
 	}
-	
+
 	public int getCadenceId() {
 		return getInt(user, "cadenceId", 0);
 	}
@@ -315,7 +333,7 @@ public enum UserPreferences {
 	public void setCadenceId(int i) {
 		setInt(user, "cadenceId", i);
 	}
-	
+
 	public int getPowerId() {
 		return getInt(user, "powerId", 0);
 	}
