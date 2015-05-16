@@ -17,9 +17,9 @@ package com.wattzap.controller;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -28,10 +28,9 @@ import org.apache.log4j.Logger;
 
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
-import com.wattzap.model.dto.WorkoutData;
+import com.wattzap.model.social.SelfLoopsAPI;
 import com.wattzap.utils.TcxWriter;
 import com.wattzap.view.Workouts;
-import com.wattzap.view.training.TrainingAnalysis;
 import com.wattzap.view.training.TrainingDisplay;
 
 /**
@@ -47,11 +46,13 @@ public class SocialSharingController implements ActionListener {
 			.getLogger("Social Sharing Controller");
 	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private final JFrame mainFrame;
+	private final TrainingDisplay trainingDisplay;
 	public final static String selfLoopsUpload = "SLU";
 
 	Workouts workouts = null;
 
-	public SocialSharingController(JFrame frame) {
+	public SocialSharingController(TrainingDisplay trainingDisplay, JFrame frame) {
+		this.trainingDisplay = trainingDisplay;
 
 		mainFrame = frame;
 	}
@@ -60,7 +61,26 @@ public class SocialSharingController implements ActionListener {
 		String command = e.getActionCommand();
 		if (selfLoopsUpload.equals(command)) {
 			System.out.println("Self Loops UPload");
-
+			ArrayList<Telemetry> data = trainingDisplay.getData();
+			if (data == null || data.size() == 0) {
+				JOptionPane.showMessageDialog(mainFrame, userPrefs.messages.getString("noDataUpload"),
+						userPrefs.messages.getString("warning"),
+						JOptionPane.WARNING_MESSAGE);
+				logger.warn("No data to save");
+				return;
+			}
+			TcxWriter writer = new TcxWriter();
+			String fileName = writer.save(data, 0);
+			JOptionPane.showMessageDialog(mainFrame, userPrefs.messages.getString("uploadTo")
+					+ "SelfLoops.com", userPrefs.messages.getString("uploadWk"),
+					JOptionPane.INFORMATION_MESSAGE);
+			try {
+				SelfLoopsAPI.uploadActivity(userPrefs.getSLUser(), userPrefs.getSLPass(), fileName, "Uploaded by http://www.wattzap.com/");
+			} catch (IOException e1) {
+				JOptionPane.showMessageDialog(mainFrame, userPrefs.messages.getString("uploadError")
+						+ e1.getLocalizedMessage(), userPrefs.messages.getString("error"),
+						JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 	}
 }

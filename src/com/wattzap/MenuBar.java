@@ -157,7 +157,7 @@ public class MenuBar implements MessageCallback {
 		socialMenu.add(selfLoopsUploadItem);
 
 		SocialSharingController socialSharing = new SocialSharingController(
-				frame);
+				trainingDisplay, frame);
 		selfLoopsUploadItem.setActionCommand(SocialSharingController.selfLoopsUpload);
 		selfLoopsUploadItem.addActionListener(socialSharing);
 
