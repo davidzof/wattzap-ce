@@ -38,6 +38,7 @@ import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
 import com.wattzap.model.RouteReader;
+import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 
 /* 
@@ -50,6 +51,7 @@ public class Profile extends JPanel implements MessageCallback {
 	ValueMarker marker = null;
 	XYPlot plot;
 	private ChartPanel chartPanel = null;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	private static Logger logger = LogManager.getLogger("Profile");
 
@@ -105,8 +107,8 @@ public class Profile extends JPanel implements MessageCallback {
 			final JFreeChart chart = ChartFactory.createXYAreaChart(
 					routeData.getName(), // chart
 					// title
-					"Distance (km)", // domain axis label
-					"Height (meters)", // range axis label
+					userPrefs.messages.getString("distancekm"), // domain axis label
+					userPrefs.messages.getString("heightMeters"), // range axis label
 					xyDataset, // data
 					PlotOrientation.VERTICAL, // orientation
 					false, // include legend

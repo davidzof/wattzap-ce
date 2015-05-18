@@ -29,6 +29,7 @@ import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 
 /* 
+ * Preferences for Social Sharing
  * 
  * @author David George
  * @date 1st May 2015
