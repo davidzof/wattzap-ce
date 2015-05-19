@@ -420,7 +420,7 @@ public class TrainingItem {
             cadenceHigh = Integer.parseInt(c.substring(i + 1).trim());
             cadence = cadenceLow + ((cadenceHigh - cadenceLow) / 2);
         } else {
-            // absolute power in watts
+            // absolute power in rpm
             cadence = Integer.parseInt(c.trim());
             cadenceHigh = (int) ((double) cadence * 1.025);
             cadenceLow = (int) ((double) cadence * 0.975);
