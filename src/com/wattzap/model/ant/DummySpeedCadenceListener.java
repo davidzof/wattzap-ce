@@ -32,7 +32,7 @@ import com.wattzap.model.power.Power;
 import com.wattzap.utils.Rolling;
 
 /**
- * (c) 2013 David George / TrainingLoops.com
+ * (c) 2013 David George / WattzAp.com
  * 
  * Speed and Cadence ANT+ processor.
  * 

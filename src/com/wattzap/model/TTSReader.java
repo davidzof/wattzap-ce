@@ -5,10 +5,8 @@
  */
 package com.wattzap.model;
 
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -51,6 +49,8 @@ public class TTSReader extends RouteReader {
 	private double totalDistance = 0.0;
 
 	private String fileName;
+	private String ttsName = "";
+
 	// Block Types
 	private final static int PROGRAM_DATA = 1032;
 	private final static int DISTANCE_FRAME = 5020;
@@ -104,13 +104,15 @@ public class TTSReader extends RouteReader {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "IT_Stelvio08";
+		return ttsName;
 	}
 
 	@Override
 	public GPXFile getGpxFile() {
-		// TODO Auto-generated method stub
-		return gpxFile;
+		if (!gpxFile.isGPXFileWithNoRoutes()) {
+			return gpxFile;
+		}
+		return null;
 	}
 
 	@Override
@@ -322,16 +324,14 @@ public class TTSReader extends RouteReader {
 				case CRC:
 					break;
 				case IMAGE:
-					logger.debug("[image " + blockType + "." + (stringId - 1000)
-							+ "]");
-					try {
-						result = currentFile + "." + (imageId++) + ".png";
-						FileOutputStream file = new FileOutputStream(result);
-						file.write(barr(decrD));
-						file.close();
-					} catch (IOException e) {
-						result = "cannot create: " + e;
-					}
+					logger.debug("[image " + blockType + "."
+							+ (stringId - 1000) + "]");
+					/*
+					 * try { result = currentFile + "." + (imageId++) + ".png";
+					 * FileOutputStream file = new FileOutputStream(result);
+					 * file.write(barr(decrD)); file.close(); } catch
+					 * (IOException e) { result = "cannot create: " + e; }
+					 */
 					break;
 				case STRING:
 					if (strings.containsKey(blockType + stringId)) {
@@ -346,6 +346,14 @@ public class TTSReader extends RouteReader {
 						str.append(c);
 					}
 					result = str.toString();
+					switch (blockType + stringId) {
+					case 5002: // Video Name
+						ttsName = result;
+						break;
+					default:
+						logger.debug("[" + result + "]");
+					}
+
 					break;
 				case BLOCK:
 					blockProcessing(blockType, version, barr(decrD));
@@ -554,6 +562,7 @@ public class TTSReader extends RouteReader {
 		double lastLon = 0;
 		double lastAlt = 0;
 		int gpsCount = data.length / 16;
+
 		for (int i = 0; i < gpsCount; i++) {
 			int distance = getUInt(data, i * 16);
 			// out.print("[" + i + "] " + distance + " cm, ");
@@ -620,7 +629,6 @@ public class TTSReader extends RouteReader {
 	 * 
 	 * Format: 2102675 (cm)/77531 (frames)
 	 */
-
 	private void distanceToFrame(int version, byte[] data) {
 		if (data.length % 8 != 0) {
 			logger.error("Distance2Frame Data wrong length " + data.length);

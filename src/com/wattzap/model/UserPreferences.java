@@ -311,7 +311,8 @@ public enum UserPreferences {
 	}
 
 	public int getSCId() {
-		return getInt(user, "sandcId", 0);
+		int i = getInt(user, "sandcId", 0);
+		return i;
 	}
 
 	public void setSCId(int i) {

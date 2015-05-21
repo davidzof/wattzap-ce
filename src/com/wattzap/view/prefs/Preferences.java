@@ -146,7 +146,7 @@ public class Preferences extends JFrame implements ActionListener,
 				mainBounds.y + ((mainBounds.height - bounds.height) / 2),
 				bounds.width, bounds.height);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		this.setSize(450, 300);
+		this.setSize(450, 350);
 		doText();
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
