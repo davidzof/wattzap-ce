@@ -63,7 +63,8 @@ public class SocialSharingController implements ActionListener {
 			System.out.println("Self Loops UPload");
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			if (data == null || data.size() == 0) {
-				JOptionPane.showMessageDialog(mainFrame, userPrefs.messages.getString("noDataUpload"),
+				JOptionPane.showMessageDialog(mainFrame,
+						userPrefs.messages.getString("noDataUpload"),
 						userPrefs.messages.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				logger.warn("No data to save");
@@ -71,14 +72,20 @@ public class SocialSharingController implements ActionListener {
 			}
 			TcxWriter writer = new TcxWriter();
 			String fileName = writer.save(data, 0);
-			JOptionPane.showMessageDialog(mainFrame, userPrefs.messages.getString("uploadTo")
-					+ "SelfLoops.com", userPrefs.messages.getString("uploadWk"),
+			JOptionPane.showMessageDialog(mainFrame,
+					userPrefs.messages.getString("uploadTo") + "SelfLoops.com",
+					userPrefs.messages.getString("uploadWk"),
 					JOptionPane.INFORMATION_MESSAGE);
 			try {
-				SelfLoopsAPI.uploadActivity(userPrefs.getSLUser(), userPrefs.getSLPass(), fileName, "Uploaded by http://www.wattzap.com/");
+				SelfLoopsAPI.uploadActivity(userPrefs.getSLUser(),
+						userPrefs.getSLPass(), fileName,
+						"Uploaded by http://www.wattzap.com/");
 			} catch (IOException e1) {
-				JOptionPane.showMessageDialog(mainFrame, userPrefs.messages.getString("uploadError")
-						+ e1.getLocalizedMessage(), userPrefs.messages.getString("error"),
+				JOptionPane.showMessageDialog(
+						mainFrame,
+						userPrefs.messages.getString("uploadError")
+								+ e1.getLocalizedMessage(),
+						userPrefs.messages.getString("error"),
 						JOptionPane.INFORMATION_MESSAGE);
 			}
 		}

@@ -62,6 +62,12 @@ public class MenuBar implements MessageCallback {
 	// File Menu Items
 	private final JMenuItem openMenuItem;
 	private MenuItem closeMenuItem;
+	// Training
+	private final JMenuItem trainMenuItem;
+	private final JMenuItem analizeMenuItem;
+	private final JMenuItem viewMenuItem;
+	private final JMenuItem recoverMenuItem;
+	private final JMenuItem saveMenuItem;
 	// Social Menu Items
 	public JMenuItem selfLoopsUploadItem;
 
@@ -108,39 +114,33 @@ public class MenuBar implements MessageCallback {
 				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 
 		// Submenu: Training
-		trainingMenu = new JMenu(userPrefs.messages.getString("training"));
+		trainingMenu = new JMenu();
 		// menuBar.add(trainingMenu);
 		TrainingDisplay trainingDisplay = new TrainingDisplay(screenSize);
 		TrainingController trainingController = new TrainingController(
 				trainingDisplay, frame);
 
+		trainMenuItem = new JMenuItem();
 		if (userPrefs.isAntEnabled()) {
-			// Submenu: training
-			JMenuItem trainMenuItem = new JMenuItem(
-					userPrefs.messages.getString("open"));
 			trainMenuItem.setActionCommand(TrainingController.open);
 			trainingMenu.add(trainMenuItem);
 
 			TrainingPicker tPicker = new TrainingPicker(frame);
 			trainMenuItem.addActionListener(tPicker);
 		}
-		JMenuItem analizeMenuItem = new JMenuItem(
-				userPrefs.messages.getString("analyze"));
+		analizeMenuItem = new JMenuItem();
 		trainingMenu.add(analizeMenuItem);
 		analizeMenuItem.setActionCommand(TrainingController.analyze);
 
-		JMenuItem saveMenuItem = new JMenuItem(
-				userPrefs.messages.getString("save"));
+		saveMenuItem = new JMenuItem();
 		saveMenuItem.setActionCommand(TrainingController.save);
 		trainingMenu.add(saveMenuItem);
 
-		JMenuItem viewMenuItem = new JMenuItem(
-				userPrefs.messages.getString("view"));
+		viewMenuItem = new JMenuItem();
 		viewMenuItem.setActionCommand(TrainingController.view);
 		trainingMenu.add(viewMenuItem);
 
-		JMenuItem recoverMenuItem = new JMenuItem(
-				userPrefs.messages.getString("recover"));
+		recoverMenuItem = new JMenuItem();
 		recoverMenuItem.setActionCommand(TrainingController.recover);
 		trainingMenu.add(recoverMenuItem);
 
@@ -177,16 +177,29 @@ public class MenuBar implements MessageCallback {
 	 * Setup menubar text, makes it easy to update menu if locale is changed
 	 */
 	private void doText() {
-		appMenu.setText("Application");
+		appMenu.setText(userPrefs.messages.getString("application"));
 		prefMenuItem.setText(userPrefs.messages.getString("preferences"));
 		aboutMenuItem.setText(userPrefs.messages.getString("about"));
 		quitMenuItem.setText(userPrefs.messages.getString("quit"));
 		fileMenu.setText(userPrefs.messages.getString("route"));
 		openMenuItem.setText(userPrefs.messages.getString("open"));
 		closeMenuItem.setText(userPrefs.messages.getString("close"));
+		
+		trainingMenu.setText(userPrefs.messages.getString("training"));
+		analizeMenuItem.setText(
+				userPrefs.messages.getString("analyze"));
+		viewMenuItem.setText(
+				userPrefs.messages.getString("view"));
+		recoverMenuItem.setText(
+				userPrefs.messages.getString("recover"));
+		saveMenuItem.setText(
+				userPrefs.messages.getString("save"));
 		//
 		socialMenu.setText("Social");
 		selfLoopsUploadItem.setText("SelfLoops Upload");
+		
+		trainMenuItem.setText(
+					userPrefs.messages.getString("open"));
 	}
 
 	/**

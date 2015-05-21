@@ -65,7 +65,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 		about = new JLabel();
 		about.setFont(font);
 		String key = userPrefs.getRegistrationKey();
-		if (key.length() == 0) {
+		if (key == null || key.length() == 0) {
 			userPrefs.setRegistrationKey("Community Edition");
 		}
 		about.setText("<html>WattzAp Community Edition<br/><br/>Version 2.5 beta<br/>10th May 2015");

@@ -265,26 +265,22 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		distMenu.add(pdgMenuItem);
 		pdgMenuItem.addActionListener(this);
 
-		cadMenuItem = new JMenuItem(
-				);
+		cadMenuItem = new JMenuItem();
 		cadMenuItem.setActionCommand(cdGraph);
 		distMenu.add(cadMenuItem);
 		cadMenuItem.addActionListener(this);
 
-		hrMenuItem = new JMenuItem(
-				);
+		hrMenuItem = new JMenuItem();
 		hrMenuItem.setActionCommand(hrdGraph);
 		distMenu.add(hrMenuItem);
 		hrMenuItem.addActionListener(this);
 
-		tlMenuItem = new JMenuItem(
-				);
+		tlMenuItem = new JMenuItem();
 		tlMenuItem.setActionCommand(tlGraph);
 		distMenu.add(tlMenuItem);
 		tlMenuItem.addActionListener(this);
 
-		tlhrMenuItem = new JMenuItem(
-				);
+		tlhrMenuItem = new JMenuItem();
 		tlhrMenuItem.setActionCommand(tlhrGraph);
 		distMenu.add(tlhrMenuItem);
 		tlhrMenuItem.addActionListener(this);
@@ -297,11 +293,22 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
+	public void updateModel() {
+		DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+		loadData(tableModel);
+		tableModel.fireTableDataChanged();
+	}
+
 	public void setVisible(boolean flag) {
 		if (!frame.isVisible()) {
 			frame.setVisible(flag);
 			super.setVisible(flag);
 		}
+		DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+
+		loadData(tableModel);
+		// table = new JTable(model);
+		tableModel.fireTableDataChanged();
 		frame.toFront();
 	}
 
@@ -391,12 +398,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 					importedFiles.append("\n");
 				}// for
 
-				DefaultTableModel tableModel = (DefaultTableModel) table
-						.getModel();
-
-				loadData(tableModel);
-				// table = new JTable(model);
-				tableModel.fireTableDataChanged();
+				updateModel();
 
 			}
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),

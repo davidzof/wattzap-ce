@@ -62,6 +62,10 @@ public class Odometer extends JPanel implements MessageCallback {
 
 	private JLabel powerLabel;
 	private JLabel chronoLabel;
+	
+	// i18n labels
+	private final JLabel pwrText;
+	private final JLabel chronoText;
 
 	private int type = RouteReader.SLOPE;
 
@@ -113,37 +117,36 @@ public class Odometer extends JPanel implements MessageCallback {
 		add(distText);
 
 		// Power #3
-		JLabel pwrText = new JLabel();
+		pwrText = new JLabel();
 		pwrText.setFont(font1);
-		pwrText.setText(userPrefs.messages.getString("power"));
 		pwrText.setForeground(textColor);
 		add(pwrText);
 
 		// Roller Resistance #4
 		resistanceText = new JLabel();
 		resistanceText.setFont(font1);
-		resistanceText.setText(userPrefs.messages.getString("resistance"));
+
 		resistanceText.setForeground(textColor);
 		add(resistanceText);
 
 		// Slope #5
 		slopeText = new JLabel();
 		slopeText.setFont(font1);
-		slopeText.setText(userPrefs.messages.getString("slope") + " %");
+		
 		slopeText.setForeground(textColor);
 		add(slopeText);
 
 		// Altitude #6
 		levelText = new JLabel();
 		levelText.setFont(font1);
-		levelText.setText(userPrefs.messages.getString("altitude"));
+		
 		levelText.setForeground(textColor);
 		add(levelText);
 
 		// Chrono #7
-		JLabel chronoText = new JLabel();
+		chronoText = new JLabel();
 		chronoText.setFont(font1);
-		chronoText.setText(userPrefs.messages.getString("stopwatch"));
+		
 		chronoText.setForeground(textColor);
 		add(chronoText, "Wrap");
 
@@ -205,24 +208,13 @@ public class Odometer extends JPanel implements MessageCallback {
 		chronoLabel.setForeground(Color.LIGHT_GRAY);
 		add(chronoLabel);
 		chronoLabel.setText("00:00:00");
-
-		initLabels(userPrefs.isMetric());
+		
+		doText();
 
 		MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
-	}
-
-	private void initLabels(boolean metric) {
-		if (metric) {
-			speedText
-					.setText(userPrefs.messages.getString("speed") + " (km/h)");
-			distText.setText(userPrefs.messages.getString("distance") + " (km)");
-		} else {
-			speedText.setText(userPrefs.messages.getString("speed") + " (mph)");
-			distText.setText(userPrefs.messages.getString("distance")
-					+ " (miles)");
-		}
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
 	@Override
@@ -321,7 +313,6 @@ public class Odometer extends JPanel implements MessageCallback {
 			distanceLabel.setText("0.0");
 			break;
 		case START:
-
 			// code to see if we are registered
 			if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
 				logger.info("Out of time " + userPrefs.getEvalTime());
@@ -332,8 +323,34 @@ public class Odometer extends JPanel implements MessageCallback {
 				userPrefs.shutDown();
 				System.exit(0);
 			}
-
-			initLabels(userPrefs.isMetric());
+			
+			//doText();
+			break;
+		case LOCALE:
+			doText();
+			break;
 		}
+	}
+	
+	/*
+	 * Setup button text, makes it easy to update if locale is changed
+	 */
+	private void doText() {
+		pwrText.setText(userPrefs.messages.getString("power"));
+		resistanceText.setText(userPrefs.messages.getString("resistance"));
+		slopeText.setText(userPrefs.messages.getString("slope") + " %");
+		levelText.setText(userPrefs.messages.getString("altitude"));
+		chronoText.setText(userPrefs.messages.getString("stopwatch"));
+		
+		if (userPrefs.isMetric()) {
+			speedText
+					.setText(userPrefs.messages.getString("speed") + " (km/h)");
+			distText.setText(userPrefs.messages.getString("distance") + " (km)");
+		} else {
+			speedText.setText(userPrefs.messages.getString("speed") + " (mph)");
+			distText.setText(userPrefs.messages.getString("distance")
+					+ " (miles)");
+		}
+		
 	}
 }
