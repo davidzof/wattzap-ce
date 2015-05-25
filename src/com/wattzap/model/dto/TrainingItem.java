@@ -34,7 +34,7 @@ public class TrainingItem {
     int heartRate;
     int power;
     int cadence;
-    long time;
+    long time; // interval duration in seconds
     double distanceMeters;
     String description;
 

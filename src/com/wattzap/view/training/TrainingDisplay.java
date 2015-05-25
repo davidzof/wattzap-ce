@@ -224,7 +224,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		Toolkit.getDefaultToolkit().beep();
 		// Display new training interva informations
 		String newTrainingIntervalInformations = "<html><font size='+8'><b>"+
-				current.getDescription() + "<br></b></font>"
+				current.getTimeInSeconds() + " " + current.getDescription() + "<br></b></font>"
 				+ "<html><font size='+6'><b>"+current.getPowerMsg() + current.getHRMsg()
 				+ current.getCadenceMsg() + "</b></font></html>";
 		final JOptionPane optionPane = new JOptionPane(newTrainingIntervalInformations, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[]{}, null);
