@@ -19,6 +19,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,9 +29,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.swing.JComponent;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -217,7 +216,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		// use telemetry time
 		support.addValues(time, values);
 
-		add(t);
+		add(telemetry);
 	}
 
 	private void notifyNewTrainingInterval() {
@@ -252,7 +251,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		timer.start();
 
 		dialog.setVisible(true);
-		add(telemetry);
 	}
 
 	/*

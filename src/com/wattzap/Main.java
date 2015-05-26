@@ -29,6 +29,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
+import com.wattzap.view.training.JavaSwingGaugesView;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.FileAppender;
@@ -66,7 +67,7 @@ import java.util.HashMap;
 
 /**
  * Main entry point
- * <p>
+ * <p/>
  * (c) 2013 David George / Wattzap.com
  *
  * @author David George
@@ -206,7 +207,7 @@ public class Main implements Runnable {
         profile.setVisible(false);
 
         // Menu Bar
-		new MenuBar(frame);
+        new MenuBar(frame);
 
         frame.add(profile, "cell 0 1, grow");
         // by default add to telemetry frame

@@ -56,12 +56,9 @@ public class JavaSwingGaugesView implements MessageCallback {
 
     private TrainingData trainingData;
 
-    private long intervalElapsedTime; // time passed in current interval
-    private long intervalStartedTime;
-    private long intervalRemainingDuration; // remaining time in current interval
+    private long intervalStartedTime; // keep the beginning of the current interval
 
-    private long trainingStartedTime;
-    private long trainingElapsedTime; // total training time, from start to now
+    private long trainingStartedTime; // keep the beginning of the whole training session
 
     public JavaSwingGaugesView() {
         // register message bus events
@@ -74,8 +71,6 @@ public class JavaSwingGaugesView implements MessageCallback {
         MessageBus.INSTANCE.register(Messages.TRAINING, this);
         MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
         MessageBus.INSTANCE.register(Messages.CLOSE, this);
-
-
     }
 
     public void show() {
@@ -325,6 +320,7 @@ public class JavaSwingGaugesView implements MessageCallback {
         cadenceGauge.addSection(new Section(100, 130, Color.orange.darker()));
         cadenceGauge.setSection3DEffectVisible(true);
         cadenceGauge.setSectionsVisible(true);
+        cadenceGauge.setGlowColor(Color.cyan);
     }
     // </editor-fold>
 
@@ -394,6 +390,8 @@ public class JavaSwingGaugesView implements MessageCallback {
         powerGauge.setTicklabelOrientation(TicklabelOrientation.HORIZONTAL);
         powerGauge.setMajorTickSpacing(50);
         powerGauge.setMinorTickSpacing(10);
+
+        cadenceGauge.setGlowColor(Color.cyan);
     }
     // </editor-fold>
 
@@ -408,22 +406,24 @@ public class JavaSwingGaugesView implements MessageCallback {
 
                 case TRAININGITEM:
                     current = (TrainingItem) o;
-                    if (current != null) updateGaugesTrainingZones();
+                    if (current != null) onNewTrainingItem();
                     break;
                 case TRAINING:
                     trainingData = (TrainingData) o;
+                    if (trainingData != null) onNewTraining(trainingData);
             }
         });
+    }
+
+    private void onNewTraining(TrainingData trainingData) {
+
     }
 
     /**
      * Set training limits with a cyan area in the corresponding gauge
      */
-    private void updateGaugesTrainingZones() {
+    private void onNewTrainingItem() {
         System.out.println(current);
-
-
-        updateTimers();
 
         double powerLow = current.getPowerLow();
         double powerHigh = current.getPowerHigh();
@@ -452,7 +452,7 @@ public class JavaSwingGaugesView implements MessageCallback {
         powerGauge.resetAreas();
         powerGauge.setAreasVisible(hasPowerZone);
         powerGauge.setGlowing(hasPowerZone);
-        powerGauge.setGlowColor(Color.cyan);
+
         powerGauge.setGlowVisible(hasPowerZone);
 //        powerGauge.setTransparentAreasEnabled(true);
         powerGauge.setAreas(new Section(powerLow, powerHigh, areaColor));
@@ -483,20 +483,10 @@ public class JavaSwingGaugesView implements MessageCallback {
         cadenceGauge.setValueAnimated(t.getCadence());
     }
 
-    private void updateTimers() {
-        intervalRemainingDuration = current.getTimeInSeconds();
-        clockRemainingInInterval.setLcdText(String.valueOf(current.getTimeInSeconds()));
-    }
 
     private void updateTimers(Telemetry t) {
-        if (intervalElapsedTime == t.getTime()) {
-            // no change
-            return;
-        }
-        intervalElapsedTime = (t.getTime() - trainingStartedTime)/1000;
-        intervalRemainingDuration = t.getTime() - intervalStartedTime;
-        clockRemainingInInterval.setLcdValue(intervalRemainingDuration);
-        clockTotal.setLcdValue(trainingElapsedTime);
+        clockRemainingInInterval.setLcdValue(intervalStartedTime + current.getTime() - t.getTime());
+        clockTotal.setLcdValue(t.getTime() - trainingStartedTime);
     }
 
     private void updateLcdColors(Telemetry t) {
