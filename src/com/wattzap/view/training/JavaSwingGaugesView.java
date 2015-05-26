@@ -21,9 +21,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.time.Minute;
-import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.xy.*;
 import org.jfree.ui.RectangleInsets;
 
@@ -55,7 +53,15 @@ public class JavaSwingGaugesView implements MessageCallback {
     private TrainingItem current;
     private static JButton stopButton;
     private static JButton startButton;
+
     private TrainingData trainingData;
+
+    private long intervalElapsedTime; // time passed in current interval
+    private long intervalStartedTime;
+    private long intervalRemainingDuration; // remaining time in current interval
+
+    private long trainingStartedTime;
+    private long trainingElapsedTime; // total training time, from start to now
 
     public JavaSwingGaugesView() {
         // register message bus events
@@ -267,7 +273,7 @@ public class JavaSwingGaugesView implements MessageCallback {
 
 
     private static void buildTrainingBirdView() {
-        // TODO add bar graph with x=time and y=intensity
+        // TODO add bar graph with x=intervalTime and y=intensity
         // bar color will follow intensity zone
         // icon will suit the target type (heart icon, power icon, rotor icon)
     }
@@ -416,7 +422,8 @@ public class JavaSwingGaugesView implements MessageCallback {
     private void updateGaugesTrainingZones() {
         System.out.println(current);
 
-        clockRemainingInInterval.setLcdText(String.valueOf(current.getTimeInSeconds()));
+
+        updateTimers();
 
         double powerLow = current.getPowerLow();
         double powerHigh = current.getPowerHigh();
@@ -470,10 +477,26 @@ public class JavaSwingGaugesView implements MessageCallback {
         updateLcdColors(t);
         System.out.println("telemetry.getTime()=" + t.getTime() + ", ~=" + new Date(t.getTime()).toString());
 
-        clockTotal.setLcdValue(t.getTime());
+        updateTimers(t);
         powerGauge.setValueAnimated(t.getPower());
         heartRateGauge.setValueAnimated(t.getHeartRate());
         cadenceGauge.setValueAnimated(t.getCadence());
+    }
+
+    private void updateTimers() {
+        intervalRemainingDuration = current.getTimeInSeconds();
+        clockRemainingInInterval.setLcdText(String.valueOf(current.getTimeInSeconds()));
+    }
+
+    private void updateTimers(Telemetry t) {
+        if (intervalElapsedTime == t.getTime()) {
+            // no change
+            return;
+        }
+        intervalElapsedTime = (t.getTime() - trainingStartedTime)/1000;
+        intervalRemainingDuration = t.getTime() - intervalStartedTime;
+        clockRemainingInInterval.setLcdValue(intervalRemainingDuration);
+        clockTotal.setLcdValue(trainingElapsedTime);
     }
 
     private void updateLcdColors(Telemetry t) {
