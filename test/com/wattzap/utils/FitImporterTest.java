@@ -18,8 +18,6 @@ package com.wattzap.utils;
 import java.io.FileReader;
 import java.util.ArrayList;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xml.sax.InputSource;

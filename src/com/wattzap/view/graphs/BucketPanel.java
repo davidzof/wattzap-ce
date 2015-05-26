@@ -24,26 +24,34 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
+import com.wattzap.model.UserPreferences;
+
 /**
  * (c) 2014 Wattzap.com
  * 
  * @author David George
  * @date 22 September 2014
  */
-public class BucketPanel extends JPanel implements ActionListener {
+public class BucketPanel extends JPanel implements ActionListener, MessageCallback {
 	private final DistributionGraph graph;
 	private int scale;
 	private boolean keepZeroes = false;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+	private final JLabel binLabel;
+	private final JCheckBox keepZero;
 
 	public BucketPanel(DistributionGraph graph, int scale) {
 		this.graph = graph;
-
+		binLabel = new JLabel();
+		
 		if (scale > 0) {
 			int values[] = { 3, 5, 10, 15, 20, 25, 30, 40, 50 };
-			JLabel label = new JLabel();
-			label.setText("Bucket Size: ");
-			add(label);
+			add(binLabel);
 
+			@SuppressWarnings("rawtypes")
 			JComboBox combo = new JComboBox();
 			for (int i = 0; i < values.length; i++) {
 				combo.addItem(values[i]);
@@ -57,12 +65,16 @@ public class BucketPanel extends JPanel implements ActionListener {
 			setBackground(Color.LIGHT_GRAY);
 			this.add(combo);
 		}
-		JCheckBox keepZero = new JCheckBox("Keep Zero Values");
+		keepZero = new JCheckBox(userPrefs.messages
+				.getString("zeroValue"));
 		keepZero.setSelected(true);
 		keepZero.setActionCommand("zeros");
 		keepZero.addActionListener(this);
 
 		this.add(keepZero);
+		
+		doText();
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
 	@Override
@@ -79,4 +91,28 @@ public class BucketPanel extends JPanel implements ActionListener {
 		}
 		graph.updateValues(scale, keepZeroes);
 	}
+	
+	/*
+	 * Setup button text, makes it easy to update if locale is changed
+	 */
+	private void doText() {
+		binLabel.setText(userPrefs.messages
+				.getString("binSize") + ": ");
+		keepZero.setText(userPrefs.messages
+				.getString("zeroValue"));
+		
+	}
+
+	/**
+	 * Change text language if we get a LOCALE message
+	 */
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case LOCALE:
+			doText();
+			break;
+		}
+	}
+
 }

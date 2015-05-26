@@ -54,6 +54,9 @@ import org.apache.log4j.Logger;
 import org.jfree.data.xy.XYSeries;
 
 import com.wattzap.controller.DistributionAccessor;
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
@@ -72,7 +75,7 @@ import com.wattzap.view.training.TrainingAnalysis;
  * @author David George (c) Copyright 17 January 2014
  * @date 17 April 2014
  */
-public class Workouts extends JPanel implements ActionListener {
+public class Workouts extends JPanel implements ActionListener, MessageCallback {
 	private static final long serialVersionUID = 1L;
 	private List<WorkoutData> workoutList;
 	private List<Integer> selectedRows;
@@ -104,6 +107,23 @@ public class Workouts extends JPanel implements ActionListener {
 	private final static String tlhrGraph = "TLHRDG";
 	public final static String importer = "IMP";
 
+	// menus
+	private final JMenu summaryMenu;
+	private final JMenuItem mmpMenuItem;
+	private final JMenuItem schrMenuItem;
+	private final JMenuItem importMenuItem;
+	private final JMenu fatMenu;
+	private final JMenu scatMenu;
+	private final JMenuItem cpgMenuItem;
+	private final JMenuItem powerWattsMenuItem;
+	private final JMenuItem quadAnalysisMenuItem;
+	private final JMenu distMenu;
+	private final JMenuItem pdgMenuItem;
+	private final JMenuItem cadMenuItem;
+	private final JMenuItem hrMenuItem;
+	private final JMenuItem tlMenuItem;
+	private final JMenuItem tlhrMenuItem;
+
 	private final static String[] columnNames = { "Date", "Time", "Source",
 			"QPower", "Max HR", "Ave HR", "Max Cadence", "Ave Cadence",
 			"5Sec W/kg", "1Min W/kg", "5Min W/kg", "20Min W/kg", "Load",
@@ -111,8 +131,8 @@ public class Workouts extends JPanel implements ActionListener {
 
 	public Workouts() {
 		super(new GridLayout(1, 0));
-		
-		this.setBorder(BorderFactory.createEmptyBorder(0,10,10,10)); 
+
+		this.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 		selectedRows = null;
 
 		DefaultTableModel model = new DefaultTableModel(columnNames, 0);
@@ -186,97 +206,97 @@ public class Workouts extends JPanel implements ActionListener {
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
 
-		JMenu summaryMenu = new JMenu(userPrefs.messages.getString("summary"));
+		summaryMenu = new JMenu();
 		summaryMenu.setMnemonic(KeyEvent.VK_S);
 		summaryMenu.setMargin(new Insets(0, 0, 0, 10));
 		menuBar.add(summaryMenu);
 		// MMP, hr/cad/pwr graph
 		// pwr/time, hr/time, cad, time
-		JMenuItem mmpMenuItem = new JMenuItem(
-				userPrefs.messages.getString("mmp"));
+		mmpMenuItem = new JMenuItem();
 		mmpMenuItem.setActionCommand(mmpGraph);
 		summaryMenu.add(mmpMenuItem);
 		mmpMenuItem.addActionListener(this);
 
-		JMenuItem schrMenuItem = new JMenuItem(
-				userPrefs.messages.getString("schr"));
+		schrMenuItem = new JMenuItem();
 		schrMenuItem.setActionCommand(schrGraph);
 		summaryMenu.add(schrMenuItem);
 		schrMenuItem.addActionListener(this);
 
-		JMenuItem importMenuItem = new JMenuItem(
-				userPrefs.messages.getString("import"));
+		importMenuItem = new JMenuItem();
 		importMenuItem.setActionCommand(importer);
 		summaryMenu.add(importMenuItem);
 		importMenuItem.addActionListener(this);
 
 		// 1sec...?
-		JMenu fatMenu = new JMenu(userPrefs.messages.getString("fatigue"));
+		fatMenu = new JMenu();
 		fatMenu.setMnemonic(KeyEvent.VK_F);
 		fatMenu.setMargin(new Insets(0, 0, 0, 10));
 		menuBar.add(fatMenu);
 
 		// pwr/cad, pwr/dist, speed/cadence
-		JMenu scatMenu = new JMenu(userPrefs.messages.getString("scatter"));
+		scatMenu = new JMenu();
 		scatMenu.setMnemonic(KeyEvent.VK_A);
 		menuBar.add(scatMenu);
 		scatMenu.setMargin(new Insets(0, 0, 0, 10));
+
 		// menuBar.add(new JSeparator());
-		JMenuItem cpgMenuItem = new JMenuItem(
-				userPrefs.messages.getString("cpg"));
+		cpgMenuItem = new JMenuItem();
 		cpgMenuItem.setActionCommand(scGraph);
 		cpgMenuItem.addActionListener(this);
 		scatMenu.add(cpgMenuItem);
 
-		JMenuItem powerWattsMenuItem = new JMenuItem(
-				userPrefs.messages.getString("poWt"));
+		powerWattsMenuItem = new JMenuItem();
 		powerWattsMenuItem.setActionCommand(hrWattsGraph);
 		powerWattsMenuItem.addActionListener(this);
 		scatMenu.add(powerWattsMenuItem);
 
-		JMenuItem quadAnalysisMenuItem = new JMenuItem(
+		quadAnalysisMenuItem = new JMenuItem(
 				userPrefs.messages.getString("quadAnal"));
 		quadAnalysisMenuItem.setActionCommand(qaGraph);
 		quadAnalysisMenuItem.addActionListener(this);
 		scatMenu.add(quadAnalysisMenuItem);
 
 		// distribution
-		JMenu distMenu = new JMenu(userPrefs.messages.getString("distribution"));
+		distMenu = new JMenu();
 		distMenu.setMnemonic(KeyEvent.VK_D);
 		menuBar.add(distMenu);
-		JMenuItem pdgMenuItem = new JMenuItem(
-				userPrefs.messages.getString("power"));
+		pdgMenuItem = new JMenuItem();
 		pdgMenuItem.setActionCommand(pdGraph);
 		distMenu.add(pdgMenuItem);
 		pdgMenuItem.addActionListener(this);
 
-		JMenuItem cadMenuItem = new JMenuItem(
-				userPrefs.messages.getString("cadence"));
+		cadMenuItem = new JMenuItem();
 		cadMenuItem.setActionCommand(cdGraph);
 		distMenu.add(cadMenuItem);
 		cadMenuItem.addActionListener(this);
 
-		JMenuItem hrMenuItem = new JMenuItem(
-				userPrefs.messages.getString("heartrate"));
+		hrMenuItem = new JMenuItem();
 		hrMenuItem.setActionCommand(hrdGraph);
 		distMenu.add(hrMenuItem);
 		hrMenuItem.addActionListener(this);
 
-		JMenuItem tlMenuItem = new JMenuItem(
-				userPrefs.messages.getString("trainlevel"));
+		tlMenuItem = new JMenuItem();
 		tlMenuItem.setActionCommand(tlGraph);
 		distMenu.add(tlMenuItem);
 		tlMenuItem.addActionListener(this);
 
-		JMenuItem tlhrMenuItem = new JMenuItem(
-				userPrefs.messages.getString("trainlevelhr"));
+		tlhrMenuItem = new JMenuItem();
 		tlhrMenuItem.setActionCommand(tlhrGraph);
 		distMenu.add(tlhrMenuItem);
 		tlhrMenuItem.addActionListener(this);
 
+		doText();
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
+
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
+	}
+
+	public void updateModel() {
+		DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+		loadData(tableModel);
+		tableModel.fireTableDataChanged();
 	}
 
 	public void setVisible(boolean flag) {
@@ -284,6 +304,11 @@ public class Workouts extends JPanel implements ActionListener {
 			frame.setVisible(flag);
 			super.setVisible(flag);
 		}
+		DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+
+		loadData(tableModel);
+		// table = new JTable(model);
+		tableModel.fireTableDataChanged();
 		frame.toFront();
 	}
 
@@ -373,12 +398,7 @@ public class Workouts extends JPanel implements ActionListener {
 					importedFiles.append("\n");
 				}// for
 
-				DefaultTableModel tableModel = (DefaultTableModel) table
-						.getModel();
-
-				loadData(tableModel);
-				// table = new JTable(model);
-				tableModel.fireTableDataChanged();
+				updateModel();
 
 			}
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),
@@ -551,7 +571,9 @@ public class Workouts extends JPanel implements ActionListener {
 				workoutData.setTcxFile(fileName);
 				workoutData.setFtp(ftp);
 				userPrefs.updateWorkout(workoutData); // saves data to RDBMS
-				workoutList.set(i, workoutData); // FIXME updates local cache of workouts but won't fire list changed event?
+				workoutList.set(i, workoutData); // FIXME updates local cache of
+													// workouts but won't fire
+													// list changed event?
 			} catch (Exception e1) {
 				logger.error(e1.getLocalizedMessage());
 			}
@@ -856,5 +878,41 @@ public class Workouts extends JPanel implements ActionListener {
 
 		}// for
 		selectedRows = null;
+	}
+
+	/*
+	 * Setup button text, makes it easy to update if locale is changed
+	 */
+	private void doText() {
+		summaryMenu.setText(userPrefs.messages.getString("summary"));
+		mmpMenuItem.setText(userPrefs.messages.getString("mmp"));
+		schrMenuItem.setText(userPrefs.messages.getString("schr"));
+
+		importMenuItem.setText(userPrefs.messages.getString("import"));
+		fatMenu.setText(userPrefs.messages.getString("fatigue"));
+		scatMenu.setText(userPrefs.messages.getString("scatter"));
+		cpgMenuItem.setText(userPrefs.messages.getString("cpg"));
+		powerWattsMenuItem.setText(userPrefs.messages.getString("poWt"));
+		quadAnalysisMenuItem.setText(userPrefs.messages.getString("quadAnal"));
+
+		distMenu.setText(userPrefs.messages.getString("distribution"));
+		pdgMenuItem.setText(userPrefs.messages.getString("power"));
+		cadMenuItem.setText(userPrefs.messages.getString("cadence"));
+		hrMenuItem.setText(userPrefs.messages.getString("heartrate"));
+		tlMenuItem.setText(userPrefs.messages.getString("trainlevel"));
+		tlhrMenuItem.setText(userPrefs.messages.getString("trainlevelhr"));
+
+	}
+
+	/**
+	 * Change text language if we get a LOCALE message
+	 */
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case LOCALE:
+			doText();
+			break;
+		}
 	}
 }

@@ -15,7 +15,6 @@
  */
 package com.wattzap.view;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -28,6 +27,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+
+import net.miginfocom.layout.CC;
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -46,7 +48,6 @@ public class AboutPanel extends JFrame implements ActionListener {
 	UserPreferences userPrefs = UserPreferences.INSTANCE;
 	StringBuilder serial = new StringBuilder();
 
-
 	private static Logger logger = LogManager.getLogger("About");
 
 	public AboutPanel() {
@@ -54,7 +55,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 		ImageIcon img = new ImageIcon("icons/preferences.jpg");
 		setIconImage(img.getImage());
 		Container contentPane = getContentPane();
-		contentPane.setLayout(new BorderLayout());
+		contentPane.setLayout(new MigLayout());
 
 		setBackground(Color.GRAY);
 
@@ -63,9 +64,12 @@ public class AboutPanel extends JFrame implements ActionListener {
 
 		about = new JLabel();
 		about.setFont(font);
-		//userPrefs.setRegistrationKey("Community Edition");
-		about.setText("WattzAp " + userPrefs.getRegistrationKey() + " Version 2.4");
-		add(about,BorderLayout.CENTER);
+		String key = userPrefs.getRegistrationKey();
+		if (key == null || key.length() == 0) {
+			userPrefs.setRegistrationKey("Community Edition");
+		}
+		about.setText("<html>WattzAp Community Edition<br/><br/>Version 2.5 beta<br/>10th May 2015");
+		add(about,"alignx right, span");
 
 		debug = new JCheckBox("Enable Debugging");
 		if (userPrefs.isDebug()) {
@@ -74,7 +78,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 			debug.setSelected(false);
 		}
 		debug.addActionListener(this);
-		add(debug, BorderLayout.SOUTH);
+		add(debug);
 
 		Dimension d = new Dimension(550, 300);
 		this.setPreferredSize(d);
