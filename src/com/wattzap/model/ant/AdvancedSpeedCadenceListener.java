@@ -91,7 +91,6 @@ public class AdvancedSpeedCadenceListener extends AntListener {
 		int sR = data[6] | (data[7] << 8);
 
 		logger.debug("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR);
-
 		Telemetry t = speedListener.getTelemetry(tS, sR);
 		if (t != null) {
 			MessageBus.INSTANCE.send(Messages.SPEED, t);

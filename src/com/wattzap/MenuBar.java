@@ -15,9 +15,11 @@
  */
 package com.wattzap;
 
+import java.awt.Dimension;
 import java.awt.Toolkit;
 
 import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
@@ -25,9 +27,15 @@ import com.wattzap.controller.MenuItem;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
+import com.wattzap.controller.SocialSharingController;
+import com.wattzap.controller.TrainingController;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.view.AboutPanel;
+import com.wattzap.view.MainFrame;
+import com.wattzap.view.RouteFilePicker;
 import com.wattzap.view.prefs.Preferences;
+import com.wattzap.view.training.TrainingDisplay;
+import com.wattzap.view.training.TrainingPicker;
 
 /**
  * Main menu bar
@@ -40,19 +48,34 @@ import com.wattzap.view.prefs.Preferences;
  * @author David George
  * @date 25 November 2014
  */
-public class MenuBar /* extends JMenuBar */implements MessageCallback {
+public class MenuBar implements MessageCallback {
 	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
+
+	private final JMenu fileMenu;
+	private final JMenu trainingMenu;
+	private final JMenu socialMenu;
+	private final JMenu appMenu;
+	// Application Menu Items
 	private JMenuItem prefMenuItem;
 	private JMenuItem aboutMenuItem;
-	public JMenuItem quitMenuItem;
-	public JMenu appMenu;
-	public JMenu fileMenu;
-	public JMenuItem openMenuItem;
+	private final JMenuItem quitMenuItem;
+	// File Menu Items
+	private final JMenuItem openMenuItem;
 	private MenuItem closeMenuItem;
+	// Training
+	private final JMenuItem trainMenuItem;
+	private final JMenuItem analizeMenuItem;
+	private final JMenuItem viewMenuItem;
+	private final JMenuItem recoverMenuItem;
+	private final JMenuItem saveMenuItem;
+	// Social Menu Items
+	public JMenuItem selfLoopsUploadItem;
 
-	public MenuBar() {
+	public MenuBar(MainFrame frame) {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+		// Application Menu
 		appMenu = new JMenu();
-
 		// Preferences
 		Preferences preferences = new Preferences();
 		prefMenuItem = new JMenuItem();
@@ -68,6 +91,11 @@ public class MenuBar /* extends JMenuBar */implements MessageCallback {
 		quitMenuItem = new JMenuItem();
 		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit
 				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+		quitMenuItem.addActionListener(frame);
+
+		appMenu.add(prefMenuItem);
+		appMenu.add(aboutMenuItem);
+		appMenu.add(quitMenuItem);
 
 		// Routes
 		fileMenu = new JMenu();
@@ -76,31 +104,102 @@ public class MenuBar /* extends JMenuBar */implements MessageCallback {
 		openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit
 				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 
+		RouteFilePicker picker = new RouteFilePicker(frame);
+		openMenuItem.addActionListener(picker);
+
 		closeMenuItem = new MenuItem(Messages.CLOSE);
 		fileMenu.add(closeMenuItem);
 
 		closeMenuItem.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit
 				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 
-		appMenu.add(prefMenuItem);
-		appMenu.add(aboutMenuItem);
-		appMenu.add(quitMenuItem);
+		// Submenu: Training
+		trainingMenu = new JMenu();
+		// menuBar.add(trainingMenu);
+		TrainingDisplay trainingDisplay = new TrainingDisplay(screenSize);
+		TrainingController trainingController = new TrainingController(
+				trainingDisplay, frame);
+
+		trainMenuItem = new JMenuItem();
+		if (userPrefs.isAntEnabled()) {
+			trainMenuItem.setActionCommand(TrainingController.open);
+			trainingMenu.add(trainMenuItem);
+
+			TrainingPicker tPicker = new TrainingPicker(frame);
+			trainMenuItem.addActionListener(tPicker);
+		}
+		analizeMenuItem = new JMenuItem();
+		trainingMenu.add(analizeMenuItem);
+		analizeMenuItem.setActionCommand(TrainingController.analyze);
+
+		saveMenuItem = new JMenuItem();
+		saveMenuItem.setActionCommand(TrainingController.save);
+		trainingMenu.add(saveMenuItem);
+
+		viewMenuItem = new JMenuItem();
+		viewMenuItem.setActionCommand(TrainingController.view);
+		trainingMenu.add(viewMenuItem);
+
+		recoverMenuItem = new JMenuItem();
+		recoverMenuItem.setActionCommand(TrainingController.recover);
+		trainingMenu.add(recoverMenuItem);
+
+		analizeMenuItem.addActionListener(trainingController);
+		saveMenuItem.addActionListener(trainingController);
+		recoverMenuItem.addActionListener(trainingController);
+		viewMenuItem.addActionListener(trainingController);
+
+		frame.add(trainingDisplay, "cell 0 0");
+
+		// Social
+		socialMenu = new JMenu();
+		selfLoopsUploadItem = new JMenuItem();
+		socialMenu.add(selfLoopsUploadItem);
+
+		SocialSharingController socialSharing = new SocialSharingController(
+				trainingDisplay, frame);
+		selfLoopsUploadItem.setActionCommand(SocialSharingController.selfLoopsUpload);
+		selfLoopsUploadItem.addActionListener(socialSharing);
+
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.add(appMenu);
+		menuBar.add(fileMenu);
+		menuBar.add(trainingMenu);
+		menuBar.add(socialMenu);
+
+		frame.setJMenuBar(menuBar);
 
 		doText();
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
 	/*
-	 * Setup menubar text
+	 * Setup menubar text, makes it easy to update menu if locale is changed
 	 */
 	private void doText() {
-		appMenu.setText("Application");
+		appMenu.setText(userPrefs.messages.getString("application"));
 		prefMenuItem.setText(userPrefs.messages.getString("preferences"));
 		aboutMenuItem.setText(userPrefs.messages.getString("about"));
 		quitMenuItem.setText(userPrefs.messages.getString("quit"));
 		fileMenu.setText(userPrefs.messages.getString("route"));
 		openMenuItem.setText(userPrefs.messages.getString("open"));
 		closeMenuItem.setText(userPrefs.messages.getString("close"));
+		
+		trainingMenu.setText(userPrefs.messages.getString("training"));
+		analizeMenuItem.setText(
+				userPrefs.messages.getString("analyze"));
+		viewMenuItem.setText(
+				userPrefs.messages.getString("view"));
+		recoverMenuItem.setText(
+				userPrefs.messages.getString("recover"));
+		saveMenuItem.setText(
+				userPrefs.messages.getString("save"));
+		//
+		socialMenu.setText("Social");
+		selfLoopsUploadItem.setText("SelfLoops Upload");
+		
+		trainMenuItem.setText(
+					userPrefs.messages.getString("open"));
 	}
 
 	/**

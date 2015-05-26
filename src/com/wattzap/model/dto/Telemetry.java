@@ -12,31 +12,54 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.dto;
 
 import java.io.Serializable;
 
 /**
- * Data object for telemetry coming from the ANT Speed, Cadence and Heart Rate Sensors
+ * Data object for telemetry coming from the ANT Speed, Cadence and Heart Rate
+ * Sensors
  * 
  * @author David George (c) Copyright 2013
  * @date 19 June 2013
  */
 public class Telemetry implements Serializable {
 	private static final double KMTOMILES = 1.609344;
-	
-	private double speed = -1;
+
+	private double speed;
 	private int cadence;
-	private double distance = 0.0;
-	private int power = -1;
+	private double distance;
+	private int power;
 	private double elevation;
 	private double gradient;
-	private double latitude = 91;
-	private double longitude = 181;
-	private int heartRate = -1;
+	private double latitude;
+	private double longitude;
+	private int heartRate;
 	private long time;
 	private int resistance;
+
+	public Telemetry() {
+		speed = -1;
+		power = -1;
+		latitude = 91;
+		longitude = 181;
+		heartRate = -1;
+
+	}
+
+	public Telemetry(Telemetry t) {
+		speed = t.speed;
+		cadence = t.cadence;
+		distance = t.distance;
+		power = t.power;
+		elevation = t.elevation;
+		gradient = t.gradient;
+		latitude = t.latitude;
+		longitude = t.longitude;
+		heartRate = t.heartRate;
+		time = t.time;
+	}
 
 	public long getTime() {
 		return time;
@@ -97,13 +120,13 @@ public class Telemetry implements Serializable {
 	public void setSpeed(double speed) {
 		this.speed = speed;
 	}
-	
+
 	public double getSpeedKMH() {
 		return speed;
 	}
-	
+
 	public double getSpeedMPH() {
-		return speed/KMTOMILES;
+		return speed / KMTOMILES;
 	}
 
 	public double getSpeedMetersPerSecond() {
@@ -120,20 +143,18 @@ public class Telemetry implements Serializable {
 	public void setDistanceMeters(double distance) {
 		this.distance = distance;
 	}
-	
+
 	public double getDistanceMeters() {
 		return distance;
 	}
-	
+
 	public double getDistanceKM() {
-		return distance/1000;
+		return distance / 1000;
 	}
-	
+
 	public double getDistanceMiles() {
-		return distance/(KMTOMILES*1000);
+		return distance / (KMTOMILES * 1000);
 	}
-
-
 
 	public int getCadence() {
 		return cadence;
@@ -148,10 +169,10 @@ public class Telemetry implements Serializable {
 	public double getTrainerSpeed() {
 		return cadence;
 	}
-	
+
 	// for player only mode
 	public void setResistance(int v) {
-		resistance =  v;
+		resistance = v;
 
 	}
 
@@ -165,6 +186,7 @@ public class Telemetry implements Serializable {
 				+ ", distance=" + distance + ", power=" + power
 				+ ", elevation=" + elevation + ", gradient=" + gradient
 				+ ", latitude=" + latitude + ", longitude=" + longitude
-				+ ", heartRate=" + heartRate + " tt " + heartRate + ", time=" + time / 1000 + "]";
+				+ ", heartRate=" + heartRate + " tt " + heartRate + ", time="
+				+ time / 1000 + "]";
 	}
 }

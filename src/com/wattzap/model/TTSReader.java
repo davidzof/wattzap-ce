@@ -5,10 +5,8 @@
  */
 package com.wattzap.model;
 
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -51,6 +49,8 @@ public class TTSReader extends RouteReader {
 	private double totalDistance = 0.0;
 
 	private String fileName;
+	private String ttsName = "";
+
 	// Block Types
 	private final static int PROGRAM_DATA = 1032;
 	private final static int DISTANCE_FRAME = 5020;
@@ -63,7 +63,7 @@ public class TTSReader extends RouteReader {
 
 	private static Logger logger = LogManager.getLogger("TTS Reader");
 
-	private static GPXFile gpxFile = new GPXFile();
+	private GPXFile gpxFile = null;
 
 	private static int[] key = { 0xD6, 0x9C, 0xD8, 0xBC, 0xDA, 0xA9, 0xDC,
 			0xB0, 0xDE, 0xB6, 0xE0, 0x95, 0xE2, 0xC3, 0xE4, 0x97, 0xE6, 0x92,
@@ -104,13 +104,15 @@ public class TTSReader extends RouteReader {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "IT_Stelvio08";
+		return ttsName;
 	}
 
 	@Override
 	public GPXFile getGpxFile() {
-		// TODO Auto-generated method stub
-		return gpxFile;
+		if (!gpxFile.isGPXFileWithNoRoutes()) {
+			return gpxFile;
+		}
+		return null;
 	}
 
 	@Override
@@ -256,6 +258,7 @@ public class TTSReader extends RouteReader {
 
 	private void loadHeaders() {
 		pointList = new ArrayList<Point>();
+		gpxFile = new GPXFile();
 		series = new XYSeries("");
 
 		int[] key2 = rehashKey(key, 17);
@@ -274,7 +277,7 @@ public class TTSReader extends RouteReader {
 						+ getUShort(data, 0) + "." + getUShort(data, 2) + " v"
 						+ getUShort(data, 4) + " " + getUInt(data, 6) + "x"
 						+ getUInt(data, 10);
-				logger.info(hdr);
+				logger.debug(hdr);
 				fingerprint = getUInt(data, 6);
 				keyH = encryptHeader(iarr(data), key2);
 
@@ -305,7 +308,7 @@ public class TTSReader extends RouteReader {
 					stringType = StringType.BLOCK;
 					blockType = getUShort(data, 2);
 					version = getUShort(data, 4);
-					logger.info("\nblock type " + blockType + " version "
+					logger.debug("\nblock type " + blockType + " version "
 							+ version);
 					stringId = -1;
 					break;
@@ -314,30 +317,28 @@ public class TTSReader extends RouteReader {
 				int[] decrD = decryptData(iarr(data), keyH);
 
 				keyH = null;
-				logger.info("::");
+				logger.debug("::");
 
 				String result = null;
 				switch (stringType) {
 				case CRC:
 					break;
 				case IMAGE:
-					logger.info("[image " + blockType + "." + (stringId - 1000)
-							+ "]");
-					try {
-						result = currentFile + "." + (imageId++) + ".png";
-						FileOutputStream file = new FileOutputStream(result);
-						file.write(barr(decrD));
-						file.close();
-					} catch (IOException e) {
-						result = "cannot create: " + e;
-					}
+					logger.debug("[image " + blockType + "."
+							+ (stringId - 1000) + "]");
+					/*
+					 * try { result = currentFile + "." + (imageId++) + ".png";
+					 * FileOutputStream file = new FileOutputStream(result);
+					 * file.write(barr(decrD)); file.close(); } catch
+					 * (IOException e) { result = "cannot create: " + e; }
+					 */
 					break;
 				case STRING:
 					if (strings.containsKey(blockType + stringId)) {
-						logger.info("[" + strings.get(blockType + stringId)
+						logger.debug("[" + strings.get(blockType + stringId)
 								+ "]");
 					} else {
-						logger.info("[" + blockType + "." + stringId + "]");
+						logger.debug("[" + blockType + "." + stringId + "]");
 					}
 					StringBuilder str = new StringBuilder();
 					for (int i = 0; i < decrD.length / 2; i++) {
@@ -345,13 +346,21 @@ public class TTSReader extends RouteReader {
 						str.append(c);
 					}
 					result = str.toString();
+					switch (blockType + stringId) {
+					case 5002: // Video Name
+						ttsName = result;
+						break;
+					default:
+						logger.debug("[" + result + "]");
+					}
+
 					break;
 				case BLOCK:
 					blockProcessing(blockType, version, barr(decrD));
 					break;
 				}
 			}
-			logger.info("\n");
+			logger.debug("\n");
 			bytes += data.length;
 		}
 
@@ -465,17 +474,17 @@ public class TTSReader extends RouteReader {
 			}
 			b.append("]");
 		}
-		logger.info(b.toString());
+		logger.debug(b.toString());
 	}
 
 	// segment range; 548300 is 5.483km. What is short value in "old" files?
 	private void segmentInfo(int version, byte[] data) {
 		if ((version == 1104) && (data.length == 8)) {
-			logger.info("[segment range] " + (getUInt(data, 0) / 100000.0)
+			logger.debug("[segment range] " + (getUInt(data, 0) / 100000.0)
 					+ "-" + (getUInt(data, 4) / 100000.0));
 		}
 		if ((version == 1000) && (data.length == 10)) {
-			logger.info("[segment range] " + (getUInt(data, 2) / 100000.0)
+			logger.debug("[segment range] " + (getUInt(data, 2) / 100000.0)
 					+ "-" + (getUInt(data, 6) / 100000.0) + "/"
 					+ getUShort(data, 0));
 		}
@@ -487,9 +496,9 @@ public class TTSReader extends RouteReader {
 		if (version == 1004) {
 			switch (data[5]) {
 			case 1:
-				logger.info("[video type] RLV");
+				logger.debug("[video type] RLV");
 			case 2:
-				logger.info("[video type] ERGO");
+				logger.debug("[video type] ERGO");
 			}
 		}
 	}
@@ -528,7 +537,7 @@ public class TTSReader extends RouteReader {
 			trainingType = "unknown training";
 			break;
 		}
-		logger.info("[program type] " + programType + " -> " + trainingType);
+		logger.debug("[program type] " + programType + " -> " + trainingType);
 
 		return;
 	}
@@ -546,13 +555,14 @@ public class TTSReader extends RouteReader {
 		Route route = routes.get(0);
 		WaypointGroup path = route.getPath();
 
-		logger.info("[" + (data.length / 16) + " gps points]");
+		logger.debug("[" + (data.length / 16) + " gps points]");
 		int pointCount = 0;
 		int lastDistance = 0;
 		double lastLat = 0;
 		double lastLon = 0;
 		double lastAlt = 0;
 		int gpsCount = data.length / 16;
+
 		for (int i = 0; i < gpsCount; i++) {
 			int distance = getUInt(data, i * 16);
 			// out.print("[" + i + "] " + distance + " cm, ");
@@ -619,7 +629,6 @@ public class TTSReader extends RouteReader {
 	 * 
 	 * Format: 2102675 (cm)/77531 (frames)
 	 */
-
 	private void distanceToFrame(int version, byte[] data) {
 		if (data.length % 8 != 0) {
 			logger.error("Distance2Frame Data wrong length " + data.length);
@@ -633,7 +642,7 @@ public class TTSReader extends RouteReader {
 		 * seconds of film - typical with tacx TTS files), if the value is more
 		 * than 100 divide by 10 (typical with RLV files converted to TTS).
 		 */
-		logger.info("[" + (data.length / 8) + " video points][last frame "
+		logger.debug("[" + (data.length / 8) + " video points][last frame "
 				+ getUInt(data, data.length - 4) + "]");
 		double dataPoints = (data.length / 8);
 		double frames = getUInt(data, data.length - 4);
@@ -673,7 +682,7 @@ public class TTSReader extends RouteReader {
 			return;
 		}
 
-		logger.info("[" + (data.length / 6) + " program points]");
+		logger.debug("[" + (data.length / 6) + " program points]");
 		long distance = 0;
 		int pointCount = data.length / 6;
 		programList = new ProgramPoint[pointCount];

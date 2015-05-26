@@ -41,12 +41,22 @@ import javax.swing.JTextField;
 
 import net.miginfocom.swing.MigLayout;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.power.Power;
 import com.wattzap.model.power.PowerProfiles;
 
-// TODO: Add video directory location
-public class Preferences extends JFrame implements ActionListener {
+/*
+ * Preferences main panel
+ * 
+ * @author David George (c) Copyright 2013
+ * @date 19 June 2013
+ */
+//TODO: Add video directory location
+public class Preferences extends JFrame implements ActionListener,
+		MessageCallback {
 	private static final long serialVersionUID = 2396482595423749504L;
 
 	// personal data
@@ -56,26 +66,34 @@ public class Preferences extends JFrame implements ActionListener {
 	JTextField maxHR;
 	JTextField maxPwr;
 	JCheckBox units;
+
+	JButton saveButton;
+	JButton cancelButton;
+	JTabbedPane jtp;
+
+	JLabel wheelLabel;
 	JLabel weightLabel;
 	JLabel bikeWeightLabel;
+	JLabel hrLabel;
+	JLabel pwrLabel;
+	JLabel langLabel;
+
 	private final JComboBox languageList = new JComboBox();
-	// Supported languages for dropdown
+	// Supported languages for dropdown TODO make this dynamic
 	private final Locale[] locales = { new Locale("fr"), new Locale("en"),
 			new Locale("de") };
-
-	TurboPanel trainerPanel;
-	AntPanel antPanel;
-	UserPreferences userPrefs = UserPreferences.INSTANCE;
+	private final TurboPanel trainerPanel;
+	private AntPanel antPanel = null;
+	private final SocialPanel socialPanel;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	public Preferences() {
-		setTitle("Preferences");
 		ImageIcon img = new ImageIcon("icons/preferences.jpg");
 		setIconImage(img.getImage());
 
-		JTabbedPane jtp = new JTabbedPane();
+		jtp = new JTabbedPane();
 
 		Container contentPane = getContentPane();
-		// MigLayout layout1 = new MigLayout();
 		contentPane.setLayout(new BorderLayout());
 		contentPane.add(jtp, BorderLayout.CENTER);
 
@@ -85,29 +103,34 @@ public class Preferences extends JFrame implements ActionListener {
 		JPanel userPanel = new JPanel();
 		userdata(userPanel);
 
-		// ANT+ Pairing
-		antPanel = new AntPanel();
-
 		// Trainer Profiles
 		trainerPanel = new TurboPanel();
 
-		jtp.addTab(
-				UserPreferences.INSTANCE.messages.getString("personal_data"),
-				userPanel);
+		// TAB-0 Personal Data
+		jtp.addTab(null, userPanel);
+
 		jtp.addTab("Trainer", trainerPanel);
-		jtp.addTab("ANT+", antPanel);
+		if (userPrefs.isAntEnabled()) {
+			// ANT+ Pairing
+			antPanel = new AntPanel();
+			jtp.addTab("ANT+", antPanel);
+		}
+
+		// Social Sharing
+		socialPanel = new SocialPanel();
+		jtp.addTab("Social", socialPanel);
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
-		JButton saveButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("saveclose"));
+		saveButton = new JButton();
+
 		saveButton.setPreferredSize(new Dimension(150, 30));
 		saveButton.setActionCommand("save");
 		saveButton.addActionListener(this);
 		buttonPanel.add(saveButton);
 
-		JButton cancelButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("cancel"));
+		cancelButton = new JButton();
+
 		cancelButton.setPreferredSize(new Dimension(120, 30));
 		cancelButton.setActionCommand("cancel");
 		cancelButton.addActionListener(this);
@@ -123,7 +146,9 @@ public class Preferences extends JFrame implements ActionListener {
 				mainBounds.y + ((mainBounds.height - bounds.height) / 2),
 				bounds.width, bounds.height);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		// dispose();
+		this.setSize(450, 350);
+		doText();
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
 	private void userdata(JPanel tab) {
@@ -137,18 +162,10 @@ public class Preferences extends JFrame implements ActionListener {
 		bikeWeightLabel = new JLabel();
 		bikeWeight = new JTextField(20);
 		if (userPrefs.isMetric()) {
-			weightLabel.setText(UserPreferences.INSTANCE.messages
-					.getString("your_weight") + " (kg) ");
-			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
-					.getString("bike_weight") + " (kg) ");
 			weight.setText(String.format("%.1f", userPrefs.getWeight()));
 			bikeWeight
 					.setText(String.format("%.1f", userPrefs.getBikeWeight()));
 		} else {
-			weightLabel.setText(UserPreferences.INSTANCE.messages
-					.getString("your_weight") + " (lbs)");
-			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
-					.getString("bike_weight") + " (lbs)");
 			weight.setText(String.format("%.0f", userPrefs.getWeight()));
 			bikeWeight.setText("" + userPrefs.getBikeWeight());
 		}
@@ -157,23 +174,22 @@ public class Preferences extends JFrame implements ActionListener {
 		tab.add(bikeWeightLabel);
 		tab.add(bikeWeight, "span");
 
-		JLabel wheelLabel = new JLabel();
-		wheelLabel.setText(UserPreferences.INSTANCE.messages
-				.getString("wheel_size") + " (mm)");
+		wheelLabel = new JLabel();
+
 		tab.add(wheelLabel);
 		wheelSize = new JTextField(20);
 		wheelSize.setText("" + userPrefs.getWheelsize());
 		tab.add(wheelSize, "span");
 
-		JLabel hrLabel = new JLabel();
-		hrLabel.setText("FT Heart Rate");
+		hrLabel = new JLabel();
+
 		tab.add(hrLabel);
 		maxHR = new JTextField(20);
 		maxHR.setText("" + userPrefs.getMaxHR());
 		tab.add(maxHR, "span");
 
-		JLabel pwrLabel = new JLabel();
-		pwrLabel.setText(UserPreferences.INSTANCE.messages.getString("ftp"));
+		pwrLabel = new JLabel();
+
 		tab.add(pwrLabel);
 		maxPwr = new JTextField(20);
 		maxPwr.setText("" + userPrefs.getMaxPower());
@@ -185,8 +201,8 @@ public class Preferences extends JFrame implements ActionListener {
 		units.addActionListener(this);
 		tab.add(units);
 
-		JLabel langLabel = new JLabel();
-		langLabel.setText("Select Language");
+		langLabel = new JLabel();
+
 		tab.add(langLabel);
 
 		int index = 0;
@@ -257,7 +273,8 @@ public class Preferences extends JFrame implements ActionListener {
 		int lang = languageList.getSelectedIndex();
 		Locale locale = locales[lang];
 		userPrefs.setLocale(locale.toString());
-		NumberFormat format = NumberFormat.getInstance(userPrefs.getLocale());
+		NumberFormat format = NumberFormat
+				.getInstance(/* userPrefs.getLocale() */);
 
 		try {
 			Number number = format.parse(weight.getText());
@@ -309,12 +326,63 @@ public class Preferences extends JFrame implements ActionListener {
 			userPrefs.setResistance(1);
 		}
 
-		userPrefs.setSCId(antPanel.getSCId());
-		userPrefs.setSpeedId(antPanel.getSpeedId());
-		userPrefs.setCadenceId(antPanel.getCadenceId());
-		userPrefs.setHRMId(antPanel.getHRMId());
-		userPrefs.setPowerId(antPanel.getPwrId());
+		if (antPanel != null) {
+			userPrefs.setSCId(antPanel.getSCId());
+			userPrefs.setSpeedId(antPanel.getSpeedId());
+			userPrefs.setCadenceId(antPanel.getCadenceId());
+			userPrefs.setHRMId(antPanel.getHRMId());
+			userPrefs.setPowerId(antPanel.getPwrId());
 
-		antPanel.close();
+			antPanel.close();
+		}
+
+		// Social Panel
+		userPrefs.setSLUser(socialPanel.getSLUser());
+		userPrefs.setSLPass(socialPanel.getSLPass());
 	}
+
+	/**
+	 * Change text language if we get a LOCALE message
+	 */
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case LOCALE:
+			doText();
+			break;
+		}
+	}
+
+	/*
+	 * Setup menubar text, makes it easy to update menu if locale is changed
+	 */
+	private void doText() {
+		this.setTitle(UserPreferences.INSTANCE.messages
+				.getString("preferences"));
+		saveButton.setText(UserPreferences.INSTANCE.messages
+				.getString("saveclose"));
+		cancelButton.setText(UserPreferences.INSTANCE.messages
+				.getString("cancel"));
+		jtp.setTitleAt(0,
+				UserPreferences.INSTANCE.messages.getString("personal_data"));
+
+		if (userPrefs.isMetric()) {
+			weightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("your_weight") + " (kg) ");
+			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("bike_weight") + " (kg) ");
+		} else {
+			weightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("your_weight") + " (lbs)");
+			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+					.getString("bike_weight") + " (lbs)");
+		}
+		wheelLabel.setText(UserPreferences.INSTANCE.messages
+				.getString("wheel_size") + " (mm)");
+		hrLabel.setText("FT Heart Rate");
+		pwrLabel.setText(UserPreferences.INSTANCE.messages.getString("ftp"));
+		langLabel.setText(UserPreferences.INSTANCE.messages
+				.getString("selectLanguage"));
+	}
+
 }
