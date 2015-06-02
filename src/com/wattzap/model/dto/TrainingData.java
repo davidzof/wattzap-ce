@@ -15,8 +15,7 @@
  */
 package com.wattzap.model.dto;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * Manages training data. Training data is is a list of Training Items.
@@ -88,20 +87,12 @@ public class TrainingData {
 		training.add(item);
 	}
 
-	/**
-	 * Get the trainings as a collection
-	 * 
-	 * @return
-	 */
-	public Collection<TrainingItem> getTraining() {
-		return training;
-	}
 
 	/**
 	 * Sees if we need to fetch the next training item. The distance covered by
 	 * the rider is greater than the next training item.
 	 * 
-	 * @param distance
+	 * @param distanceMeters
 	 *            Current distance covered
 	 * @return true - ready to fetch next Training Item
 	 */
@@ -142,5 +133,42 @@ public class TrainingData {
 		}
 
 		return current;
+	}
+
+	public Map<Long, TrainingRangeView> getCadenceLimits() {
+		Map<Long, TrainingRangeView> cadenceLimits = new LinkedHashMap<>();
+		for (TrainingItem interval : training) {
+			cadenceLimits.put(
+					interval.getTimeInSeconds(),
+					interval.getCadenceRangeView()
+			);
+		}
+		return cadenceLimits;
+	}
+
+	public Map<Long, TrainingRangeView> getPowerRangeLimits() {
+		Map<Long, TrainingRangeView> powerLimits = new LinkedHashMap<>();
+		for (TrainingItem interval : training) {
+			powerLimits.put(
+					interval.getTimeInSeconds(),
+					interval.getPowerRangeView()
+			);
+		}
+		return powerLimits;
+	}
+
+	public Map<Long, TrainingRangeView> getHeartRateRangeLimits() {
+		Map<Long, TrainingRangeView> powerLimits = new LinkedHashMap<>();
+		for (TrainingItem interval : training) {
+			powerLimits.put(
+					interval.getTimeInSeconds(),
+					interval.getHeartRateRangeView()
+			);
+		}
+		return powerLimits;
+	}
+
+	public ArrayList<TrainingItem> getTraining() {
+		return training;
 	}
 }

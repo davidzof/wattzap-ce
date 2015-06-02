@@ -15,5 +15,17 @@
     <orderEntry type="library" name="SteelSeries-3.9.31-SNAPSHOT" level="project" />
     <orderEntry type="library" name="trident-6.3" level="project" />
     <orderEntry type="library" name="miglayout-core-5.0" level="project" />
+    <orderEntry type="library" name="httpclient-4.4.1" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/json_simple-1.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="commons-logging-1.2" level="project" />
+    <orderEntry type="library" name="track-parser" level="project" />
   </component>
 </module>

@@ -25,6 +25,13 @@ import com.wattzap.model.UserPreferences;
  */
 public class TrainingItem {
 
+    private static final int MIN_RPM = 0;
+    private static final int MAX_RPM = 180;
+    private static final int MAX_HR = 220;
+    private static final int MIN_HR = 30;
+    private static final int MIN_POWER = 0;
+    private static int MAX_POWER; // ftp * 1.5
+
     int hrLow = 0;
     int hrHigh;
     int powerLow = 0;
@@ -384,7 +391,7 @@ public class TrainingItem {
     /**
      * Says if Heart Rate is within range
      *
-     * @param hr
+     * @param c
      * @return
      */
     public int isCadenceInRange(int c) {
@@ -449,6 +456,11 @@ public class TrainingItem {
 
     public void setDistanceMeters(double distance) {
         this.distanceMeters = distance;
+    }
+
+    public TrainingItem() {
+        MAX_POWER = (int) ((double) UserPreferences.INSTANCE
+                .getMaxPower() * 1.50);
     }
 
     @Override
@@ -554,4 +566,29 @@ public class TrainingItem {
 
         return "Neuromuscular";
     }
+
+    public TrainingRangeView getCadenceRangeView() {
+        int cadenceLow = this.getCadenceLow();
+        int cadenceHigh = this.getCadenceHigh();
+        if (cadenceHigh < cadenceLow) cadenceHigh = MAX_RPM;
+        if (cadenceLow > cadenceHigh) cadenceLow = MIN_RPM;
+        return new TrainingRangeView(cadenceLow, cadenceHigh, MIN_RPM, MAX_RPM);
+    }
+
+    public TrainingRangeView getPowerRangeView() {
+        int powerLow = this.getPowerLow();
+        int powerHigh = this.getPowerHigh();
+        if (powerHigh < powerLow) powerHigh = MAX_POWER;
+        if (powerLow > powerHigh) powerLow = MIN_POWER;
+        return new TrainingRangeView(powerLow, powerHigh, MIN_POWER, MAX_POWER);
+    }
+
+    public TrainingRangeView  getHeartRateRangeView() {
+        int hrLow = this.getHrLow();
+        int hrHigh = this.getHrHigh();
+        if (hrHigh < hrLow) cadenceHigh = MAX_HR;
+        if (hrLow > hrHigh) cadenceLow = MIN_HR;
+        return new TrainingRangeView(hrLow, hrHigh, MIN_HR, MAX_HR);
+    }
+
 }
