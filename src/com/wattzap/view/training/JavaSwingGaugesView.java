@@ -11,7 +11,8 @@ import com.wattzap.model.dto.TrainingRangeView;
 import com.wattzap.utils.DataInjector;
 import eu.hansolo.steelseries.gauges.DisplaySingle;
 import eu.hansolo.steelseries.gauges.Radial;
-import eu.hansolo.steelseries.tools.*;
+import eu.hansolo.steelseries.tools.LcdColor;
+import eu.hansolo.steelseries.tools.Section;
 import net.miginfocom.swing.MigLayout;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -19,14 +20,20 @@ import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.*;
-import org.jfree.data.time.*;
+import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.time.Second;
+import org.jfree.data.time.SimpleTimePeriod;
+import org.jfree.data.time.TimePeriodValues;
+import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.RectangleInsets;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * Created by nicolas on 08/05/2015.
@@ -52,16 +59,17 @@ public class JavaSwingGaugesView implements MessageCallback {
     private static JButton startButton;
 
     private long intervalStartedTime; // keep the beginning of the current interval
-
     private long trainingStartedTime; // keep the beginning of the whole training session
-    private static TimePeriodValuesCollection heartRateSeries;
-    private static TimePeriodValuesCollection powerSeries;
-    private static TimePeriodValuesCollection cadenceSeries;
+
     private static ChartPanel cadenceChartPanel;
     private static ChartPanel powerChartPanel;
     private static ChartPanel heartRateChartPanel;
     private static JPanel panelSouth;
     private static JFrame frame;
+    private boolean noTelemetryYet;
+
+    private static JLabel labelInfoInterval = new JLabel();
+    private long accumulatedTrainingTime = 0;
 
     public JavaSwingGaugesView() {
         // register message bus events
@@ -94,42 +102,57 @@ public class JavaSwingGaugesView implements MessageCallback {
         frame.add(mainPanel);
         mainPanel.setLayout(new BorderLayout());
 
-        // build north panel
+        // build panels
         JPanel panelNorth = new JPanel();
+        JPanel centerPanel = new JPanel();
+        panelSouth = new JPanel();
+
         panelNorth.setBackground(Color.black);
         panelNorth.setLayout(new MigLayout());
-        panelNorth.add(new JLabel("Wattzap!"));
+        panelNorth.setMaximumSize(new Dimension(1920, 75));
+
+        mainPanel.add(panelNorth, BorderLayout.NORTH);
+        mainPanel.add(centerPanel);
+        mainPanel.add(panelSouth, BorderLayout.SOUTH);
+
         panelNorth.add(startButton);
         panelNorth.add(stopButton);
+
+
         clockTotal = buildClockTotal();
+        clockRemainingInInterval = buildClockRemaining();
         panelNorth.add(clockTotal);
-        clockRemainingInInterval = new DisplaySingle();
+        panelNorth.add(clockRemainingInInterval);
+        labelInfoInterval.setForeground(Color.white);
+        labelInfoInterval.setFont(new Font("Dialog", Font.BOLD, 28));
+        labelInfoInterval.setMaximumSize(new Dimension(1920, 75));
+        labelInfoInterval.setHorizontalTextPosition(SwingConstants.CENTER);
+        panelNorth.add(labelInfoInterval);
+
+        centerPanel.setBackground(Color.black);
+        centerPanel.setLayout(new GridLayout(1, 3, 20, 20));
+
+        centerPanel.add(cadenceGauge);
+        centerPanel.add(powerGauge);
+        centerPanel.add(heartRateGauge);
+
+        panelSouth.setBackground(Color.black);
+        panelSouth.setLayout(new GridLayout(1, 3, 20, 20));
+
+        frame.setSize(2 * GAUGE_PREFERRED_SIZE + 100, GAUGE_PREFERRED_SIZE + 100);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private static DisplaySingle buildClockRemaining() {
+        DisplaySingle clockRemainingInInterval = new DisplaySingle();
         clockRemainingInInterval.setPreferredSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
         clockRemainingInInterval.setMinimumSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
         clockRemainingInInterval.setLcdUnitString("seconds");
         clockRemainingInInterval.setLcdInfoString("Remaining in interval");
         clockRemainingInInterval.setLcdDecimals(0);
         clockRemainingInInterval.setLcdColor(LcdColor.STANDARD_LCD);
-        panelNorth.add(clockRemainingInInterval);
-        mainPanel.add(panelNorth, BorderLayout.NORTH);
-
-        JPanel centerPanel = new JPanel();
-        centerPanel.setBackground(Color.black);
-        centerPanel.setLayout(new GridLayout(1, 3, 20, 20));
-        mainPanel.add(centerPanel);
-
-        centerPanel.add(cadenceGauge);
-        centerPanel.add(powerGauge);
-        centerPanel.add(heartRateGauge);
-
-        panelSouth = new JPanel();
-        panelSouth.setBackground(Color.black);
-        panelSouth.setLayout(new GridLayout(1, 3, 20, 20));
-        mainPanel.add(panelSouth, BorderLayout.SOUTH);
-
-        frame.setSize(2 * GAUGE_PREFERRED_SIZE + 100, GAUGE_PREFERRED_SIZE + 100);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        return clockRemainingInInterval;
     }
 
 
@@ -137,13 +160,14 @@ public class JavaSwingGaugesView implements MessageCallback {
         TimePeriodValues yintervalseriesHigh = new TimePeriodValues(titleSerieHigh);
         TimePeriodValues yintervalseriesLow = new TimePeriodValues(titleSerieLow);
         TimePeriodValues yintervalPhysiologicalLimit = new TimePeriodValues("phy. limit");
+        TimePeriodValues yDatas = new TimePeriodValues(title);
         Second start = new Second(new Date());
         Second objPrev = start;
         Second objNext = start;
         for (Long timeInSeconds : limits.keySet()) {
             long low = limits.get(timeInSeconds).getLow();
             long high = limits.get(timeInSeconds).getHigh();
-            Date nextIntervalStart = new Date(start.getStart().getTime()+ (timeInSeconds*1000));
+            Date nextIntervalStart = new Date(start.getStart().getTime() + (timeInSeconds * 1000));
             objNext = new Second(nextIntervalStart);
             yintervalseriesHigh.add(new SimpleTimePeriod(objPrev.getStart(), objNext.getEnd()), high);
             yintervalseriesLow.add(new SimpleTimePeriod(objPrev.getStart(), objNext.getEnd()), low);
@@ -157,8 +181,8 @@ public class JavaSwingGaugesView implements MessageCallback {
         TimePeriodValuesCollection series2 = new TimePeriodValuesCollection();
         yintervalPhysiologicalLimit.add(new SimpleTimePeriod(start.getStart(), start.getEnd()), physioLimit);
         yintervalPhysiologicalLimit.add(new SimpleTimePeriod(objNext.getStart(), objNext.getEnd()), physioLimit);
+        series2.addSeries(yDatas);
         series2.addSeries(yintervalPhysiologicalLimit);
-
         return createChartPanel(series, series2, title, minY, maxY);
     }
 
@@ -170,35 +194,50 @@ public class JavaSwingGaugesView implements MessageCallback {
         rangeAxis.setUpperBound(maxY);
         rangeAxis.setLowerBound(minY);
 
+        // serie 0-0 (bar)  : realtime telemetry value
+        // serie 0-1 (bar)  : physiological limit (ftp, fhr, ...)
+        // serie 1-0 (line) : interval low limit
+        // serie 1-1 (line) : interval high limit
+
         XYBarRenderer barRenderer = new XYBarRenderer();
-        // serie 0 : interval low limit
-        // serie 1 : interval high limit
-        // serie 2 : physiological limit (ftp, fhr, ...)
-        // serie 3 : realtime telemetry value
+
+//        Color primaryColor1 = Color.cyan.darker().darker();
+//        Color secondaryColor1 = Color.cyan;
+//        Color primaryColor2 = Color.blue.darker();
+//        Color secondaryColor2 = Color.blue.brighter();
+//        GradientPaint gpHorizontal = new GradientPaint(5, 5, primaryColor1, 5,
+//                10, secondaryColor1, true);
+//        GradientPaint gpHorizontal2 = new GradientPaint(5, 5, primaryColor2, 5,
+//                10, secondaryColor2, true);
+
         barRenderer.setSeriesStroke(0, new BasicStroke(1F, 1, 1));
-        barRenderer.setSeriesPaint(0, Color.cyan.darker().darker());
+//        Color colorMin = new Color(0, 102, 102);
+        Color colorMin = Color.darkGray;
+        Color colorMax = new Color(0, 204, 204);
+        barRenderer.setSeriesPaint(0, colorMin);
         barRenderer.setSeriesStroke(1, new BasicStroke(1F, 1, 1));
-        barRenderer.setSeriesPaint(1, Color.cyan.brighter());
+        barRenderer.setSeriesPaint(1, colorMax);
 
-        XYLineAndShapeRenderer line3DRenderer = new XYLineAndShapeRenderer();
-        line3DRenderer.setSeriesStroke(0, new BasicStroke(1F, 1, 1));
-        line3DRenderer.setSeriesPaint(0, Color.gray);
-        line3DRenderer.setSeriesStroke(1, new BasicStroke(2F, 1, 1));
-        line3DRenderer.setSeriesPaint(1, Color.yellow);
-        line3DRenderer.setSeriesLinesVisible(0, true);
-        line3DRenderer.setSeriesShapesVisible(0, false);
-
-
+        barRenderer.setGradientPaintTransformer(null);
         barRenderer.setBarPainter(new StandardXYBarPainter());
+
+
         barRenderer.setShadowVisible(false);
         barRenderer.setDrawBarOutline(false);
 
-        XYPlot xyplot = new XYPlot(xydataset, domainAxis, rangeAxis, barRenderer);
+        XYLineAndShapeRenderer lineRenderer = new XYLineAndShapeRenderer();
+        lineRenderer.setSeriesStroke(0, new BasicStroke(2F, 1, 1));
+        lineRenderer.setSeriesPaint(0, Color.yellow);
+        lineRenderer.setSeriesStroke(1, new BasicStroke(1F, 1, 1));
+        lineRenderer.setSeriesPaint(1, Color.gray);
+        lineRenderer.setSeriesLinesVisible(0, true);
+        lineRenderer.setSeriesShapesVisible(0, false);
+        lineRenderer.setSeriesLinesVisible(1, true);
+        lineRenderer.setSeriesShapesVisible(1, false);
 
-        xyplot.setRenderer(0, barRenderer);
-
-        xyplot.setDataset(1, xydataset2);
-        xyplot.setRenderer(1, line3DRenderer);
+        XYPlot xyplot = new XYPlot(xydataset2, domainAxis, rangeAxis, lineRenderer);
+        xyplot.setDataset(1, xydataset);
+        xyplot.setRenderer(1, barRenderer);
 
         JFreeChart chart = new JFreeChart(title, xyplot);
         chart.setBackgroundPaint(Color.black);
@@ -211,25 +250,26 @@ public class JavaSwingGaugesView implements MessageCallback {
         ChartPanel chartPanel = new ChartPanel(chart) {
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(250, 250);
+                return new Dimension(250, 300);
             }
         };
         return chartPanel;
     }
-    // <editor-fold defaultstate="collapsed" desc="build clocks">
+
+    // <editor-fold defaultstate="collapsed" desc="build clock total">
     private static DisplaySingle buildClockTotal() {
         DisplaySingle clockTotal = new DisplaySingle();
         clockTotal.setPreferredSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
         clockTotal.setMinimumSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
-        clockTotal.setLcdUnitString("minutes");
+        clockTotal.setLcdUnitString("seconds");
         clockTotal.setLcdInfoString("Time elapsed total"); // TODO translate
         clockTotal.setLcdDecimals(0);
-        clockTotal.setLcdValue(42);
+        clockTotal.setLcdValue(0);
         clockTotal.setLcdColor(LcdColor.STANDARD_LCD);
         return clockTotal;
     }
-
     // </editor-fold>
+
     // <editor-fold defaultstate="collapsed" desc="build control panel">
     private static void buildControlPanel() {
         stopButton = new JButton(
@@ -239,10 +279,9 @@ public class JavaSwingGaugesView implements MessageCallback {
                 UserPreferences.INSTANCE.messages.getString("start"));
         startButton.addActionListener(e -> MessageBus.INSTANCE.send(Messages.START, null));
     }
-
-
-
     // </editor-fold>
+
+
     // <editor-fold defaultstate="collapsed" desc="callback">
     @Override
     public void callback(Messages message, Object o) {
@@ -250,15 +289,17 @@ public class JavaSwingGaugesView implements MessageCallback {
             switch (message) {
                 case SPEED:
                     Telemetry t = (Telemetry) o;
-                    updateGaugesValues(t);
+                    onNewTelemetry(t);
                     break;
-
                 case TRAININGITEM:
+                    if (current != null) accumulatedTrainingTime = current.getTime();
+                    System.out.println("Accumulated training time = " + accumulatedTrainingTime / 1000 + " seconds");
                     current = (TrainingItem) o;
                     if (current != null) onNewInterval();
                     break;
                 case TRAINING:
                     trainingData = (TrainingData) o;
+                    accumulatedTrainingTime = 0;
                     if (trainingData != null) onNewTraining(trainingData);
             }
         });
@@ -267,7 +308,13 @@ public class JavaSwingGaugesView implements MessageCallback {
     // </editor-fold>
 
     private void onNewTraining(TrainingData trainingData) {
-        trainingStartedTime = 0;
+        noTelemetryYet = true;
+        // create chart for a bird eye view of the training
+        // thy will be re-created when training really start for an accurate time view
+        createCharts(trainingData);
+    }
+
+    private void createCharts(TrainingData trainingData) {
         Map<Long, TrainingRangeView> cadenceLimits = trainingData.getCadenceLimits();
         Map<Long, TrainingRangeView> powerRangeLimits = trainingData.getPowerRangeLimits();
         Map<Long, TrainingRangeView> heartRateRangeLimits = trainingData.getHeartRateRangeLimits();
@@ -286,7 +333,12 @@ public class JavaSwingGaugesView implements MessageCallback {
      * Set training limits with a cyan area in the corresponding gauge
      */
     private void onNewInterval() {
-        System.out.println(current);
+        System.out.println("current interval " + current);
+        labelInfoInterval.setText(current.getDescription());
+        frame.pack();
+        intervalStartedTime = 0;
+        System.out.println("Interval started time = " + new Date(intervalStartedTime).toString());
+        System.out.println("Interval duration = " + current.getTime() / 1000 + " seconds");
 
         TrainingRangeView cadenceRangeView = current.getCadenceRangeView();
         TrainingRangeView powerRangeView = current.getPowerRangeView();
@@ -317,17 +369,38 @@ public class JavaSwingGaugesView implements MessageCallback {
         heartRateGauge.setAreas(new Section(heartRateRangeView.getLow(), heartRateRangeView.getHigh(), areaColor));
     }
 
-    private void updateGaugesValues(Telemetry t) {
-        updateLcdColors(t);
+    private void onNewTelemetry(Telemetry t) {
+        if (noTelemetryYet && trainingData != null) {
+            noTelemetryYet = false;
+            trainingStartedTime = new Date().getTime();
+            System.out.println("Training started time = " + new Date(trainingStartedTime).toString());
+            // recreate charts...
+            System.out.println("First telemetry, recreate charts...");
+            createCharts(trainingData);
+        }
+        if (current != null && intervalStartedTime == 0) intervalStartedTime = t.getTime();
         System.out.println("telemetry.getTime()=" + t.getTime() + ", ~=" + new Date(t.getTime()).toString());
-        if (current != null)
-            clockRemainingInInterval.setLcdValue(intervalStartedTime + current.getTime() - t.getTime());
-        clockTotal.setLcdValue(t.getTime() - trainingStartedTime);
-        powerGauge.setValueAnimated(t.getPower());
-        heartRateGauge.setValueAnimated(t.getHeartRate());
-        cadenceGauge.setValueAnimated(t.getCadence());
+        updateClocks(t);
+        updateGauges(t);
+        updateLcdColors(t);
+        updateGraphs(t);
     }
 
+    private void updateClocks(Telemetry t) {
+        clockTotal.setLcdValue((t.getTime() - trainingStartedTime) / 1000);
+        if (current != null) {
+            clockRemainingInInterval.setLcdValue((current.getTime() - accumulatedTrainingTime - (t.getTime() - intervalStartedTime)) / 1000 + 1);
+        }
+    }
+
+    private void updateGraphs(Telemetry t) {
+        TimePeriodValuesCollection datasetCadence = (TimePeriodValuesCollection) cadenceChartPanel.getChart().getXYPlot().getDataset(0);
+        datasetCadence.getSeries(0).add(new Second(new Date(t.getTime())), t.getCadence());
+        TimePeriodValuesCollection datasetPower = (TimePeriodValuesCollection) powerChartPanel.getChart().getXYPlot().getDataset(0);
+        datasetPower.getSeries(0).add(new Second(new Date(t.getTime())), t.getPower());
+        TimePeriodValuesCollection datasetHeartRate = (TimePeriodValuesCollection) heartRateChartPanel.getChart().getXYPlot().getDataset(0);
+        datasetHeartRate.getSeries(0).add(new Second(new Date(t.getTime())), t.getHeartRate());
+    }
 
     private void updateLcdColors(Telemetry t) {
         if (current != null) {
@@ -373,9 +446,15 @@ public class JavaSwingGaugesView implements MessageCallback {
                 heartRateGauge.setLcdInfoString("HIGH");
             }
 
-            clockRemainingInInterval.setLcdValue(current.getTimeInSeconds());
 
         }
+    }
+
+
+    private void updateGauges(Telemetry t) {
+        powerGauge.setValueAnimated(t.getPower());
+        heartRateGauge.setValueAnimated(t.getHeartRate());
+        cadenceGauge.setValueAnimated(t.getCadence());
     }
 
     public static void main(String[] args) {

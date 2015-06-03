@@ -179,7 +179,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 						MessageBus.INSTANCE
 								.send(Messages.TRAININGITEM, current);
 						// Sound beep on training change
-						Toolkit.getDefaultToolkit().beep();
+						notifyNewTrainingInterval();
 					}
 				}
 			} else {
@@ -189,7 +189,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 					current = tData.getNext(telemetry.getDistanceMeters());
 					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 					// Sound beep on training change
-					Toolkit.getDefaultToolkit().beep();
+					notifyNewTrainingInterval();
 
 				}
 			}

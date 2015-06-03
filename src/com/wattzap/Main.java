@@ -29,6 +29,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
+import com.wattzap.utils.DataInjector;
 import com.wattzap.view.training.JavaSwingGaugesView;
 import net.miginfocom.swing.MigLayout;
 
@@ -227,6 +228,9 @@ public class Main implements Runnable {
         // show Gauge view (swing version)
         JavaSwingGaugesView gaugesView = new JavaSwingGaugesView();
         gaugesView.show();
+
+        // for testing purposes
+        new DataInjector();
     }
 
     private static Level setLogLevel() {

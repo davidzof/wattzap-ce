@@ -154,68 +154,64 @@ public class TrainingItem {
      */
     public void setHr(String v) {
         v = v.trim();
+        int fhr = UserPreferences.INSTANCE.getMaxHR(); // Functional Heart Rate
         if (v.charAt(0) == '<') {
             // less than
             heartRate = Integer.parseInt(v.substring(1));
-            heartRate = (heartRate * UserPreferences.INSTANCE.getMaxHR()) / 100;
+            heartRate = (heartRate * fhr) / 100;
             hrHigh = heartRate;
             hrLow = 0;
         } else if (v.charAt(0) == '>') {
             // greater than
             heartRate = Integer.parseInt(v.substring(1));
-            heartRate = (heartRate * UserPreferences.INSTANCE.getMaxHR()) / 100;
+            heartRate = (heartRate * fhr) / 100;
             hrHigh = 0;
             hrLow = heartRate;
         } else if (v.indexOf('-') != -1) {
             int i = v.indexOf('-');
-            hrLow = (Integer.parseInt(v.substring(0, i).trim()) * UserPreferences.INSTANCE
-                    .getMaxHR()) / 100;
-            hrHigh = (Integer.parseInt(v.substring(i + 1).trim()) * UserPreferences.INSTANCE
-                    .getMaxHR()) / 100;
+            hrLow = (Integer.parseInt(v.substring(0, i).trim()) * fhr) / 100;
+            hrHigh = (Integer.parseInt(v.substring(i + 1).trim()) * fhr) / 100;
             heartRate = hrLow + ((hrHigh - hrLow) / 2);
         } else {
             heartRate = Integer.parseInt(v.trim());
             if (heartRate <= 5) {
                 // training level
+
                 switch (heartRate) {
                     case 1:
                         // active recovery < 68%
-                        hrHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxHR() * 0.68);
+                        hrHigh = (int) (fhr * 0.68);
                         hrLow = 0;
                         heartRate = hrHigh;
                         break;
                     case 2:
                         // Endurance 69 - 83%
-                        hrHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxHR() * 0.75);
-                        hrLow = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.69);
+                        hrHigh = (int) (fhr * 0.83);
+                        hrLow = (int) (fhr * 0.69);
                         heartRate = hrLow + ((hrHigh - hrLow) / 2);
                         break;
                     case 3:
                         // Tempo 84 - 94%
-                        hrHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxHR() * 0.95);
-                        hrLow = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.84);
+                        hrHigh = (int) (fhr * 0.95);
+                        hrLow = (int) (fhr * 0.84);
                         heartRate = hrLow + ((hrHigh - hrLow) / 2);
                         break;
                     case 4:
                         // Lactate Threshold 95-105%
-                        hrHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxHR() * 1.05);
-                        hrLow = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 0.96);
+                        hrHigh = (int) (fhr * 1.05);
+                        hrLow = (int) (fhr * 0.96);
                         heartRate = hrLow + ((hrHigh - hrLow) / 2);
                         break;
                     case 5:
                         // VO2Max
                         hrHigh = 0;
-                        hrLow = (int) ((double) UserPreferences.INSTANCE.getMaxHR() * 1.06);
+                        hrLow = (int) (fhr * 1.06);
                         heartRate = hrLow;
                         break;
                 }
             } else {
                 // percentage of max heartrate
-                heartRate = (heartRate * UserPreferences.INSTANCE.getMaxHR()) / 100;
+                heartRate = (heartRate * fhr) / 100;
                 hrHigh = (int) ((double) heartRate * 1.02);
                 hrLow = (int) ((double) heartRate * 0.98);
             }
@@ -275,24 +271,23 @@ public class TrainingItem {
      */
     public void setPower(String v) {
         v = v.trim();
+        int ftp = UserPreferences.INSTANCE.getMaxPower();
         if (v.charAt(0) == '<') {
             // less than
             power = Integer.parseInt(v.substring(1));
-            power = (power * UserPreferences.INSTANCE.getMaxPower()) / 100;
+            power = (power * ftp) / 100;
             powerHigh = power;
             powerLow = 0;
         } else if (v.charAt(0) == '>') {
             // greater than
             power = Integer.parseInt(v.substring(1));
-            power = (power * UserPreferences.INSTANCE.getMaxPower()) / 100;
+            power = (power * ftp) / 100;
             powerHigh = 0;
             powerLow = power;
         } else if (v.indexOf('-') != -1) {
             int i = v.indexOf('-');
-            powerLow = (Integer.parseInt(v.substring(0, i).trim()) * UserPreferences.INSTANCE
-                    .getMaxPower()) / 100;
-            powerHigh = (Integer.parseInt(v.substring(i + 1).trim()) * UserPreferences.INSTANCE
-                    .getMaxPower()) / 100;
+            powerLow = (Integer.parseInt(v.substring(0, i).trim()) * ftp) / 100;
+            powerHigh = (Integer.parseInt(v.substring(i + 1).trim()) * ftp) / 100;
             power = powerLow + ((powerHigh - powerLow) / 2);
         } else if (v.indexOf('w') != -1) {
             // absolute power in watts
@@ -306,61 +301,50 @@ public class TrainingItem {
                 switch (power) {
                     case 1:
                         // active recovery < 55%
-                        powerHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 0.55);
+                        powerHigh = (int) ((double) ftp * 0.55);
                         powerLow = 0;
                         power = powerHigh;
                         break;
                     case 2:
                         // Endurance 56 - 75%
-                        powerHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 0.75);
-                        powerLow = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 0.56);
+                        powerHigh = (int) ((double) ftp * 0.75);
+                        powerLow = (int) ((double) ftp * 0.56);
                         power = powerLow + ((powerHigh - powerLow) / 2);
                         break;
                     case 3:
                         // Tempo 76 - 90%
-                        powerHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 0.9);
-                        powerLow = (int) ((UserPreferences.INSTANCE.getMaxPower()) * 0.66);
+                        powerHigh = (int) ((double) ftp * 0.9);
+                        powerLow = (int) (ftp * 0.66);
                         power = powerLow + ((powerHigh - powerLow) / 2);
                         break;
                     case 4:
                         // Lactate Threshold 91-105%
-                        powerHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 1.05);
-                        powerLow = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 0.91);
+                        powerHigh = (int) ((double) ftp * 1.05);
+                        powerLow = (int) ((double) ftp * 0.91);
                         power = powerLow + ((powerHigh - powerLow) / 2);
                         break;
                     case 5:
                         // VO2Max 106-120
-                        powerHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 1.2);
-                        powerLow = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 1.06);
+                        powerHigh = (int) ((double) ftp * 1.2);
+                        powerLow = (int) ((double) ftp * 1.06);
                         power = powerLow + ((powerHigh - powerLow) / 2);
                         break;
                     case 6:
                         // Anaerobic Capacity
-                        powerHigh = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 1.50);
-                        powerLow = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 1.21);
+                        powerHigh = (int) ((double) ftp * 1.50);
+                        powerLow = (int) ((double) ftp * 1.21);
                         power = powerLow + ((powerHigh - powerLow) / 2);
                         break;
                     case 7:
                         // Neuromuscular
                         powerHigh = 0;
-                        powerLow = (int) ((double) UserPreferences.INSTANCE
-                                .getMaxPower() * 1.50);
+                        powerLow = (int) ((double) ftp * 1.50);
                         power = powerLow;
                         break;
                 }
             } else {
                 // percentage of max power
-                power = (power * UserPreferences.INSTANCE.getMaxPower()) / 100;
+                power = (power * ftp) / 100;
                 powerHigh = (int) ((double) power * 1.025);
                 powerLow = (int) ((double) power * 0.975);
             }

@@ -8,6 +8,7 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Date;
 
 /**
  * Created by nicolas on 12/05/2015.
@@ -31,7 +32,6 @@ public class DataInjector extends JFrame {
     private JTextField hrZone = new JTextField(10);
     private JButton sendTrainingButton = new JButton("Send Training zones");
 
-
     public DataInjector() {
         JPanel panel = new JPanel();
         this.getContentPane().add(panel);
@@ -39,12 +39,16 @@ public class DataInjector extends JFrame {
         panel.setLayout(new MigLayout());
         panel.add(new JLabel("Telemetry:"), "wrap");
         panel.add(labelTime);
-        panel.add(time);
+        time.setText("0");
+        panel.add(time, "wrap");
         panel.add(labelCadence);
+        cadence.setText("89");
         panel.add(cadence);
         panel.add(labelPower);
+        power.setText("234");
         panel.add(power);
         panel.add(labelHeartRate);
+        heartRate.setText("123");
         panel.add(heartRate);
         panel.add(sendButton, "wrap");
 
@@ -52,12 +56,12 @@ public class DataInjector extends JFrame {
         panel.add(labelCadenceZone);
         panel.add(cadenceZone);
         panel.add(labelPowerZone);
+        powerZone.setText("3");
         panel.add(powerZone);
         panel.add(labelHRZone);
+        hrZone.setText("4");
         panel.add(hrZone);
         panel.add(sendTrainingButton);
-
-
 
         this.pack();
         this.setVisible(true);
@@ -65,7 +69,7 @@ public class DataInjector extends JFrame {
         sendButton.addActionListener(e -> {
             Telemetry t = new Telemetry();
             if (!("".equals(time.getText())))
-                t.setTime(Integer.parseInt(time.getText().trim()));
+                t.setTime(new Date().getTime() + Integer.parseInt(time.getText().trim())*1000);
             if (!("".equals(cadence.getText())))
                 t.setCadence(Integer.parseInt(cadence.getText().trim()));
             if (!("".equals(power.getText())))
