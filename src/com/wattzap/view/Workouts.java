@@ -16,6 +16,7 @@
 package com.wattzap.view;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Insets;
@@ -36,6 +37,8 @@ import java.util.TreeMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -44,9 +47,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.log4j.LogManager;
@@ -145,6 +150,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 		table.getColumnModel().getColumn(0).setPreferredWidth(130);
 		table.getColumnModel().getColumn(1).setPreferredWidth(100);
+		// table.getColumnModel().getColumn(0).setCellRenderer(
+		// new MyCellRenderer());
 
 		table.setRowSelectionAllowed(true);
 		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -318,9 +325,11 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		workoutList = UserPreferences.INSTANCE.listWorkouts();
 
 		tableModel.setRowCount(0);
-		String[] data = new String[columnNames.length];
+		// String[] data = new String[columnNames.length];
+		Object[] data = new Object[columnNames.length];
 		for (WorkoutData workout : workoutList) {
 			data[0] = workout.getDateAsString();
+			// data[0] = new Boolean(true); - checkbox
 			data[1] = timeFormat.format(new Date(workout.getTime()));
 			data[2] = workout.getSourceAsString();
 			data[3] = "" + workout.getQuadraticPower();
@@ -594,6 +603,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 
 	/**
 	 * Create Mean Maximal Power Graph
+	 * 
+	 * This is a graph of power plotted by time.
 	 */
 	public void mmpGraph() {
 		TreeMap<Integer, Long> powerValues = new TreeMap<Integer, Long>();
@@ -626,8 +637,17 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		XYSeries series = new XYSeries("Mean Maximal Power");
 		for (Entry<Integer, Long> entry : powerValues.descendingMap()
 				.entrySet()) {
-			Integer pwr = entry.getKey();
-			total += entry.getValue();
+			Integer pwr = entry.getKey(); // power, Y axis
+			if (total == 0) {
+				// first time thru
+				total = entry.getValue();
+				if (total > 1) {
+					// add extra point at 1 second
+					series.addOrUpdate(1, (double) pwr);
+				}
+			} else {
+				total += entry.getValue(); // time in milliseconds - X axis
+			}
 			series.addOrUpdate(total / 1000, (double) pwr);
 		}// for
 
@@ -914,5 +934,29 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 			doText();
 			break;
 		}
+	}
+
+	public class MyCellRenderer extends DefaultTableCellRenderer {
+
+		private static final long serialVersionUID = 1L;
+
+		public Component getTableCellRendererComponent(JTable table,
+				Object value, boolean isSelected, boolean hasFocus, int row,
+				int column) {
+
+			if (value instanceof JComboBox) {
+				return (JComboBox) value;
+			}
+			if (value instanceof Boolean) {
+				JCheckBox cb = new JCheckBox();
+				cb.setSelected(((Boolean) value).booleanValue());
+				return cb;
+			}
+			if (value instanceof JCheckBox) {
+				return (JCheckBox) value;
+			}
+			return new JTextField(value.toString());
+		}
+
 	}
 }
