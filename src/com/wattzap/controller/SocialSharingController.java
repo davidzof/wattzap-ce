@@ -60,7 +60,6 @@ public class SocialSharingController implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if (selfLoopsUpload.equals(command)) {
-			System.out.println("Self Loops UPload");
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			if (data == null || data.size() == 0) {
 				JOptionPane.showMessageDialog(mainFrame,
@@ -82,7 +81,7 @@ public class SocialSharingController implements ActionListener {
 						userPrefs.messages.getString("uploadTo") + " SelfLoops.com",
 						userPrefs.messages.getString("uploadWk"),
 						JOptionPane.INFORMATION_MESSAGE);
-			} catch (IOException e1) {
+			} catch (Exception e1) {
 				JOptionPane.showMessageDialog(
 						mainFrame,
 						userPrefs.messages.getString("uploadError")

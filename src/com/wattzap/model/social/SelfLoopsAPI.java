@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.social;
 
 import java.io.ByteArrayOutputStream;
@@ -123,7 +123,7 @@ public class SelfLoopsAPI {
 					if (respEntity != null) {
 						// EntityUtils to get the response content
 						String content = EntityUtils.toString(respEntity);
-						System.out.println(content);
+						//System.out.println(content);
 						JSONParser jsonParser = new JSONParser();
 						jsonObj = (JSONObject) jsonParser.parse(content);
 					}
@@ -145,12 +145,14 @@ public class SelfLoopsAPI {
 				}
 			}
 
-			String activityId = (String) jsonObj.get("activity_id");
 
+			int activityId = ((Long) jsonObj.get("activity_id")).intValue();
+			
 			// parse error code
-			String error = (String) jsonObj.get("error_code");
-			if (error != null) {
-				switch (Integer.parseInt(error)) {
+			int error = ((Long) jsonObj.get("error_code")).intValue();
+			if (activityId == -1) {
+				String message = (String) jsonObj.get("message");
+				switch (error) {
 				case 102:
 					throw new RuntimeException("Empty TCX file " + fileName);
 				case 103:
@@ -166,10 +168,11 @@ public class SelfLoopsAPI {
 				case 107:
 					throw new RuntimeException("Invalid file mime types");
 				default:
-					throw new RuntimeException("Unknown error " + error);
+					throw new RuntimeException(message + " " + error);
 				}
 			}
-			return Integer.parseInt(activityId);
+
+			return activityId;
 		} finally {
 			if (in != null) {
 				in.close();
