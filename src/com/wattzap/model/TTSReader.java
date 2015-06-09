@@ -447,7 +447,7 @@ public class TTSReader extends RouteReader {
 		case VIDEO_INFO:
 			videoInfo(version, data);
 		default:
-			logger.error("Unidentified block type " + blockType);
+			logger.info("Unidentified block type " + blockType);
 		}
 
 	}

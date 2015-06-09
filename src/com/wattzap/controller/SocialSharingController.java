@@ -72,19 +72,21 @@ public class SocialSharingController implements ActionListener {
 			}
 			TcxWriter writer = new TcxWriter();
 			String fileName = writer.save(data, 0);
-			JOptionPane.showMessageDialog(mainFrame,
-					userPrefs.messages.getString("uploadTo") + "SelfLoops.com",
-					userPrefs.messages.getString("uploadWk"),
-					JOptionPane.INFORMATION_MESSAGE);
+			
 			try {
 				SelfLoopsAPI.uploadActivity(userPrefs.getSLUser(),
-						userPrefs.getSLPass(), fileName,
+						userPrefs.getSLPass(), UserPreferences.INSTANCE.getUserDataDirectory()
+						+ TcxWriter.WORKOUTDIR + fileName,
 						"Uploaded by http://www.wattzap.com/");
+				JOptionPane.showMessageDialog(mainFrame,
+						userPrefs.messages.getString("uploadTo") + " SelfLoops.com",
+						userPrefs.messages.getString("uploadWk"),
+						JOptionPane.INFORMATION_MESSAGE);
 			} catch (IOException e1) {
 				JOptionPane.showMessageDialog(
 						mainFrame,
 						userPrefs.messages.getString("uploadError")
-								+ e1.getLocalizedMessage(),
+								+ " " + e1.getLocalizedMessage(),
 						userPrefs.messages.getString("error"),
 						JOptionPane.INFORMATION_MESSAGE);
 			}
