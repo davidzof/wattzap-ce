@@ -39,23 +39,23 @@ public class EliteChronoHydroMag extends Power {
 		double power = 0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			power = (0.00141 * (speed * speed * speed))
 					+ (0.09596 * speed * speed) + (2.5 * speed);
 			break;
-		case 2:
+		case 1:
 			power = (0.00135 * (speed * speed * speed))
 					+ (0.18566 * speed * speed) + (2.18944 * speed);
 			break;
-		case 3:
+		case 2:
 			power = (-0.00047 * (speed * speed * speed))
 					+ (0.41424 * speed * speed) + (-0.95756 * speed);
 			break;
-		case 4:
+		case 3:
 			power = (0.00307 * (speed * speed * speed))
 					+ (0.28018 * speed * speed) + (2.1480 * speed);
 			break;
-		case 5:
+		case 4:
 			power = (0.00757 * (speed * speed * speed))
 					+ (0.07234 * speed * speed) + (6.25259 * speed);
 			break;
@@ -72,27 +72,27 @@ public class EliteChronoHydroMag extends Power {
 		double speed = 0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			cubic.solve(0.00141, 0.09596, 2.5, -power);
 			speed = cubic.x1;
 
 			break;
-		case 2:
+		case 1:
 			cubic.solve(0.00135, 0.18566, 2.18944, -power);
 			speed = cubic.x1;
 
 			break;
-		case 3:
+		case 2:
 			cubic.solve(-0.00047, 0.41424, -0.95756, -power);
 			speed = cubic.x2;
 
 			break;
-		case 4:
+		case 3:
 			cubic.solve(0.00307, 0.28018, 2.14803, -power);
 			speed = cubic.x1;
 
 			break;
-		case 5:
+		case 4:
 			cubic.solve(0.00757, 0.07234, 6.25259, -power);
 			speed = cubic.x1;
 			break;

@@ -25,7 +25,6 @@ public class TacxBooster extends Power {
 	private final double[] intercept = {-55, -61, -67, -73, -80, -85, -91, -97, -103, -110 };
 
 	public int getPower(double speed, int resistance) {
-		resistance--;
 		int power = (int) ((speed * slope[resistance]) + intercept[resistance]);
 		if (power < 0) {
 			return 0;
@@ -34,7 +33,6 @@ public class TacxBooster extends Power {
 	}
 
 	public double getSpeed(int power, int resistance) {
-		resistance--;
 		double speed = (power - intercept[resistance]) / slope[resistance];
 		if (speed < 0) {
 			return 0;

@@ -30,7 +30,6 @@ public class TacxSatoriBlueMotion extends Power {
 			-66.33, -67.00, -83.67, -82.00, -89.67, -114.67 };
 
 	public int getPower(double speed, int resistance) {
-		resistance--;
 		int power = (int) ((speed * slope[resistance]) + intercept[resistance]);
 		if (power < 0) {
 			return 0;
@@ -39,7 +38,6 @@ public class TacxSatoriBlueMotion extends Power {
 	}
 
 	public double getSpeed(int power, int resistance) {
-		resistance--;
 		double speed = (power - intercept[resistance]) / slope[resistance];
 		if (speed < 0) {
 			return 0;

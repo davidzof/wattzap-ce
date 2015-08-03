@@ -34,12 +34,12 @@ public class OneUpUsaProfile extends Power {
 		double power = 0.0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			power = (4.93333 * speed) + (0.2 * speed * speed)
 					+ (-0.00433 * speed * speed * speed);
 
+		case 1:
 		case 2:
-		case 3:
 		}
 
 
@@ -47,7 +47,7 @@ public class OneUpUsaProfile extends Power {
 	}
 
 	public String description() {
-		return "Elite Aran Mag";
+		return "OneUp USA";
 	}
 
 	@Override

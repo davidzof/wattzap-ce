@@ -37,29 +37,28 @@ package com.wattzap.model.power;
 @PowerAnnotation
 public class EliteChronoMagForceGel extends Power {
 	private final Cubic cubic = new Cubic();
-	private final static int neutral = 2;
 
 	public int getPower(double speed, int resistance) {
 		double power = 0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			power = (7.82 * speed) - (0.05 * speed * speed)
 					+ (0.00083 * (speed * speed * speed)) - 46;
 			break;
-		case 2:
+		case 1:
 			power = (7.64167 * speed) + (0.055 * speed * speed)
 					- (0.00042 * (speed * speed * speed)) - 39.5;
 			break;
-		case 3:
+		case 2:
 			power = (10.075 * speed) + (0.075 * speed * speed)
 					- (0.00075 * (speed * speed * speed)) - 45.5;
 			break;
-		case 4:
+		case 3:
 			power = (18.94583 * speed) - (0.0675 * speed * speed)
 					+ (0.00054 * (speed * speed * speed)) - 104.25;
 			break;
-		case 5:
+		case 4:
 			power = (1.91667 * speed) + (0.5875 * speed * speed)
 					- (0.00121 * (speed * speed * speed));
 			break;
@@ -76,27 +75,27 @@ public class EliteChronoMagForceGel extends Power {
 		double speed = 0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			cubic.solve(0.00083, -0.05, 7.82, -(46 + power));
 			speed = cubic.x1;
 
 			break;
-		case 2:
+		case 1:
 			cubic.solve(-0.00042, 0.055, 7.64167, -(39.5 + power));
 			speed = cubic.x2;
 
 			break;
-		case 3:
+		case 2:
 			cubic.solve(-0.00075, 0.075, 10.075, -(45.5 + power));
 			speed = cubic.x2;
 
 			break;
-		case 4:
+		case 3:
 			cubic.solve(0.00054, -0.0675, 18.94583, -104.25 - power);
 			speed = cubic.x1;
 
 			break;
-		case 5:
+		case 4:
 			cubic.solve(-0.00121, 0.5875, 1.91667, 0 - power);
 			speed = cubic.x2;
 			break;

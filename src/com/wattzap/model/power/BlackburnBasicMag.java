@@ -43,13 +43,13 @@ public class BlackburnBasicMag extends Power {
 		double power = 0.0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			power = (1.6576 * speed) + (0.4144 * speed * speed)
 					- (0.00875 * speed * speed * speed);
 			break;
 
+		case 1:
 		case 2:
-		case 3:
 		}
 
 		return (int) power;
@@ -59,12 +59,12 @@ public class BlackburnBasicMag extends Power {
 		double speed = 0;
 		
 		switch (resistance) {
-		case 1:
+		case 0:
 			cubic.solve(-0.00875, 0.4144, 1.6576, -power);
 			speed = cubic.x2;
 			break;
+		case 1:
 		case 2:
-		case 3:
 		}
 		
 		return speed;

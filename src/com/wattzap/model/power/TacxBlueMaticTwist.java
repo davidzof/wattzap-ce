@@ -29,8 +29,6 @@ public class TacxBlueMaticTwist extends Power {
 			-100 };
 
 	public int getPower(double speed, int resistance) {
-
-		resistance--;
 		int power = (int) ((speed * slope[resistance]) + intercept[resistance]);
 		if (power < 0) {
 			return 0;

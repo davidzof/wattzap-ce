@@ -40,21 +40,21 @@ public class EliteVolareSpeed extends Power {
 		double power = 0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			power = (0.95 * speed) + (0.035 * speed * speed);
 			break;
-		case 2:
+		case 1:
 			power = (1.65 * speed) + (0.055 * speed * speed);
 			break;
-		case 3:
+		case 2:
 			power = (2.8 * speed) + (0.115 * speed * speed)
 					- (0.0005 * (speed * speed * speed));
 			break;
-		case 4:
+		case 3:
 			power = (3.55 * speed) + (0.21 * speed * speed)
 					- (0.0015 * (speed * speed * speed));
 			break;
-		case 5:
+		case 4:
 			power = (3.76667 * speed) + (0.33 * speed * speed)
 					- (0.00267 * (speed * speed * speed));
 			break;
@@ -70,21 +70,21 @@ public class EliteVolareSpeed extends Power {
 		double speed = 0;
 
 		switch (resistance) {
-		case 1:
+		case 0:
 			speed = this.quadraticEquationRoot1(0.035, 0.95, 0 - power);
 			break;
-		case 2:
+		case 1:
 			speed = this.quadraticEquationRoot1(0.055, 1.65, 0 - power);
 			break;
-		case 3:
+		case 2:
 			cubic.solve(-0.0005, 0.115, 2.8, 0 - power);
 			speed = cubic.x2;
 			break;
-		case 4:
+		case 3:
 			cubic.solve(-0.0015, 0.21, 3.55, 0 - power);
 			speed = cubic.x2;
 			break;
-		case 5:
+		case 4:
 			cubic.solve(-0.00267, 0.33, 3.76667, 0 - power);
 			speed = cubic.x2;
 			break;
