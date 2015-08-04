@@ -165,12 +165,13 @@ public class Main implements Runnable {
 			new Ant(antListeners).register();
 			odo = new AntOdometer();
 		} catch (Exception e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
 					userPrefs.messages.getString("warning"),
 					JOptionPane.WARNING_MESSAGE);
 			logger.error("ANT+ " + e.getMessage());
 			new DummySpeedCadenceListener();
-			userPrefs.setAntEnabled(false);
+			userPrefs.setAntEnabled(true);
 			odo = new Odometer();
 		}
 
