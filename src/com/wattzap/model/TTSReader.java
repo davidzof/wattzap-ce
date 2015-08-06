@@ -517,7 +517,8 @@ public class TTSReader extends RouteReader {
 			break;
 		case 1:
 			programType = "watt";
-			break;
+			throw new RuntimeException("Power files not currently supported");
+			//break;
 		case 2:
 			programType = "heartRate";
 			break;
@@ -569,6 +570,8 @@ public class TTSReader extends RouteReader {
 			double lat = Float.intBitsToFloat(getUInt(data, i * 16 + 4));
 			double lon = Float.intBitsToFloat(getUInt(data, i * 16 + 8));
 			double altitude = Float.intBitsToFloat(getUInt(data, i * 16 + 12));
+			
+			//System.out.println("alt " + altitude + " distance " + distance);
 
 			// GPX Data
 			Waypoint wayPoint = new Waypoint(lat, lon);
@@ -625,9 +628,13 @@ public class TTSReader extends RouteReader {
 	}
 
 	/*
+	 * Slope/Distance Program:
 	 * Distance to Frame Mapping
-	 * 
 	 * Format: 2102675 (cm)/77531 (frames)
+	 * 
+	 * Watt/Time Program:
+	 * 
+
 	 */
 	private void distanceToFrame(int version, byte[] data) {
 		if (data.length % 8 != 0) {
@@ -655,10 +662,13 @@ public class TTSReader extends RouteReader {
 		}
 		logger.info("Frame Rate " + frameRate);
 
+		//System.out.println("Frame Rate " + frameRate);
+		
 		for (int i = 0; i < data.length / 8; i++) {
 			Point p = new Point();
 			p.setDistanceFromStart(getUInt(data, i * 8));
 			int frame = getUInt(data, i * 8 + 4);
+			//System.out.println("frame " + frame + " dist " + (p.getDistanceFromStart()/1000));
 
 			p.setTime((int) (frame / frameRate));
 			pointList.add(p);
@@ -669,7 +679,8 @@ public class TTSReader extends RouteReader {
 	/**
 	 * PROGRAM data
 	 * 
-	 * Typically it is slope/distance information
+     *
+	 * Format: slope/distance information or power/time
 	 * 
 	 * short slope // FLOAT RollingFriction; // Usually 4.0 // Now it is integer
 	 * (/100=>[m], /100=>[s]) and short (/100=>[%], [W], // probably HR as
@@ -694,6 +705,7 @@ public class TTSReader extends RouteReader {
 
 			// slope %, distance meters
 			distance += (getUInt(data, i * 6 + 2));
+			//System.out.println("slope " + slope + " distance " + distance);
 			ProgramPoint p = new ProgramPoint();
 			p.slope = (double) slope / 100;
 			if (i == 0) {
