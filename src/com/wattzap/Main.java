@@ -59,7 +59,7 @@ import com.wattzap.view.VideoPlayer;
 /**
  * Main entry point
  * 
- * (c) 2013 David George / Wattzap.com
+ * (c) 2013,2015 David George / Wattzap.com
  * 
  * @author David George
  * @date 11 June 2013

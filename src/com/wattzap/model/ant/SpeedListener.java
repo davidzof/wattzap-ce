@@ -142,7 +142,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 		
 		//allow trainer speed null for down
 		long timestamp = System.currentTimeMillis();
-		if (tDiff == 0  && elapsedTimestamp > 0 && routeData.getPoint(distance).getGradient() < 0) {
+		if (tDiff == 0  && elapsedTimestamp > 0 && routeData != null && routeData.getPoint(distance).getGradient() < 0) {
 			tDiff = (int) (timestamp - elapsedTimestamp)*1024/1000;
 		}
 
@@ -172,6 +172,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			// based on power and gradient using magic sauce
 			if (simulSpeed && routeData != null) {
 				Point p = routeData.getPoint(distance);
+
 				if (routeData.routeType() == RouteReader.SLOPE) {
 					if (p == null) {
 						// end of the road

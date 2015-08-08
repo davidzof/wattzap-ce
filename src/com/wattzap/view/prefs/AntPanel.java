@@ -68,14 +68,13 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 	private JLabel powLabel;
 	private JLabel status;
 
-	private int hrmID;
 	private int scID;
+	private int hrmID;
 	private int speedID;
 	private int cadenceID;
-	private int powID;
+	private int powerID;
 
 	// Checkboxen
-	JCheckBox antUSBM;
 	JCheckBox scCheckBox;
 	JCheckBox cadCheckBox;
 	JCheckBox speedCheckBox;
@@ -102,7 +101,9 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		// speed and cadence sensor
 		sCIDlabel = new JLabel();
 		sandcField = new JLabel();
-		sandcField.setText(": " + userPrefs.getSCId());
+		scID = userPrefs.getSCId();
+		sandcField.setText(": " + scID);
+
 		sandcLabel = new JLabel();
 		sandcLabel.setText("0 km/h");
 		scCheckBox = new JCheckBox();
@@ -110,28 +111,43 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		add(sandcField);
 		add(sandcLabel, "w 80!");
 		add(scCheckBox, "gapleft 30, wrap");
+
+		if (userPrefs.getSCId() > 0) {
+			scCheckBox.setVisible(true);
+			scCheckBox.setSelected(true);
+		} else {
+			scCheckBox.setVisible(false);
+		}
 		scCheckBox.addItemListener(this);
-		scCheckBox.setVisible(false);
 
 		// Cadence Sensor
 		cadIdLabel = new JLabel();
 		cadenceField = new JLabel();
-		cadenceField.setText(": " + userPrefs.getCadenceId()); // cadence ID
+		cadenceID = userPrefs.getCadenceId();
+		cadenceField.setText(": " + cadenceID); // cadence ID
 		cadenceLabel = new JLabel();
 		cadenceLabel.setText("0 rpm");
 		cadCheckBox = new JCheckBox();
-		cadCheckBox.addItemListener(this);
-		cadCheckBox.setVisible(false);
+
+		if (userPrefs.getCadenceId() > 0) {
+			cadCheckBox.setVisible(true);
+			cadCheckBox.setSelected(true);
+		} else {
+			cadCheckBox.setVisible(false);
+		}
 		add(cadIdLabel);
 		add(cadenceField);
 		add(cadenceLabel, "w 80!");
 		add(cadCheckBox, "gapleft 30, wrap");
+		cadCheckBox.addItemListener(this);
 
 		// Speed Sensor
 		speedIdLabel = new JLabel();
 
 		speedField = new JLabel();
-		speedField.setText(": " + userPrefs.getSpeedId()); // speed Sensor
+
+		speedID = userPrefs.getSpeedId();
+		speedField.setText(": " + speedID); // speed Sensor
 		speedLabel = new JLabel();
 		speedLabel.setText("0 km/h");
 		speedCheckBox = new JCheckBox();
@@ -139,13 +155,19 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		add(speedField);
 		add(speedLabel, "w 80!");
 		add(speedCheckBox, "gapleft 30, wrap");
+		if (userPrefs.getSpeedId() > 0) {
+			speedCheckBox.setVisible(true);
+			speedCheckBox.setSelected(true);
+		} else {
+			speedCheckBox.setVisible(false);
+		}
 		speedCheckBox.addItemListener(this);
-		speedCheckBox.setVisible(false);
 
 		// Power Meter
 		powIdLabel = new JLabel();
 		powIdField = new JLabel();
-		powIdField.setText(": " + userPrefs.getPowerId()); // cadence ID
+		powerID = userPrefs.getPowerId();
+		powIdField.setText(": " + powerID); // cadence ID
 		powLabel = new JLabel();
 		powLabel.setText("0 watts");
 		powCheckBox = new JCheckBox();
@@ -153,13 +175,20 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		add(powIdField);
 		add(powLabel, "w 80!");
 		add(powCheckBox, "gapleft 30, wrap");
+		
+		if (userPrefs.getPowerId() > 0) {
+			powCheckBox.setVisible(true);
+			powCheckBox.setSelected(true);
+		} else {
+			powCheckBox.setVisible(false);
+		}
 		powCheckBox.addItemListener(this);
-		powCheckBox.setVisible(false);
-
+		
 		// Heart Rate Strap
 		hrmIdLabel = new JLabel();
 		hrmIdField = new JLabel();
-		hrmIdField.setText(": " + userPrefs.getHRMId());
+		hrmID = userPrefs.getHRMId();
+		hrmIdField.setText(": " + hrmID);
 		hrmCheckBox = new JCheckBox();
 		hrm = new JLabel();
 		hrm.setText("0 bpm");
@@ -168,15 +197,15 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		add(hrmIdField);
 		add(hrm);
 		add(hrmCheckBox, "gapleft 30, wrap");
+		
+		if (userPrefs.getHRMId() > 0) {
+			hrmCheckBox.setVisible(true);
+			hrmCheckBox.setSelected(true);
+		} else {
+			hrmCheckBox.setVisible(false);
+		}
 		hrmCheckBox.addItemListener(this);
-		hrmCheckBox.setVisible(false);
-
-		antUSBM = new JCheckBox("ANTUSB-m Stick");
-		antUSBM.setSelected(userPrefs.isANTUSB());
-		antUSBM.addItemListener(this);
-
-		add(antUSBM, "wrap");
-
+		
 		pairButton = new JButton("Pair");
 		pairButton.setPreferredSize(new Dimension(60, 30));
 		pairButton.setActionCommand("pair");
@@ -204,7 +233,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 
 	@Override
 	public void callback(Messages message, Object o) {
-		
+
 		switch (message) {
 		case HEARTRATE:
 			int heartRate = (Integer) o;
@@ -255,13 +284,6 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			if (speedCheckBox.isSelected()) {
 				scCheckBox.setSelected(false);
 			}
-		} else if (source == antUSBM) {
-			if (antUSBM.isSelected()) {
-				userPrefs.setAntUSBM(true);
-			} else {
-				userPrefs.setAntUSBM(false);
-
-			}
 		}
 	}
 
@@ -284,6 +306,14 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			antListeners.put(listener.getName(), listener);
 			antDevice = new Ant(antListeners);
 			// FIXME will need to set all ids to zero first
+			
+			scCheckBox.setVisible(false);
+			scCheckBox.setSelected(false);
+			hrmCheckBox.setVisible(false);
+			hrmCheckBox.setSelected(false);
+			sandcField.setText(": 0");
+			hrmIdField.setText(": 0");
+			
 			antDevice.open();
 			status.setText("Attempting pairing...");
 
@@ -313,12 +343,12 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 				speedCheckBox.setVisible(true);
 			}
 			speedField.setText(": " + speedID);
-			
-			powID = antDevice.getChannelId(PowerListener.name);
-			if (powID > 0) {
+
+			powerID = antDevice.getChannelId(PowerListener.name);
+			if (powerID > 0) {
 				powCheckBox.setVisible(true);
 			}
-			powIdField.setText(": " + powID);
+			powIdField.setText(": " + powerID);
 
 			antDevice.close();
 			antListeners = null;
@@ -367,10 +397,10 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		}
 		return 0;
 	}
-	
+
 	public int getPwrId() {
 		if (powCheckBox.isSelected()) {
-			return powID;
+			return powerID;
 		}
 		return 0;
 	}

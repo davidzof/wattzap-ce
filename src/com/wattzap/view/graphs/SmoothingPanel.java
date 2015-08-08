@@ -23,6 +23,8 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import com.wattzap.model.UserPreferences;
+
 /**
  * (c) 2014 Wattzap.com
  * 
@@ -34,12 +36,13 @@ import javax.swing.JPanel;
 public class SmoothingPanel extends JPanel implements ItemListener {
 	private static final long serialVersionUID = 1L;
 	private final SCHRGraph graph;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	public SmoothingPanel(SCHRGraph graph) {
 		this.graph = graph;
 
 		JLabel label = new JLabel();
-		label.setText("Smoothing: ");
+		label.setText(userPrefs.messages.getString("smooth") + ": ");
 		add(label);
 
 		JComboBox combo = new JComboBox();
