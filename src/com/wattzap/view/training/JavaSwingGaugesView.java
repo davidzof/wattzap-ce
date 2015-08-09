@@ -49,8 +49,8 @@ public class JavaSwingGaugesView implements MessageCallback {
     private static Radial cadenceGauge;
     private static Radial heartRateGauge;
 
-    private static DisplaySingle clockTotal;
-    private static DisplaySingle clockRemainingInInterval;
+    private static JLabel clockTotal;
+    private static JLabel clockRemainingInInterval;
 
     private TrainingData trainingData;
     private TrainingItem current;
@@ -118,16 +118,15 @@ public class JavaSwingGaugesView implements MessageCallback {
         panelNorth.add(startButton);
         panelNorth.add(stopButton);
 
-
-        clockTotal = buildClockTotal();
-        clockRemainingInInterval = buildClockRemaining();
+        clockTotal = buildClock();
+        clockRemainingInInterval = buildClock();
         panelNorth.add(clockTotal);
-        panelNorth.add(clockRemainingInInterval);
         labelInfoInterval.setForeground(Color.white);
         labelInfoInterval.setFont(new Font("Dialog", Font.BOLD, 28));
         labelInfoInterval.setMaximumSize(new Dimension(1920, 75));
         labelInfoInterval.setHorizontalTextPosition(SwingConstants.CENTER);
         panelNorth.add(labelInfoInterval);
+        panelNorth.add(clockRemainingInInterval);
 
         centerPanel.setBackground(Color.black);
         centerPanel.setLayout(new GridLayout(1, 3, 20, 20));
@@ -144,16 +143,6 @@ public class JavaSwingGaugesView implements MessageCallback {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private static DisplaySingle buildClockRemaining() {
-        DisplaySingle clockRemainingInInterval = new DisplaySingle();
-        clockRemainingInInterval.setPreferredSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
-        clockRemainingInInterval.setMinimumSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
-        clockRemainingInInterval.setLcdUnitString("seconds");
-        clockRemainingInInterval.setLcdInfoString("Remaining in interval");
-        clockRemainingInInterval.setLcdDecimals(0);
-        clockRemainingInInterval.setLcdColor(LcdColor.STANDARD_LCD);
-        return clockRemainingInInterval;
-    }
 
 
     private ChartPanel createChartPanelWithSeries(Map<Long, TrainingRangeView> limits, String titleSerieHigh, String titleSerieLow, String title, double minY, double maxY, int physioLimit) {
@@ -257,16 +246,14 @@ public class JavaSwingGaugesView implements MessageCallback {
     }
 
     // <editor-fold defaultstate="collapsed" desc="build clock total">
-    private static DisplaySingle buildClockTotal() {
-        DisplaySingle clockTotal = new DisplaySingle();
-        clockTotal.setPreferredSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
-        clockTotal.setMinimumSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
-        clockTotal.setLcdUnitString("seconds");
-        clockTotal.setLcdInfoString("Time elapsed total"); // TODO translate
-        clockTotal.setLcdDecimals(0);
-        clockTotal.setLcdValue(0);
-        clockTotal.setLcdColor(LcdColor.STANDARD_LCD);
-        return clockTotal;
+    private static JLabel buildClock() {
+        JLabel clock = new JLabel();
+        clock.setPreferredSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
+        clock.setMinimumSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
+        clock.setSize(new Dimension(GAUGE_MINIMUM_SIZE, 75));
+        clock.setForeground(Color.white);
+        clock.setFont(new Font("Dialog", Font.BOLD, 28));
+        return clock;
     }
     // </editor-fold>
 
@@ -387,19 +374,49 @@ public class JavaSwingGaugesView implements MessageCallback {
     }
 
     private void updateClocks(Telemetry t) {
-        clockTotal.setLcdValue((t.getTime() - trainingStartedTime) / 1000);
+        clockTotal.setText(timeToString((t.getTime() - trainingStartedTime)));
         if (current != null) {
-            clockRemainingInInterval.setLcdValue((current.getTime() - accumulatedTrainingTime - (t.getTime() - intervalStartedTime)) / 1000 + 1);
+            clockRemainingInInterval.setText(timeToString((current.getTime() - accumulatedTrainingTime - (t.getTime() - intervalStartedTime)) + 1000));
         }
     }
 
+    private String timeToString(long time) {
+        StringBuilder sb = new StringBuilder(8);
+        long hours = time / 3600000;
+        long minutes = (time - hours * 3600000) / 60000;
+        long seconds = (time - hours * 3600000 - minutes * 60000) / 1000;
+
+        if (hours < 10)
+            sb.append('0');
+        sb.append(hours);
+        sb.append(':');
+
+        if (minutes < 10)
+            sb.append('0');
+        sb.append(minutes);
+        sb.append(':');
+
+        if (seconds < 10)
+            sb.append('0');
+        sb.append(seconds);
+
+        String formattedTime = sb.toString();
+        return formattedTime;
+    }
+
     private void updateGraphs(Telemetry t) {
-        TimePeriodValuesCollection datasetCadence = (TimePeriodValuesCollection) cadenceChartPanel.getChart().getXYPlot().getDataset(0);
-        datasetCadence.getSeries(0).add(new Second(new Date(t.getTime())), t.getCadence());
-        TimePeriodValuesCollection datasetPower = (TimePeriodValuesCollection) powerChartPanel.getChart().getXYPlot().getDataset(0);
-        datasetPower.getSeries(0).add(new Second(new Date(t.getTime())), t.getPower());
-        TimePeriodValuesCollection datasetHeartRate = (TimePeriodValuesCollection) heartRateChartPanel.getChart().getXYPlot().getDataset(0);
-        datasetHeartRate.getSeries(0).add(new Second(new Date(t.getTime())), t.getHeartRate());
+        if (cadenceChartPanel!=null) {
+            TimePeriodValuesCollection datasetCadence = (TimePeriodValuesCollection) cadenceChartPanel.getChart().getXYPlot().getDataset(0);
+            datasetCadence.getSeries(0).add(new Second(new Date(t.getTime())), t.getCadence());
+        }
+        if (powerChartPanel!=null) {
+            TimePeriodValuesCollection datasetPower = (TimePeriodValuesCollection) powerChartPanel.getChart().getXYPlot().getDataset(0);
+            datasetPower.getSeries(0).add(new Second(new Date(t.getTime())), t.getPower());
+        }
+        if (heartRateChartPanel!=null) {
+            TimePeriodValuesCollection datasetHeartRate = (TimePeriodValuesCollection) heartRateChartPanel.getChart().getXYPlot().getDataset(0);
+            datasetHeartRate.getSeries(0).add(new Second(new Date(t.getTime())), t.getHeartRate());
+        }
     }
 
     private void updateLcdColors(Telemetry t) {
@@ -411,8 +428,10 @@ public class JavaSwingGaugesView implements MessageCallback {
                 cadenceGauge.setLcdColor(LcdColor.BLUE_LCD);
                 cadenceGauge.setLcdInfoString("LOW");
             }
-            if (cadenceInRange)
+            if (cadenceInRange) {
                 cadenceGauge.setLcdColor(LcdColor.GREEN_LCD);
+                cadenceGauge.setLcdInfoString("");
+            }
             if (cadenceTooHigh) {
                 cadenceGauge.setLcdColor(LcdColor.ORANGE_LCD);
                 cadenceGauge.setLcdInfoString("HIGH");
@@ -425,8 +444,10 @@ public class JavaSwingGaugesView implements MessageCallback {
                 powerGauge.setLcdColor(LcdColor.BLUE_LCD);
                 powerGauge.setLcdInfoString("LOW");
             }
-            if (powerInRange)
+            if (powerInRange) {
                 powerGauge.setLcdColor(LcdColor.GREEN_LCD);
+                powerGauge.setLcdInfoString("");
+            }
             if (powerTooHigh) {
                 powerGauge.setLcdColor(LcdColor.ORANGE_LCD);
                 powerGauge.setLcdInfoString("HIGH");
@@ -439,14 +460,14 @@ public class JavaSwingGaugesView implements MessageCallback {
                 heartRateGauge.setLcdColor(LcdColor.BLUE_LCD);
                 heartRateGauge.setLcdInfoString("LOW");
             }
-            if (heartRateInRange)
+            if (heartRateInRange) {
                 heartRateGauge.setLcdColor(LcdColor.GREEN_LCD);
+                heartRateGauge.setLcdInfoString("");
+            }
             if (heartRateTooHigh) {
                 heartRateGauge.setLcdColor(LcdColor.ORANGE_LCD);
                 heartRateGauge.setLcdInfoString("HIGH");
             }
-
-
         }
     }
 
