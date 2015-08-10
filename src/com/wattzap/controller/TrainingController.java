@@ -19,7 +19,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -67,7 +66,8 @@ public class TrainingController implements ActionListener {
 		if (save.equals(command)) {
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			if (data == null || data.size() == 0) {
-				JOptionPane.showMessageDialog(mainFrame, "No data to save",
+				JOptionPane.showMessageDialog(mainFrame,
+						userPrefs.messages.getString("noDataSave"),
 						userPrefs.messages.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				logger.warn("No data to save");
@@ -80,8 +80,8 @@ public class TrainingController implements ActionListener {
 			if (zero != null && zero.getLatitude() <= 90) {
 				// gpsData == 0 is Yes
 				gpsData = JOptionPane.showConfirmDialog(mainFrame,
-						"Save with GPS and Altitude data?", "GPS Data",
-						dialogButton);
+						userPrefs.messages.getString("saveGPS"),
+						userPrefs.messages.getString("saveGPS"), dialogButton);
 			}
 			TcxWriter writer = new TcxWriter();
 
@@ -92,10 +92,16 @@ public class TrainingController implements ActionListener {
 			workoutData.setDescription(trainingDisplay.getName());
 			UserPreferences.INSTANCE.addWorkout(workoutData);
 
-			JOptionPane.showMessageDialog(mainFrame, "Saved workout to "
-					+ fileName, "Workout Saved",
+			JOptionPane.showMessageDialog(
+					mainFrame,
+					userPrefs.messages.getString("wktSave") + ": "
+							+ userPrefs.getUserDataDirectory()
+							+ TcxWriter.WORKOUTDIR + fileName, "Workout Saved",
 					JOptionPane.INFORMATION_MESSAGE);
 
+			if (workouts != null) {
+				workouts.updateModel();
+			}
 		} else if (analyze.equals(command)) {
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			WorkoutData wData = TrainingAnalysis.analyze(data);

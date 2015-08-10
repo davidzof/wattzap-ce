@@ -353,7 +353,7 @@ public class TrainingAnalysis extends JFrame {
 		long len = (lastPoint.getTime() - firstPoint.getTime());
 		workoutData.setTime(len);
 		workoutData.setDate(firstPoint.getTime());
-		workoutData.setDistanceMeters(lastPoint.getDistanceMeters());
+		workoutData.setDistanceMeters(lastPoint.getDistanceMeters() - firstPoint.getDistanceMeters());
 
 		int maxCad = 0;
 		long aveCad = 0;

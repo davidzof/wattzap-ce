@@ -108,7 +108,6 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 				logger.info("Open command cancelled by user.");
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			JOptionPane.showMessageDialog(frame,
 					ex.getMessage() + " " + file.getAbsolutePath(), "Error",
 					JOptionPane.ERROR_MESSAGE);

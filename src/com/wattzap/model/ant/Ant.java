@@ -27,6 +27,7 @@ import org.cowboycoders.ant.NetworkKey;
 import org.cowboycoders.ant.Node;
 import org.cowboycoders.ant.events.MessageCondition;
 import org.cowboycoders.ant.events.MessageConditionFactory;
+import org.cowboycoders.ant.interfaces.AntCommunicationException;
 import org.cowboycoders.ant.interfaces.AntTransceiver;
 import org.cowboycoders.ant.messages.ChannelType;
 import org.cowboycoders.ant.messages.SlaveChannelType;
@@ -52,8 +53,6 @@ public class Ant implements MessageCallback {
 	private Node node = null;
 	private NetworkKey key = null;
 
-	private AntListener SCListener;
-	private AntListener HRListener;
 	private HashMap<String,AntListener> antListeners;
 	private HashMap<String,Channel> antChannels;
 	
@@ -87,10 +86,11 @@ public class Ant implements MessageCallback {
 		antListeners = listeners;
 		
 		AntTransceiver antchip = null;
-		if (userPrefs.isANTUSB()) {
-			antchip = new AntTransceiver(0, AntTransceiver.ANTUSBM_ID);
-		} else {
+
+		try {
 			antchip = new AntTransceiver(0);
+		} catch (AntCommunicationException e) {
+			antchip = new AntTransceiver(0, AntTransceiver.ANTUSBM_ID);
 		}
 		// initialises node with chosen driver
 		node = new Node(antchip);
@@ -109,14 +109,16 @@ public class Ant implements MessageCallback {
 		 * AntTransceiver(int deviceNumber) deviceNumber : 0 ... number of usb
 		 * sticks plugged in 0: first usb ant-stick
 		 */
-		SCListener = scListener;
-		HRListener = hrmListener;
+		//SCListener = scListener;
+		//HRListener = hrmListener;
 		AntTransceiver antchip = null;
-		if (userPrefs.isANTUSB()) {
-			antchip = new AntTransceiver(0, AntTransceiver.ANTUSBM_ID);
-		} else {
+
+		try {
 			antchip = new AntTransceiver(0);
+		} catch (AntCommunicationException e) {
+			antchip = new AntTransceiver(0, AntTransceiver.ANTUSBM_ID);
 		}
+
 		// initialises node with chosen driver
 		node = new Node(antchip);
 

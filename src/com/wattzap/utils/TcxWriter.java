@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.utils;
 
 import java.io.File;
@@ -167,7 +167,7 @@ public class TcxWriter /* implements TrackWriter */{
 		pw.print(t.getPower());
 		pw.print("</Watts>");
 		pw.print("<Speed>");
-		pw.print(t.getSpeedMetersPerSecond());
+		pw.print(t.getSpeedKMH());
 		pw.print("</Speed>");
 		pw.println("</TPX></Extensions>");
 		pw.println("        </Trackpoint>");
@@ -277,10 +277,9 @@ public class TcxWriter /* implements TrackWriter */{
 		Telemetry firstPoint = data.get(0);
 		Telemetry lastPoint = data.get(data.size() - 1);
 
-		fileName = UserPreferences.INSTANCE.getUserDataDirectory()
-				+ WORKOUTDIR + getWorkoutName(firstPoint
-				.getTime());
-		File file = new File(fileName);
+		fileName = getWorkoutName(firstPoint.getTime());
+		File file = new File(UserPreferences.INSTANCE.getUserDataDirectory()
+				+ WORKOUTDIR + fileName);
 
 		try {
 			// make sure parent directory exists
@@ -304,10 +303,12 @@ public class TcxWriter /* implements TrackWriter */{
 				} else {
 					if (gpsData == 0 && last != null
 							&& last.getLatitude() == t.getLatitude()
-							&& last.getLongitude() == t.getLongitude()) {
-						// Same GPS Point and we are saving GPS Data, drop
-						// this
-						// value
+							&& last.getLongitude() == t.getLongitude()
+							&& t.getLatitude() != 0 && t.getLongitude() != 0) {
+						/*
+						 * We are saving GPS data, it is the same GPS Point and
+						 * the data is valid (not 0,0), drop it.
+						 */
 						continue;
 					} else {
 						writeLocation(t, gpsData);

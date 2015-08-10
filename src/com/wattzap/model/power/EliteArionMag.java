@@ -39,16 +39,16 @@ public class EliteArionMag extends Power {
 	public int getPower(double speed, int resistance) {
 		double power = 0.0;
 
-		switch (++resistance) {
-		case 1:
+		switch (resistance) {
+		case 0:
 			power = (5.95833 * speed) + (0.08875 * speed * speed)
 					+ (-0.00146 * speed * speed * speed);
 			break;
-		case 2:
+		case 1:
 			power = (6.14167 * speed) + (0.13125 * speed * speed)
 					+ (-0.00154 * speed * speed * speed);
 			break;
-		case 3:
+		case 2:
 			power = (4.625 * speed) + (0.40374 * speed * speed)
 					+ (-0.00462 * speed * speed * speed);
 			break;
@@ -60,16 +60,16 @@ public class EliteArionMag extends Power {
 	public double getSpeed(int power, int resistance) {
 		double speed = 0;
 
-		switch (++resistance) {
-		case 1:
+		switch (resistance) {
+		case 0:
 			cubic.solve(-0.00146, 0.08875, 5.95833, 0 - power);
 			speed = cubic.x2;
 			break;
-		case 2:
+		case 1:
 			cubic.solve(-0.00154, 0.13125, 6.14167, 0 - power);
 			speed = cubic.x2;
 			break;
-		case 3:
+		case 2:
 			cubic.solve(-0.00462, 0.40374, 4.625, 0 - power);
 			speed = cubic.x2;
 			break;
@@ -80,7 +80,7 @@ public class EliteArionMag extends Power {
 	public String description() {
 		return "Elite Arion Mag";
 	}
-
+	
 	@Override
 	public int getResitanceLevels() {
 		return 3;

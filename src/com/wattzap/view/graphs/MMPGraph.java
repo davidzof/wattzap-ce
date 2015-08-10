@@ -37,6 +37,8 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import com.wattzap.model.UserPreferences;
+
 /* 
  * Mean Maximal Power Graph
  * 
@@ -47,13 +49,14 @@ public class MMPGraph extends JPanel {
 	ValueMarker marker = null;
 	XYPlot plot;
 	private ChartPanel chartPanel = null;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	private static Logger logger = LogManager.getLogger("MMPGraph");
 
 	public MMPGraph(XYSeries series) {
 		super();
 
-		NumberAxis yAxis = new NumberAxis("Power (watts)");
+		NumberAxis yAxis = new NumberAxis(userPrefs.messages.getString("poWtt"));
 		yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		double maxY = series.getMaxY();
 		yAxis.setRange(0, maxY + 20);
@@ -61,7 +64,7 @@ public class MMPGraph extends JPanel {
 		yAxis.setLabelPaint(Color.white);
 		
 		
-		LogAxis xAxis = new LogAxis("Time");
+		LogAxis xAxis = new LogAxis(userPrefs.messages.getString("time"));
 		xAxis.setTickLabelPaint(Color.white);
 		xAxis.setBase(4);
 		xAxis.setAutoRange(false);
@@ -80,7 +83,7 @@ public class MMPGraph extends JPanel {
 
 				if (millis >= 60000) {
 					return new StringBuffer(String.format(
-							"%d m%d s",
+							"%d m %d s",
 							TimeUnit.MILLISECONDS.toMinutes((long) millis),
 							TimeUnit.MILLISECONDS.toSeconds((long) millis)
 									- TimeUnit.MINUTES

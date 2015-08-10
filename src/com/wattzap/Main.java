@@ -23,9 +23,6 @@ import java.awt.Toolkit;
 import java.io.IOException;
 import java.util.HashMap;
 
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
@@ -42,7 +39,6 @@ import org.apache.log4j.PatternLayout;
 
 import com.omniscient.log4jcontrib.swingappender.SwingAppender;
 import com.sun.jna.NativeLibrary;
-import com.wattzap.controller.TrainingController;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
 import com.wattzap.model.ant.Ant;
@@ -58,15 +54,12 @@ import com.wattzap.view.MainFrame;
 import com.wattzap.view.Map;
 import com.wattzap.view.Odometer;
 import com.wattzap.view.Profile;
-import com.wattzap.view.RouteFilePicker;
 import com.wattzap.view.VideoPlayer;
-import com.wattzap.view.training.TrainingDisplay;
-import com.wattzap.view.training.TrainingPicker;
 
 /**
  * Main entry point
  * 
- * (c) 2013 David George / Wattzap.com
+ * (c) 2013,2015 David George / Wattzap.com
  * 
  * @author David George
  * @date 11 June 2013
@@ -177,7 +170,7 @@ public class Main implements Runnable {
 					JOptionPane.WARNING_MESSAGE);
 			logger.error("ANT+ " + e.getMessage());
 			new DummySpeedCadenceListener();
-			userPrefs.setAntEnabled(false);
+			userPrefs.setAntEnabled(true);
 			odo = new Odometer();
 		}
 
@@ -205,63 +198,7 @@ public class Main implements Runnable {
 		profile.setVisible(false);
 
 		// Menu Bar
-		JMenuBar menuBar = new JMenuBar();
-		//
-		MenuBar mB = new MenuBar();
-
-		menuBar.add(mB.appMenu);
-		mB.quitMenuItem.addActionListener(frame);
-		menuBar.add(mB.fileMenu);
-		RouteFilePicker picker = new RouteFilePicker(frame);
-		mB.openMenuItem.addActionListener(picker);
-
-		// Submenu: Training
-		JMenu trainingMenu = new JMenu(userPrefs.messages.getString("training"));
-		menuBar.add(trainingMenu);
-		TrainingDisplay trainingDisplay = new TrainingDisplay(screenSize);
-		TrainingController trainingController = new TrainingController(
-				trainingDisplay, frame);
-
-		if (userPrefs.isAntEnabled()) {
-			// Submenu: training
-			JMenuItem trainMenuItem = new JMenuItem(
-					userPrefs.messages.getString("open"));
-			trainMenuItem.setActionCommand(TrainingController.open);
-			trainingMenu.add(trainMenuItem);
-
-			TrainingPicker tPicker = new TrainingPicker(frame);
-			trainMenuItem.addActionListener(tPicker);
-		}
-		JMenuItem analizeMenuItem = new JMenuItem(
-				userPrefs.messages.getString("analyze"));
-		trainingMenu.add(analizeMenuItem);
-		analizeMenuItem.setActionCommand(TrainingController.analyze);
-
-		JMenuItem saveMenuItem = new JMenuItem(
-				userPrefs.messages.getString("save"));
-		saveMenuItem.setActionCommand(TrainingController.save);
-		trainingMenu.add(saveMenuItem);
-
-		JMenuItem viewMenuItem = new JMenuItem(
-				userPrefs.messages.getString("view"));
-		viewMenuItem.setActionCommand(TrainingController.view);
-		trainingMenu.add(viewMenuItem);
-
-		JMenuItem recoverMenuItem = new JMenuItem(
-				userPrefs.messages.getString("recover"));
-		recoverMenuItem.setActionCommand(TrainingController.recover);
-		trainingMenu.add(recoverMenuItem);
-
-		analizeMenuItem.addActionListener(trainingController);
-		saveMenuItem.addActionListener(trainingController);
-		recoverMenuItem.addActionListener(trainingController);
-
-		viewMenuItem.addActionListener(trainingController);
-
-		frame.add(trainingDisplay, "cell 0 0");
-
-		frame.setJMenuBar(menuBar);
-		// End Menu
+		new MenuBar(frame);
 
 		frame.add(profile, "cell 0 1, grow");
 		// by default add to telemetry frame

@@ -22,48 +22,54 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
 import com.wattzap.model.UserPreferences;
 
 /**
  * (c) 2014 Wattzap.com
  * 
- * Bottom panel for Workouts View containing buttons for Reanalyzing and Deleting
- * selected workouts as well as Quit button.
+ * Bottom panel for Workouts View containing buttons for Reanalyzing and
+ * Deleting selected workouts as well as Quit button.
  * 
  * @see Workouts.java
  * 
  * @author David George
  * @date 17 April 2014
  */
-public class WorkoutButtonPanel extends JPanel implements ActionListener {
+public class WorkoutButtonPanel extends JPanel implements ActionListener,
+		MessageCallback {
 	Workouts workouts;
 
 	private final static String delete = "DEL";
 	private final static String analyze = "ANAL";
 	private final static String quit = "QUIT";
+	private final JButton deleteButton;
+	private final JButton reloadButton;
+	private final JButton quitButton;
 
 	public WorkoutButtonPanel(Workouts workouts) {
 		this.workouts = workouts;
 
-		JButton deleteButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("delete"));
+		deleteButton = new JButton();
 		deleteButton.setActionCommand(delete);
-		
-		JButton reloadButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("reanal"));
+		reloadButton = new JButton();
 		reloadButton.setActionCommand(analyze);
-		JButton quitButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("quit"));
+		quitButton = new JButton();
 		quitButton.setActionCommand(quit);
-		
+
 		reloadButton.addActionListener(this);
 		deleteButton.addActionListener(this);
 		quitButton.addActionListener(this);
-		
+
+		doText();
 		setBackground(Color.LIGHT_GRAY);
 		add(reloadButton);
 		add(deleteButton);
 		add(quitButton);
+		
+		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 	}
 
 	@Override
@@ -80,6 +86,29 @@ public class WorkoutButtonPanel extends JPanel implements ActionListener {
 			workouts.reanalyze();
 		}
 
+	}
+
+	/*
+	 * Setup button text, makes it easy to update if locale is changed
+	 */
+	private void doText() {
+		deleteButton.setText(UserPreferences.INSTANCE.messages
+				.getString("delete"));
+		reloadButton.setText(UserPreferences.INSTANCE.messages
+				.getString("reanal"));
+		quitButton.setText(UserPreferences.INSTANCE.messages.getString("quit"));
+	}
+
+	/**
+	 * Change text language if we get a LOCALE message
+	 */
+	@Override
+	public void callback(Messages message, Object o) {
+		switch (message) {
+		case LOCALE:
+			doText();
+			break;
+		}
 	}
 
 	private static final long serialVersionUID = 1L;

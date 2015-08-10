@@ -19,7 +19,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
 import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,7 +28,9 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -78,7 +79,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	private static Logger logger = LogManager.getLogger("Training Display");
 
 	public TrainingDisplay(Dimension screenSize) {
-		setPreferredSize(new Dimension(screenSize.width , screenSize.height));
+		setPreferredSize(new Dimension(screenSize.width / 2, 400));
 		setLayout(new BorderLayout());
 
 		MessageBus.INSTANCE.register(Messages.SPEED, this);
@@ -103,15 +104,15 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 		Color darkOrange = new Color(246, 46, 00);
 		descriptor.addItem(userPrefs.messages.getString("power"), darkOrange,
-				4.0f, Color.red, null, null);
+				1.0f, Color.red, null, null);
 		numElements = 1;
 
 		if (antEnabled) {
 			Color green = new Color(28, 237, 00);
 			descriptor.addItem(userPrefs.messages.getString("heartrate"),
-					green, 4.0f, Color.green, null, null);
+					green, 1.0f, Color.green, null, null);
 			descriptor.addItem(userPrefs.messages.getString("cadence"),
-					Color.blue, 4.0f, Color.blue, null, null);
+					Color.blue, 1.0f, Color.blue, null, null);
 			numElements += 2;
 		}
 
@@ -139,7 +140,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				}
 			}
 			descriptor
-					.setDetailsItems(new String[] { "<html><font size='+8'><b>Info" });
+					.setDetailsItems(new String[] { "<html><font size='+2'><b>Info" });
 		}
 
 		support = ChartFactory.createSimpleXYChart(descriptor);
@@ -149,22 +150,22 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		chart.revalidate();
 	}
 
-	private void update(Telemetry t) {
-		if (time == t.getTime()) {
+	private void update(Telemetry telemetry) {
+		if (time == telemetry.getTime()) {
 			// no change
 			return;
 		}
-		time = t.getTime();
+		time = telemetry.getTime();
 
 		if (startTime == 0) {
 			startTime = time; // start time
 		}
 
 		long[] values = new long[numElements];
-		values[0] = t.getPower();
+		values[0] = telemetry.getPower();
 		if (antEnabled) {
-			values[1] = t.getHeartRate();
-			values[2] = t.getCadence();
+			values[1] = telemetry.getHeartRate();
+			values[2] = telemetry.getCadence();
 		}
 
 		// training
@@ -178,18 +179,18 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 
 						MessageBus.INSTANCE
 								.send(Messages.TRAININGITEM, current);
-						notifyNewTrainingInterval();
-
+						// Sound beep on training change
+						Toolkit.getDefaultToolkit().beep();
 					}
 				}
 			} else {
 				// distance based training
-				if (tData.isNext(t.getDistanceMeters())) {
+				if (tData.isNext(telemetry.getDistanceMeters())) {
 					
-					current = tData.getNext(t.getDistanceMeters());
+					current = tData.getNext(telemetry.getDistanceMeters());
 					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 					// Sound beep on training change
-					notifyNewTrainingInterval();
+					Toolkit.getDefaultToolkit().beep();
 
 				}
 			}
@@ -216,41 +217,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		// use telemetry time
 		support.addValues(time, values);
 
-		add(t);
-	}
-
-	private void notifyNewTrainingInterval() {
-		// Sound beep on training change
-		Toolkit.getDefaultToolkit().beep();
-		// Display new training interva informations
-		String newTrainingIntervalInformations = "<html><font size='+8'><b>"+
-				current.getDescription() + "<br></b></font>"
-				+ "<html><font size='+6'><b>"+current.getPowerMsg() + current.getHRMsg()
-				+ current.getCadenceMsg() + "</b></font></html>";
-		final JOptionPane optionPane = new JOptionPane(newTrainingIntervalInformations, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[]{}, null);
-
-		final JDialog dialog = new JDialog();
-		dialog.setTitle(userPrefs.messages.getString("new_interval"));
-		//dialog.setModal(true);
-		dialog.setLocationRelativeTo(null);
-		dialog.setContentPane(optionPane);
-
-		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-		dialog.pack();
-
-		//create timer to dispose of dialog after 5 seconds
-		Timer timer = new Timer(5000, new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				dialog.dispose();
-			}
-		});
-		timer.setRepeats(false);//the timer should only go off once
-
-		//start timer to close JDialog as dialog modal we must start the timer before its visible
-		timer.start();
-
-		dialog.setVisible(true);
+		add(telemetry);
 	}
 
 	/*
@@ -358,7 +325,8 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				// TODO: this is a race hazard, this method can be called before
 				// setup, hence this test.
 
-				Telemetry t = (Telemetry) o;
+				// get a clone
+				Telemetry t = new Telemetry((Telemetry) o);
 				// recover last heart rate data
 				t.setHeartRate(heartRate);
 				t.setCadence(cadence);

@@ -117,12 +117,10 @@ public class ControlPanel extends JPanel implements ActionListener,
 
 			startPosition.addChangeListener(this);
 			startPosition.setPreferredSize(new Dimension(500, 40));
-			Font font = new Font("Serif", Font.ITALIC, 15);
+			Font font = new Font("Serif", Font.ITALIC, 14);
 
 			startPosition.setFont(font);
-			startPosition.setForeground(Color.WHITE);
-
-			startPosition.setPaintLabels(true);
+			startPosition.setForeground(Color.ORANGE);
 			add(startPosition);
 
 			start = 0;
@@ -134,8 +132,9 @@ public class ControlPanel extends JPanel implements ActionListener,
 			startPosition.setMaximum((int) (distance / 1000));
 
 			if (distance > 20000) {
+				// more than 20km
 				int ticks = (int) distance / 5000;
-				ticks = (int) (Math.ceil(ticks / 10) * 10);
+				ticks = (int) (Math.ceil(ticks / 10d) * 10 );
 				startPosition.setMajorTickSpacing(ticks);
 				startPosition.setMinorTickSpacing(1);
 			} else {
@@ -145,6 +144,7 @@ public class ControlPanel extends JPanel implements ActionListener,
 				startPosition.setMinorTickSpacing(1);
 			}
 
+			startPosition.setPaintLabels(true);
 			startPosition.setPaintTicks(true);
 			startPosition.revalidate();
 
