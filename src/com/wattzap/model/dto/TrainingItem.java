@@ -27,10 +27,15 @@ public class TrainingItem {
 
     private static final int MIN_RPM = 0;
     private static final int MAX_RPM = 180;
-    private static final int MAX_HR = 220;
+
     private static final int MIN_HR = 30;
+    private static final int MAX_HR = 220;
+
     private static final int MIN_POWER = 0;
     private static int MAX_POWER; // ftp * 1.5
+
+    public static final double FACTOR_SMOOTH_UPPER = 1.075;
+    public static final double FACTOR_SMOOTH_LOWER = 0.925;
 
     int hrLow = 0;
     int hrHigh;
@@ -49,48 +54,24 @@ public class TrainingItem {
         return hrLow;
     }
 
-    public void setHrLow(int hrLow) {
-        this.hrLow = hrLow;
-    }
-
     public int getHrHigh() {
         return hrHigh;
-    }
-
-    public void setHrHigh(int hrHigh) {
-        this.hrHigh = hrHigh;
     }
 
     public int getPowerLow() {
         return powerLow;
     }
 
-    public void setPowerLow(int powerLow) {
-        this.powerLow = powerLow;
-    }
-
     public int getPowerHigh() {
         return powerHigh;
-    }
-
-    public void setPowerHigh(int powerHigh) {
-        this.powerHigh = powerHigh;
     }
 
     public int getCadenceLow() {
         return cadenceLow;
     }
 
-    public void setCadenceLow(int cadenceLow) {
-        this.cadenceLow = cadenceLow;
-    }
-
     public int getCadenceHigh() {
         return cadenceHigh;
-    }
-
-    public void setCadenceHigh(int cadenceHigh) {
-        this.cadenceHigh = cadenceHigh;
     }
 
     public int getHeartRate() {
@@ -212,8 +193,8 @@ public class TrainingItem {
             } else {
                 // percentage of max heartrate
                 heartRate = (heartRate * fhr) / 100;
-                hrHigh = (int) ((double) heartRate * 1.02);
-                hrLow = (int) ((double) heartRate * 0.98);
+                hrHigh = (int) ((double) heartRate * FACTOR_SMOOTH_UPPER);
+                hrLow = (int) ((double) heartRate * FACTOR_SMOOTH_LOWER);
             }
         }
 
@@ -260,8 +241,8 @@ public class TrainingItem {
     public void setPower(double power) {
         // absolute power in watts
         this.power = (int) power;
-        powerHigh = (int) (power * 1.025);
-        powerLow = (int) (power * 0.975);
+        powerHigh = (int) (power * FACTOR_SMOOTH_UPPER);
+        powerLow = (int) (power * FACTOR_SMOOTH_LOWER);
     }
 
     /**
@@ -292,8 +273,8 @@ public class TrainingItem {
         } else if (v.indexOf('w') != -1) {
             // absolute power in watts
             power = Integer.parseInt(v.substring(0, v.indexOf('w')).trim());
-            powerHigh = (int) ((double) power * 1.025);
-            powerLow = (int) ((double) power * 0.975);
+            powerHigh = (int) ((double) power * FACTOR_SMOOTH_UPPER);
+            powerLow = (int) ((double) power * FACTOR_SMOOTH_LOWER);
         } else {
             power = Integer.parseInt(v.trim());
             if (power <= 7) {
@@ -345,8 +326,8 @@ public class TrainingItem {
             } else {
                 // percentage of max power
                 power = (power * ftp) / 100;
-                powerHigh = (int) ((double) power * 1.025);
-                powerLow = (int) ((double) power * 0.975);
+                powerHigh = (int) ((double) power * FACTOR_SMOOTH_UPPER);
+                powerLow = (int) ((double) power * FACTOR_SMOOTH_LOWER);
             }
         }
 
@@ -413,8 +394,8 @@ public class TrainingItem {
         } else {
             // absolute power in rpm
             cadence = Integer.parseInt(c.trim());
-            cadenceHigh = (int) ((double) cadence * 1.025);
-            cadenceLow = (int) ((double) cadence * 0.975);
+            cadenceHigh = (int) ((double) cadence * FACTOR_SMOOTH_UPPER);
+            cadenceLow = (int) ((double) cadence * FACTOR_SMOOTH_LOWER);
         }
     }
 
