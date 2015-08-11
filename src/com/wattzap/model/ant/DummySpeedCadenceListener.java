@@ -52,7 +52,6 @@ public class DummySpeedCadenceListener extends Thread implements
 	int resistance;
 	Power power;
 	boolean virtualPower;
-	private double levels = 1;
 
 	private static Logger logger = LogManager
 			.getLogger("DummySpeedCadenceListener");
@@ -89,6 +88,7 @@ public class DummySpeedCadenceListener extends Thread implements
 				// if ant disabled always use this calculation
 				if ((virtualPower || !UserPreferences.INSTANCE.isAntEnabled())
 						&& routeData != null) {
+
 					if (routeData.routeType() == RouteReader.SLOPE) {
 						p = routeData.getPoint(distance);
 
@@ -122,11 +122,16 @@ public class DummySpeedCadenceListener extends Thread implements
 							// what would be our real speed for those watts -
 							// show
 							// in odo
+
 							double realSpeed = power.getRealSpeed(mass,
 									p.getGradient() / 100, powerWatts);
 							speed = (realSpeed * 3600) / 1000;
 						}
 					} else {
+						// here we are a power file
+						// TODO For power files we just want to play at normal
+						// speed. OK we no there is no ANT here.
+
 						p = routeData.getPoint(distance);
 						// power comes from video (gradient)
 						// powerWatts = (int) ((p.getGradient()) +
@@ -150,15 +155,15 @@ public class DummySpeedCadenceListener extends Thread implements
 							t.setVirtualSpeed(bd.intValue());
 							t.setResistance(UserPreferences.INSTANCE
 									.getResistance());
-							// speed = p.getSpeed(); // FIXME what about RLV
+							if (routeData.getExtension().equals("pwr")) {
+								speed = p.getSpeed();
+							}
 						}
 					}
 				} else {
 					speed = power.getRealSpeed(mass, 0, powerWatts) * 3.6;
 				}
 
-				// t.setHeartRate((int) (110 + (powerWatts * 60 / 400)));
-				// t.setCadence((int) (60 + ((powerWatts * 40 / 300))));
 				t.setPower(powerWatts);
 
 				if (routeData != null) {
@@ -181,6 +186,7 @@ public class DummySpeedCadenceListener extends Thread implements
 				t.setSpeed(speed);
 				t.setDistanceMeters(distance * 1000);
 				t.setTime(System.currentTimeMillis());
+
 				MessageBus.INSTANCE.send(Messages.SPEED, t);
 
 				// d = s * t
