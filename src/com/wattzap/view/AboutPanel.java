@@ -68,7 +68,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 		if (key == null || key.length() == 0) {
 			userPrefs.setRegistrationKey("Community Edition");
 		}
-		about.setText("<html>WattzAp Community Edition<br/><br/>Version 2.5 beta2<br/>10th August 2015");
+		about.setText("<html>WattzAp Community Edition<br/><br/>Version 2.5.1<br/>19th August 2015");
 		add(about,"alignx right, span");
 
 		debug = new JCheckBox("Enable Debugging");
