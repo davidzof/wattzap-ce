@@ -7,7 +7,8 @@
   <property name="build" location="dist-mac/bin"/>
   <property name="dist"  location="dist-mac"/>
   <!-- ***** Change this to point to your JDK ***** -->
-  <property name="javadir" location="/home/david/bin/jdk1.6.0_45"/>
+  <!-- 26/08/2015 - updated to likely path of 1.6.0 JDK on OSX -->
+  <property name="javadir" location="/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home"/>
 
   <path id="master-classpath">
       <fileset dir="lib">
