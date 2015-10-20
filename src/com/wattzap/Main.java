@@ -166,7 +166,7 @@ public class Main implements Runnable {
 			odo = new AntOdometer();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
-					userPrefs.messages.getString("warning"),
+					userPrefs.getString("warning"),
 					JOptionPane.WARNING_MESSAGE);
 			logger.error("ANT+ " + e.getMessage());
 			new DummySpeedCadenceListener();
@@ -180,7 +180,7 @@ public class Main implements Runnable {
 			videoPlayer.init();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, e.getMessage(),
-					userPrefs.messages.getString("warning"),
+					userPrefs.getString("warning"),
 					JOptionPane.INFORMATION_MESSAGE);
 			logger.info(e.getMessage());
 
