@@ -47,7 +47,7 @@ public class CascadeFluidPro extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Cascade Fluid Pro";
 	}
 

@@ -70,7 +70,7 @@ public class BlackburnBasicMag extends Power {
 		return speed;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Blackburn Basic Mag";
 	}
 

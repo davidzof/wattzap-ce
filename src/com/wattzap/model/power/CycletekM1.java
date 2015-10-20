@@ -44,7 +44,7 @@ public class CycletekM1 extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Cycletek M1";
 	}
 

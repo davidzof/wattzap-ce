@@ -52,7 +52,7 @@ public class KineticRoadMachine extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Kinetic Road Machine/Rock And Roll";
 	}
 

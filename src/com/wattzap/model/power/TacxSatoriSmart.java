@@ -15,42 +15,40 @@
 */
 package com.wattzap.model.power;
 
-/*
- * Ascent Fluid
- * Power: 10km/h=50w, 20km/h=112w, 30km/h=232w, 40km/h=415w, 50km/h=700w, 60km/h=1100w
+/**
+ * (c) 2013 David George / Wattzap.com
  * 
- * Function: y = 0.00442x³ -0.04x² + 4.95833x
  * 
  * @author David George
- * @date 2 January 2015
+ * @date 11 June 2013
  */
 @PowerAnnotation
-public class AscentFluid extends Power {
-	private static final double a = 0.00422;
-	private static final double b = -0.04;
-	private static final double c = 4.95833;
-	private static final double d = 0;
-	private static final Cubic cubic = new Cubic();
-
+public class TacxSatoriSmart extends Power {
+	private final double[] slope = { 11.75, 13, 14.2, 15.45, 16.65, 17.9, 19.1, 20.35, 21.65, 22.85 };
+	private final double[] intercept = { -10, -9, -7, -6, -4, -3, -1, 0, 0, 0 };
 
 	public int getPower(double speed, int resistance) {
-
-		double power = (c * speed) + (b * speed * speed)
-				+ (a * speed * speed * speed);
-		return (int) power;
-	}
-
-	public String toString() {
-		return "Ascent Fluid";
-	}
-
-	@Override
-	public int getResitanceLevels() {
-		return 1;
+		int power = (int) ((speed * slope[resistance]) + intercept[resistance]);
+		if (power < 0) {
+			return 0;
+		}
+		return power;
 	}
 
 	public double getSpeed(int power, int resistance) {
-		cubic.solve(a, b, c, d - power);
-		return cubic.x1;
+		double speed = (power - intercept[resistance]) / slope[resistance];
+		if (speed < 0) {
+			return 0;
+		}
+		return speed;
+	}
+	
+	@Override
+	public int getResitanceLevels() {
+		return slope.length;
+	}
+
+	public String toString() {
+		return "Tacx Satori Smart";
 	}
 }

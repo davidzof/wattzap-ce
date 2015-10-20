@@ -42,7 +42,7 @@ public class EliteQuboFluid extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Qubo Fluid";
 	}
 

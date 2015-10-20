@@ -52,7 +52,7 @@ public class EliteParabolicRollers extends Power {
 		return speed;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Parabolic rollers";
 	}
 

@@ -40,7 +40,7 @@ public class CatEyeCS1000 extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "CatEye CS1000";
 	}
 

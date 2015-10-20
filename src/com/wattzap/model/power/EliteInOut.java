@@ -59,7 +59,7 @@ public class EliteInOut extends Power {
 	}
 
    @Override
-	public String description() {
+	public String toString() {
 		return "Elite Crono InOut Elastogel";
 	}
 }

@@ -45,7 +45,7 @@ public class BlackburnFluid extends Power {
 		return cubic.x1;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Blackburn Fluid";
 	}
 
