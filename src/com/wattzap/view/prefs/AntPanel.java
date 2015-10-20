@@ -26,6 +26,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -73,6 +74,8 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 	private int speedID;
 	private int cadenceID;
 	private int powerID;
+	
+	private JSlider powerSmooth;
 
 	// Checkboxen
 	JCheckBox scCheckBox;
@@ -196,7 +199,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		add(hrmIdLabel);
 		add(hrmIdField);
 		add(hrm);
-		add(hrmCheckBox, "gapleft 30, wrap");
+		add(hrmCheckBox, "gapleft 30, wrap 15px");
 		
 		if (userPrefs.getHRMId() > 0) {
 			hrmCheckBox.setVisible(true);
@@ -206,12 +209,23 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		}
 		hrmCheckBox.addItemListener(this);
 		
+		
+		JLabel pwrSliderLabel = new JLabel("Power Smoothing");
+		add(pwrSliderLabel, "wrap");
+		powerSmooth = new JSlider(JSlider.HORIZONTAL,
+                0, 30, 1);
+		powerSmooth.setMajorTickSpacing(5);
+		powerSmooth.setMinorTickSpacing(1);
+		powerSmooth.setPaintTicks(true);
+		powerSmooth.setVisible(true);
+		add(powerSmooth, "wrap 15px");
+		
 		pairButton = new JButton("Pair");
 		pairButton.setPreferredSize(new Dimension(60, 30));
 		pairButton.setActionCommand("pair");
 		pairButton.addActionListener(this);
 
-		JButton stopButton = new JButton(userPrefs.messages.getString("stop"));
+		JButton stopButton = new JButton(userPrefs.getString("stop"));
 		stopButton.setPreferredSize(new Dimension(60, 30));
 		stopButton.setActionCommand("stop");
 		stopButton.addActionListener(this);
@@ -281,6 +295,11 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 				scCheckBox.setSelected(false);
 			}
 		} else if (source == speedCheckBox) {
+			if (speedCheckBox.isSelected()) {
+				scCheckBox.setSelected(false);
+			}
+		} else if (source == powCheckBox) {
+			// power checkbox selected, don't use speed
 			if (speedCheckBox.isSelected()) {
 				scCheckBox.setSelected(false);
 			}
@@ -403,5 +422,9 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			return powerID;
 		}
 		return 0;
+	}
+	
+	public int getSmoothing() {
+		return powerSmooth.getValue();
 	}
 }
