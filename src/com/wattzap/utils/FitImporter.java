@@ -89,12 +89,16 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 						p = last.getPower();
 					}
 					if (p > 0) {
+						//point.setResistance(p);
 						point.setPower(p);
 					} else {
+						//point.setResistance(0);
 						point.setPower(0);
 					}
+					
 				}// for
-			}/* else {
+			}
+				/* else {
 				double powerSum1 = 0;
 				double powerSum2 = 0;
 				double stdev = 0;
@@ -323,16 +327,7 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 		return DatatypeConverter.printDateTime(cal);
 	}
 
-	public static void main(String args[]) {
-
-		// String fitFilename = "2014-05-22-11-10-22.fit";
-		String fitFilename = "Coteaux-de-Crolles-2014_07_20.fit";
-
-		FitImporter fitImporter = new FitImporter(fitFilename);
-
-		for (Telemetry t : fitImporter.data) {
-			System.out.println(t);
-		}
-	}
+	
+	
 
 }
