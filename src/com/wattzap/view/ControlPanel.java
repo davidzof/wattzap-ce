@@ -53,10 +53,10 @@ public class ControlPanel extends JPanel implements ActionListener,
 
 	public ControlPanel() {
 		JButton stopButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("stop"));
+				UserPreferences.INSTANCE.getString("stop"));
 		stopButton.setActionCommand("stop");
 		JButton startButton = new JButton(
-				UserPreferences.INSTANCE.messages.getString("start"));
+				UserPreferences.INSTANCE.getString("start"));
 		startButton.setActionCommand("start");
 
 		startButton.addActionListener(this);
@@ -81,9 +81,9 @@ public class ControlPanel extends JPanel implements ActionListener,
 		if ("start".equals(command)) {
 			if (!userPrefs.isAntEnabled() && userPrefs.getMaxPower() == 0) {
 				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE.messages
+						UserPreferences.INSTANCE
 								.getString("ftpWarning"),
-						UserPreferences.INSTANCE.messages.getString("warning"),
+						UserPreferences.INSTANCE.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 			}
 

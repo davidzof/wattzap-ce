@@ -107,9 +107,9 @@ public class Map extends GPXPanel implements MessageCallback {
 				logger.info("Out of time "
 						+ UserPreferences.INSTANCE.getEvalTime());
 				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE.messages
+						UserPreferences.INSTANCE
 								.getString("trial_expired"),
-						UserPreferences.INSTANCE.messages.getString("warning"),
+						UserPreferences.INSTANCE.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				UserPreferences.INSTANCE.shutDown();
 				System.exit(0);

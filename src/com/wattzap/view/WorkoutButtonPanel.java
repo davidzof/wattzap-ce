@@ -92,11 +92,11 @@ public class WorkoutButtonPanel extends JPanel implements ActionListener,
 	 * Setup button text, makes it easy to update if locale is changed
 	 */
 	private void doText() {
-		deleteButton.setText(UserPreferences.INSTANCE.messages
+		deleteButton.setText(UserPreferences.INSTANCE
 				.getString("delete"));
-		reloadButton.setText(UserPreferences.INSTANCE.messages
+		reloadButton.setText(UserPreferences.INSTANCE
 				.getString("reanal"));
-		quitButton.setText(UserPreferences.INSTANCE.messages.getString("quit"));
+		quitButton.setText(UserPreferences.INSTANCE.getString("quit"));
 	}
 
 	/**
