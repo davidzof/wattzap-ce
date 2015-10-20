@@ -63,8 +63,8 @@ public class SocialSharingController implements ActionListener {
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			if (data == null || data.size() == 0) {
 				JOptionPane.showMessageDialog(mainFrame,
-						userPrefs.messages.getString("noDataUpload"),
-						userPrefs.messages.getString("warning"),
+						userPrefs.getString("noDataUpload"),
+						userPrefs.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				logger.warn("No data to save");
 				return;
@@ -78,15 +78,15 @@ public class SocialSharingController implements ActionListener {
 						+ TcxWriter.WORKOUTDIR + fileName,
 						"Uploaded by http://www.wattzap.com/");
 				JOptionPane.showMessageDialog(mainFrame,
-						userPrefs.messages.getString("uploadTo") + " SelfLoops.com",
-						userPrefs.messages.getString("uploadWk"),
+						userPrefs.getString("uploadTo") + " SelfLoops.com",
+						userPrefs.getString("uploadWk"),
 						JOptionPane.INFORMATION_MESSAGE);
 			} catch (Exception e1) {
 				JOptionPane.showMessageDialog(
 						mainFrame,
-						userPrefs.messages.getString("uploadError")
+						userPrefs.getString("uploadError")
 								+ " " + e1.getLocalizedMessage(),
-						userPrefs.messages.getString("error"),
+						userPrefs.getString("error"),
 						JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
