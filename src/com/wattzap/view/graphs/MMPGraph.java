@@ -56,7 +56,7 @@ public class MMPGraph extends JPanel {
 	public MMPGraph(XYSeries series) {
 		super();
 
-		NumberAxis yAxis = new NumberAxis(userPrefs.messages.getString("poWtt"));
+		NumberAxis yAxis = new NumberAxis(userPrefs.getString("poWtt"));
 		yAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		double maxY = series.getMaxY();
 		yAxis.setRange(0, maxY + 20);
@@ -64,7 +64,7 @@ public class MMPGraph extends JPanel {
 		yAxis.setLabelPaint(Color.white);
 		
 		
-		LogAxis xAxis = new LogAxis(userPrefs.messages.getString("time"));
+		LogAxis xAxis = new LogAxis(userPrefs.getString("time"));
 		xAxis.setTickLabelPaint(Color.white);
 		xAxis.setBase(4);
 		xAxis.setAutoRange(false);

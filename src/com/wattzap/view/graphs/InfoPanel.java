@@ -97,7 +97,7 @@ public class InfoPanel extends JPanel {
 		// distance
 		JLabel distanceLabel = new JLabel();
 		distanceLabel.setFont(font1);
-		distanceLabel.setText(userPrefs.messages.getString("distance"));
+		distanceLabel.setText(userPrefs.getString("distance"));
 		add(distanceLabel);
 
 		distance = new JLabel();
@@ -108,7 +108,7 @@ public class InfoPanel extends JPanel {
 		// Max Heart Rate
 		JLabel maxHeartRateLabel = new JLabel();
 		maxHeartRateLabel.setFont(font1);
-		maxHeartRateLabel.setText(userPrefs.messages.getString("maxhr"));
+		maxHeartRateLabel.setText(userPrefs.getString("maxhr"));
 		add(maxHeartRateLabel);
 
 		maxHeartRate = new JLabel();
@@ -119,7 +119,7 @@ public class InfoPanel extends JPanel {
 		// Average Heartrate
 		JLabel aveHeartRateLabel = new JLabel();
 		aveHeartRateLabel.setFont(font1);
-		aveHeartRateLabel.setText(userPrefs.messages.getString("avehr"));
+		aveHeartRateLabel.setText(userPrefs.getString("avehr"));
 		add(aveHeartRateLabel);
 
 		aveHeartRate = new JLabel();
@@ -130,7 +130,7 @@ public class InfoPanel extends JPanel {
 		// Functional Threshold Heartrate
 		JLabel fthrLabel = new JLabel();
 		fthrLabel.setFont(font1);
-		fthrLabel.setText(userPrefs.messages.getString("fthr"));
+		fthrLabel.setText(userPrefs.getString("fthr"));
 		add(fthrLabel);
 
 		ftHeartRate = new JLabel();
@@ -141,7 +141,7 @@ public class InfoPanel extends JPanel {
 		// Average Cadence
 		JLabel aveCadenceLabel = new JLabel();
 		aveCadenceLabel.setFont(font1);
-		aveCadenceLabel.setText(userPrefs.messages.getString("avecad"));
+		aveCadenceLabel.setText(userPrefs.getString("avecad"));
 		add(aveCadenceLabel);
 
 		aveCadence = new JLabel();
@@ -151,7 +151,7 @@ public class InfoPanel extends JPanel {
 
 		JLabel maxCadenceLabel = new JLabel();
 		maxCadenceLabel.setFont(font1);
-		maxCadenceLabel.setText(userPrefs.messages.getString("maxcad"));
+		maxCadenceLabel.setText(userPrefs.getString("maxcad"));
 		add(maxCadenceLabel);
 
 		maxCadence = new JLabel();
@@ -162,7 +162,7 @@ public class InfoPanel extends JPanel {
 		// Total Power
 		JLabel powerLabel = new JLabel();
 		powerLabel.setFont(font1);
-		powerLabel.setText(userPrefs.messages.getString("power"));
+		powerLabel.setText(userPrefs.getString("power"));
 		add(powerLabel);
 
 		totalPower = new JLabel();
@@ -173,7 +173,7 @@ public class InfoPanel extends JPanel {
 		// Average Power
 		JLabel aveLabel = new JLabel();
 		aveLabel.setFont(font1);
-		aveLabel.setText(userPrefs.messages.getString("avepow"));
+		aveLabel.setText(userPrefs.getString("avepow"));
 		add(aveLabel);
 
 		avePower = new JLabel();
@@ -184,7 +184,7 @@ public class InfoPanel extends JPanel {
 		// Max Power
 		JLabel maxLabel = new JLabel();
 		maxLabel.setFont(font1);
-		maxLabel.setText(userPrefs.messages.getString("maxpow"));
+		maxLabel.setText(userPrefs.getString("maxpow"));
 		add(maxLabel);
 
 		maxPower = new JLabel();
@@ -195,7 +195,7 @@ public class InfoPanel extends JPanel {
 		// Quadratic Power
 		JLabel qLabel = new JLabel();
 		qLabel.setFont(font1);
-		qLabel.setText(userPrefs.messages.getString("qpow"));
+		qLabel.setText(userPrefs.getString("qpow"));
 		add(qLabel);
 
 		qPower = new JLabel();
@@ -206,7 +206,7 @@ public class InfoPanel extends JPanel {
 		// Current FTP
 		JLabel ftpLabel = new JLabel();
 		ftpLabel.setFont(font1);
-		ftpLabel.setText(userPrefs.messages.getString("cftp"));
+		ftpLabel.setText(userPrefs.getString("cftp"));
 		add(ftpLabel);
 
 		ftPower = new JLabel();
@@ -216,7 +216,7 @@ public class InfoPanel extends JPanel {
 
 		JLabel ftp1Label = new JLabel();
 		ftp1Label.setFont(font1);
-		ftp1Label.setText(userPrefs.messages.getString("1minftp"));
+		ftp1Label.setText(userPrefs.getString("1minftp"));
 		add(ftp1Label);
 
 		ft1Power = new JLabel();
@@ -226,7 +226,7 @@ public class InfoPanel extends JPanel {
 
 		JLabel ftp2Label = new JLabel();
 		ftp2Label.setFont(font1);
-		ftp2Label.setText(userPrefs.messages.getString("20minftp"));
+		ftp2Label.setText(userPrefs.getString("20minftp"));
 		add(ftp2Label);
 
 		ft20Power = new JLabel();
@@ -237,7 +237,7 @@ public class InfoPanel extends JPanel {
 		// Load
 		JLabel loadLabel = new JLabel();
 		loadLabel.setFont(font1);
-		loadLabel.setText(userPrefs.messages.getString("load"));
+		loadLabel.setText(userPrefs.getString("load"));
 		add(loadLabel);
 
 		load = new JLabel();
@@ -247,7 +247,7 @@ public class InfoPanel extends JPanel {
 
 		JLabel stressLabel = new JLabel();
 		stressLabel.setFont(font1);
-		stressLabel.setText(userPrefs.messages.getString("stress"));
+		stressLabel.setText(userPrefs.getString("stress"));
 		add(stressLabel);
 
 		stress = new JLabel();

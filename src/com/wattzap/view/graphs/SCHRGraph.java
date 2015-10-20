@@ -71,7 +71,7 @@ public class SCHRGraph extends JPanel {
 	private static Logger logger = LogManager.getLogger("Profile");
 	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-	final ValueAxis powerAxis = new NumberAxis(userPrefs.messages.getString("poWtt"));
+	final ValueAxis powerAxis = new NumberAxis(userPrefs.getString("poWtt"));
 
 	public SCHRGraph(ArrayList<Telemetry> telemetry[]) {
 		super();
@@ -181,7 +181,7 @@ public class SCHRGraph extends JPanel {
 			}
 		};
 
-		final ValueAxis cadenceAxis = new NumberAxis(userPrefs.messages.getString("cDrpm"));
+		final ValueAxis cadenceAxis = new NumberAxis(userPrefs.getString("cDrpm"));
 		cadenceAxis.setRange(0, 200);
 
 		// arguments of new XYLineAndShapeRenderer are to activate or deactivate
@@ -216,7 +216,7 @@ public class SCHRGraph extends JPanel {
 		// arguments of new XYLineAndShapeRenderer are to activate or deactivate
 		// the display of points or line. Set first argument to true if you want
 		// to draw lines between the points for e.g.
-		final ValueAxis heartRateAxis = new NumberAxis(userPrefs.messages.getString("hrBpm"));
+		final ValueAxis heartRateAxis = new NumberAxis(userPrefs.getString("hrBpm"));
 		heartRateAxis.setRange(0, 200);
 
 		plot.setRenderer(2, hrRenderer);
@@ -252,9 +252,9 @@ public class SCHRGraph extends JPanel {
 	}
 
 	public void updateValues(int smoothing) {
-		XYSeries powerSeries = new XYSeries(userPrefs.messages.getString("power"));
-		XYSeries cadenceSeries = new XYSeries(userPrefs.messages.getString("cadence"));
-		XYSeries hrSeries = new XYSeries(userPrefs.messages.getString("heartrate"));
+		XYSeries powerSeries = new XYSeries(userPrefs.getString("power"));
+		XYSeries cadenceSeries = new XYSeries(userPrefs.getString("cadence"));
+		XYSeries hrSeries = new XYSeries(userPrefs.getString("heartrate"));
 
 		Rolling pAve = new Rolling(smoothing);
 		Rolling hrAve = new Rolling(smoothing);
