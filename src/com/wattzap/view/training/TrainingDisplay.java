@@ -103,15 +103,15 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 				200, 300, 1d, true, 600);
 
 		Color darkOrange = new Color(246, 46, 00);
-		descriptor.addItem(userPrefs.messages.getString("power"), darkOrange,
+		descriptor.addItem(userPrefs.getString("power"), darkOrange,
 				1.0f, Color.red, null, null);
 		numElements = 1;
 
 		if (antEnabled) {
 			Color green = new Color(28, 237, 00);
-			descriptor.addItem(userPrefs.messages.getString("heartrate"),
+			descriptor.addItem(userPrefs.getString("heartrate"),
 					green, 1.0f, Color.green, null, null);
-			descriptor.addItem(userPrefs.messages.getString("cadence"),
+			descriptor.addItem(userPrefs.getString("cadence"),
 					Color.blue, 1.0f, Color.blue, null, null);
 			numElements += 2;
 		}
