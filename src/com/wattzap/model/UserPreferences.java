@@ -17,6 +17,7 @@ package com.wattzap.model;
 
 import java.awt.Rectangle;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -47,7 +48,7 @@ public enum UserPreferences {
 	private static String userDataDirectory = null;
 	private static final String cryptKey = "afghanistanbananastan";
 	private static final double LBSTOKG = 0.45359237;
-	public ResourceBundle messages;
+	private ResourceBundle messages;
 	private boolean antEnabled = true;
 	private boolean antUSBM = false;
 
@@ -274,6 +275,7 @@ public enum UserPreferences {
 	public void setLocale(String value) {
 		set(user, "locale", value);
 		messages = ResourceBundle.getBundle("MessageBundle", getLocale());
+		System.out.println("setting language to " + value + " get locale " + getLocale());
 		MessageBus.INSTANCE.send(Messages.LOCALE, null);
 	}
 
@@ -554,5 +556,18 @@ public enum UserPreferences {
 			}
 		}
 		return userDataDirectory;
+	}
+	
+	// Hack For UTF resources
+	public String getString(String key) {
+		String val = messages.getString(key); 
+		try {
+			return new String(val.getBytes("ISO-8859-1"), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 }
