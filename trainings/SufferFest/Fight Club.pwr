@@ -1,0 +1,220 @@
+#
+# SufferFest Fight Club Powerfile for Wattzap
+# http://www.wattzap.com/
+# http://www.thesufferfest.com 
+#
+# Intensity Factor: 93%
+#
+# hh:mm:ss,RPE,Cad,Speed
+00:00,1,90,30
+#
+# Warm Up
+02:18,1,90,30
+05:15,2,90,30
+#
+# Increase speed
+07:26,2,90,30
+#
+# Lap 1 - Tempo
+09:02,3,90,30
+#
+# Attack
+10:54,6,90,30
+#
+# Tempo
+11:08,3,90,30
+#
+# Attack
+11:51,6,90,30
+#
+# Tempo
+12:05,3,90,30
+#
+# Attack
+12:31,6,90,30
+#
+# Tempo
+12:45,3,90,30
+#
+# Attack
+13:40,6,90,30
+#
+# Tempo
+13:53,3,90,30
+#
+# Recovery
+15:03,1,90,30
+#
+# Lap 2 - Time Trial
+16:46,3,90,30
+#
+# Attack
+17:51,6,90,30
+#
+# Time Trial
+18:05,3,90,30
+#
+# Attack
+19:08,6,90,30
+#
+# Time Trial
+19:21,3,90,30
+#
+# Climb
+20:51,4,90,30
+#
+# Attack
+21:37,6,90,30
+#
+# Climb
+21:51,4,90,30
+#
+# Attack
+22:31,6,90,30
+#
+# Climb
+22:45,4,90,30
+#
+# Recovery
+23:31,1,90,30
+#
+# Lap 3 - Time Trial
+26:55,3,90,30
+#
+# Attack
+28:04,6,90,30
+#
+# Time Trial
+28:18,3,90,30
+#
+# Attack
+28:59,6,90,30
+#
+# Time Trial
+29:12,3,90,30
+#
+# Climb
+31:07,4,90,30
+#
+# Attack
+31:55,6,90,30
+#
+# Climb
+32:08,4,90,30
+#
+# Attack
+33:00,6,90,30
+#
+# Climb
+33:13,4,90,30
+#
+# Attack
+33:40,6,90,30
+#
+# Recovery
+33:54,1,90,30
+#
+# Lap 4 - Time Trial
+37:21,3,90,30
+#
+# Attack
+38:21,6,90,30
+#
+# Time Trial
+38:34,3,90,30
+#
+# Attack
+40:13,6,90,30
+#
+# Time Trial
+40:27,3,90,30
+#
+# Attack
+40:50,6,90,30
+#
+# Time Trial
+40:57,3,90,30
+#
+# Climb
+41:44,4,90,30
+#
+# Attack
+42:06,6,90,30
+#
+# Climb
+42:20,4,90,30
+#
+# Attack
+42:58,6,90,30
+#
+# Climb
+43:12,4,90,30
+#
+# Attack
+43:56,6,90,30
+#
+# Climb
+44:04,4,90,30
+#
+# Recovery
+44:19,1,90,30
+#
+# Lap 5 - Time Trial
+47:35,3,90,30
+#
+# Attack
+48:08,6,90,30
+#
+# Time Trial
+48:21,3,90,30
+#
+# Attack
+48:49,6,90,30
+#
+# Time Trial
+49:03,3,90,30
+#
+# Attack
+50:04,6,90,30
+#
+# Time Trial
+50:16,3,90,30
+#
+# Attack
+51:07,6,90,30
+#
+# Time Trial
+51:15,3,90,30
+#
+# Attack
+51:26,6,90,30
+#
+# Climb
+51:47,4,90,30
+#
+# Attack
+52:16,6,90,30
+#
+# Climb
+52:29,4,90,30
+#
+# Attack
+52:58,6,90,30
+#
+# Climb
+53:05,4,90,30
+#
+# Attack
+53:37,6,90,30
+#
+# Climb
+53:50,4,90,30
+#
+# Attack
+54:23,6,90,30
+#
+# Cool Down
+54:48,1,90,30
+#
+# Finish
+60:19,1,90,30
