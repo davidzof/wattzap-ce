@@ -39,7 +39,7 @@ import com.wattzap.model.UserPreferences;
 /**
  * Control button panel at bottom of main screen to start/stop routes
  * 
- * (c) 2014 David George / Wattzap.com
+ * (c) 2014-2016 David George / Wattzap.com
  * 
  * @author David George
  * @date 1 January 2014
@@ -50,21 +50,33 @@ public class ControlPanel extends JPanel implements ActionListener,
 	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private JSlider startPosition;
 	private int start;
+	private boolean started;
+	JButton startStopButton;
 
 	public ControlPanel() {
-		JButton stopButton = new JButton(
-				UserPreferences.INSTANCE.getString("stop"));
-		stopButton.setActionCommand("stop");
-		JButton startButton = new JButton(
-				UserPreferences.INSTANCE.getString("start"));
-		startButton.setActionCommand("start");
+		//JButton stopButton = new JButton(
+			//	UserPreferences.INSTANCE.getString("stop"));
+		//stopButton.setActionCommand("stop");
+		
+		// One button to start and stop them all
+		startStopButton = new JButton(UserPreferences.INSTANCE.getString("start"));
+		//startButton.setBackground(Color.RED);
+		startStopButton.setActionCommand("start");
+		
+		//startButton.setContentAreaFilled(false);
+        
+		//startButton.setOpaque(true);
+		
+		
+		
+		started = false;
 
-		startButton.addActionListener(this);
-		stopButton.addActionListener(this);
+		startStopButton.addActionListener(this);
+		//stopButton.addActionListener(this);
 
 		setBackground(Color.black);
-		add(startButton);
-		add(stopButton);
+		add(startStopButton);
+		//add(stopButton);
 
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
@@ -78,19 +90,27 @@ public class ControlPanel extends JPanel implements ActionListener,
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		if ("start".equals(command)) {
+		// if ("start".equals(command)) {
+		if (started) {
+			MessageBus.INSTANCE.send(Messages.STOP, null);
+			startStopButton.setText("Start");
+			started = false;
+		} else {
 			if (!userPrefs.isAntEnabled() && userPrefs.getMaxPower() == 0) {
+				// warn if FTP is not set and running in stand alone mode
 				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE
-								.getString("ftpWarning"),
+						UserPreferences.INSTANCE.getString("ftpWarning"),
 						UserPreferences.INSTANCE.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 			}
 
 			MessageBus.INSTANCE.send(Messages.START, new Double(start));
-		} else {
-			MessageBus.INSTANCE.send(Messages.STOP, null);
+			startStopButton.setText("Stop");
+			started = true;
 		}
+		// } else {
+		// MessageBus.INSTANCE.send(Messages.STOP, null);
+		// }
 	}
 
 	/**
@@ -134,7 +154,7 @@ public class ControlPanel extends JPanel implements ActionListener,
 			if (distance > 20000) {
 				// more than 20km
 				int ticks = (int) distance / 5000;
-				ticks = (int) (Math.ceil(ticks / 10d) * 10 );
+				ticks = (int) (Math.ceil(ticks / 10d) * 10);
 				startPosition.setMajorTickSpacing(ticks);
 				startPosition.setMinorTickSpacing(1);
 			} else {

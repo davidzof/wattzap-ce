@@ -25,7 +25,7 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 
 /**
- * (c) 2013 David George / Wattzap.com
+ * (c) 2013-2015 David George / Wattzap.com
  * 
  * Speed and Cadence ANT+ processor.
  * 
@@ -41,7 +41,12 @@ public class AdvancedSpeedCadenceListener extends AntListener {
 	private final CadenceListener cadenceListener;
 
 	public AdvancedSpeedCadenceListener() {
-		speedListener = new SpeedListener();
+		if (UserPreferences.INSTANCE.getPowerId() == 0) {
+			// if power is selected don't register a speed listener, use power meter instead
+			speedListener = new SpeedListener();
+		} else {
+			speedListener = null;
+		}
 		cadenceListener = new CadenceListener();
 	}
 
@@ -86,14 +91,17 @@ public class AdvancedSpeedCadenceListener extends AntListener {
 		// Bytes 4 and 5: TTTT / 1024 = milliSeconds since the last
 		// rollover for speed
 		int tS = data[4] | (data[5] << 8);
-		
+
 		// Bytes 6 and 7: speed rotation count.
 		int sR = data[6] | (data[7] << 8);
 
 		logger.debug("tC " + tC + " cR " + cR + " tS " + tS + " sR " + sR);
-		Telemetry t = speedListener.getTelemetry(tS, sR);
-		if (t != null) {
-			MessageBus.INSTANCE.send(Messages.SPEED, t);
+
+		if (speedListener != null) {
+			Telemetry t = speedListener.getTelemetry(tS, sR);
+			if (t != null) {
+				MessageBus.INSTANCE.send(Messages.SPEED, t);
+			}
 		}
 
 		int cadence = cadenceListener.getCadence(tC, cR);

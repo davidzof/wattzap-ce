@@ -36,7 +36,8 @@ import com.wattzap.view.Workouts;
 /**
  * Singleton helper to read/write user preferences to a backing store
  * 
- * @author David George / 15 September 2013 (C) Copyright 2013
+ * @author David George / 15 September 2013
+ * (C) Copyright 2013-2015
  */
 public enum UserPreferences {
 	INSTANCE;
@@ -275,7 +276,6 @@ public enum UserPreferences {
 	public void setLocale(String value) {
 		set(user, "locale", value);
 		messages = ResourceBundle.getBundle("MessageBundle", getLocale());
-		System.out.println("setting language to " + value + " get locale " + getLocale());
 		MessageBus.INSTANCE.send(Messages.LOCALE, null);
 	}
 
@@ -343,6 +343,14 @@ public enum UserPreferences {
 
 	public void setPowerId(int i) {
 		setInt(user, "powerId", i);
+	}
+	
+	public int getPowerSmoothing() {
+		return getInt(user, "powerSmooth", 0);
+	}
+
+	public void setPowerSmooth(int i) {
+		setInt(user, "powerSmooth", i);
 	}
 
 	public int getHRMId() {

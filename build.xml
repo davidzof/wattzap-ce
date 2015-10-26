@@ -7,6 +7,7 @@
   <property name="build" location="dist-ce/bin"/>
   <property name="dist"  location="dist-ce"/>
 
+
   <path id="master-classpath">
       <fileset dir="lib">
         <include name="*.jar"/>

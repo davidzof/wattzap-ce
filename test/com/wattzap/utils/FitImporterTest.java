@@ -46,6 +46,25 @@ public class FitImporterTest {
 		}
 	}
 	
+	@Test
+	public void ImportFIT2() {
+		Rolling gAve = new Rolling(1);
+		Rolling pAve = new Rolling(1);
+		// String fitFilename = "2014-05-22-11-10-22.fit";
+		String fitFilename = "/home/david/wattzap/Imports/Edge520-Verve-Infocrank-2015-08-25-10-39-22.fit";
+
+		FitImporter fitImporter = new FitImporter(fitFilename);
+		long time = 0;
+		for (Telemetry t : fitImporter.data) {
+			if (time == 0) {
+				time = t.getTime();
+			}
+
+			System.out.println(((t.getTime()-time)/1000) + "," + (int) gAve.add(t.getPower()) + "," + (int) pAve.add(t.getResistance()) + ", " + t.getElevation());
+		}
+		System.exit(0);
+	}
+	
 	
 	//@Test
 	public void TcxImport() {

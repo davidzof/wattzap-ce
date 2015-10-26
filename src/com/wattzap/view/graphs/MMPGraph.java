@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view.graphs;
 
 import java.awt.BorderLayout;
@@ -36,13 +36,15 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleInsets;
 
 import com.wattzap.model.UserPreferences;
 
 /* 
  * Mean Maximal Power Graph
  * 
- * @author David George (c) Copyright 2014
+ * @author David George (c) Copyright 2014-2016
  * @date 18 April 2014
  */
 public class MMPGraph extends JPanel {
@@ -53,7 +55,7 @@ public class MMPGraph extends JPanel {
 
 	private static Logger logger = LogManager.getLogger("MMPGraph");
 
-	public MMPGraph(XYSeries series) {
+	public MMPGraph(XYSeries series, int ftp20, long ftp20T, int ftp, long ftpT) {
 		super();
 
 		NumberAxis yAxis = new NumberAxis(userPrefs.getString("poWtt"));
@@ -62,23 +64,21 @@ public class MMPGraph extends JPanel {
 		yAxis.setRange(0, maxY + 20);
 		yAxis.setTickLabelPaint(Color.white);
 		yAxis.setLabelPaint(Color.white);
-		
-		
+
 		LogAxis xAxis = new LogAxis(userPrefs.getString("time"));
 		xAxis.setTickLabelPaint(Color.white);
 		xAxis.setBase(4);
 		xAxis.setAutoRange(false);
-	
-		
+
 		xAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
-		xAxis.setRange(1, series.getMaxX()+500);
+		xAxis.setRange(1, series.getMaxX() + 500);
 		xAxis.setNumberFormatOverride(new NumberFormat() {
 
 			@Override
 			public StringBuffer format(double number, StringBuffer toAppendTo,
 					FieldPosition pos) {
-				
+
 				long millis = (long) number * 1000;
 
 				if (millis >= 60000) {
@@ -92,7 +92,7 @@ public class MMPGraph extends JPanel {
 				} else {
 					return new StringBuffer(String.format(
 							"%d s",
-							
+
 							TimeUnit.MILLISECONDS.toSeconds((long) millis)
 									- TimeUnit.MINUTES
 											.toSeconds(TimeUnit.MILLISECONDS
@@ -111,32 +111,60 @@ public class MMPGraph extends JPanel {
 				return null;
 			}
 		});
-	
-
 
 		XYPlot plot = new XYPlot(new XYSeriesCollection(series), xAxis, yAxis,
 				new XYLineAndShapeRenderer(true, false));
 
+		// show FTP20 line
+		if (ftp20 > 0) {
+			ValueMarker horiz = new ValueMarker(ftp20);
+			ValueMarker vert = new ValueMarker(ftp20T);
+			horiz.setPaint(Color.YELLOW);
+			vert.setPaint(Color.YELLOW);
+
+			horiz.setLabel("FTP 20 " + ftp20 + " watts"); 
+			horiz.setLabelAnchor(RectangleAnchor.CENTER);
+			horiz.setLabelPaint(Color.white);
+
+			plot.addRangeMarker(horiz);
+			plot.addDomainMarker(vert);
+		}
+		// show FTP line
+		if (ftp > 0) {
+			ValueMarker horiz = new ValueMarker(ftp);
+			ValueMarker vert = new ValueMarker(ftpT);
+			horiz.setPaint(Color.ORANGE);
+			vert.setPaint(Color.ORANGE);
+			
+			vert.setLabel("FTP " + ftp + " watts");
+			vert.setLabelAnchor(RectangleAnchor.BOTTOM_LEFT);
+			vert.setLabelPaint(Color.white);
+			
+			plot.addRangeMarker(horiz);
+			plot.addDomainMarker(vert);
+		}
 
 		JFreeChart chart = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT,
-				plot, false);	
+				plot, false);
 
 		chart.setBackgroundPaint(Color.gray);
 		plot = chart.getXYPlot();
 		plot.setBackgroundPaint(Color.darkGray);
-		/*plot.setDomainGridlinePaint(Color.lightGray);
-		plot.setRangeGridlinePaint(Color.lightGray);*/
-		
+		/*
+		 * plot.setDomainGridlinePaint(Color.lightGray);
+		 * plot.setRangeGridlinePaint(Color.lightGray);
+		 */
+
 		ValueAxis domainAxis = plot.getDomainAxis();
 		domainAxis.setTickLabelPaint(Color.white);
 		domainAxis.setLabelPaint(Color.white);
-		
+
 		chartPanel = new ChartPanel(chart);
 		chartPanel.setSize(100, 800);
 		chartPanel.setFillZoomRectangle(true);
 		chartPanel.setMouseWheelEnabled(true);
 		chartPanel.setBackground(Color.gray);
-		
+
 		setLayout(new BorderLayout());
 		add(chartPanel, BorderLayout.CENTER);
 		setBackground(Color.black);

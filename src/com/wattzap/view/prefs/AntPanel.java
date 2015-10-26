@@ -48,6 +48,8 @@ import com.wattzap.model.dto.Telemetry;
  * 
  * @author David George
  * @date 25th August 2013
+ * 
+ * (c) 2013-2015 David George / Wattzap.com
  */
 public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		MessageCallback {
@@ -211,13 +213,14 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		
 		
 		JLabel pwrSliderLabel = new JLabel("Power Smoothing");
-		add(pwrSliderLabel, "wrap");
+		
 		powerSmooth = new JSlider(JSlider.HORIZONTAL,
                 0, 30, 1);
 		powerSmooth.setMajorTickSpacing(5);
 		powerSmooth.setMinorTickSpacing(1);
 		powerSmooth.setPaintTicks(true);
 		powerSmooth.setVisible(true);
+		add(pwrSliderLabel, "wrap");
 		add(powerSmooth, "wrap 15px");
 		
 		pairButton = new JButton("Pair");
@@ -237,9 +240,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		status.setText("");
 		add(status, "span");
 
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
-		MessageBus.INSTANCE.register(Messages.CADENCE, this);
-		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 
 		setText();
@@ -333,12 +334,18 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			sandcField.setText(": 0");
 			hrmIdField.setText(": 0");
 			
+			MessageBus.INSTANCE.register(Messages.SPEED, this);
+			MessageBus.INSTANCE.register(Messages.CADENCE, this);
+			MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+			
 			antDevice.open();
 			status.setText("Attempting pairing...");
 
 		} else {
 			status.setText("Pairing complete...");
-			MessageBus.INSTANCE.unregister();
+			MessageBus.INSTANCE.unregister(Messages.SPEED, this);
+			MessageBus.INSTANCE.unregister(Messages.CADENCE, this);
+			MessageBus.INSTANCE.unregister(Messages.HEARTRATE, this);
 			hrmID = antDevice.getChannelId(HeartRateListener.name);
 			if (hrmID > 0) {
 				hrmCheckBox.setVisible(true);

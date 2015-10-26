@@ -78,7 +78,7 @@ import com.wattzap.view.training.TrainingAnalysis;
 /**
  * List of workouts stored in the system
  * 
- * @author David George (c) 2014,2015
+ * @author David George (c) 2014-2016
  * @date 17 April 2014
  */
 public class Workouts extends JPanel implements ActionListener, MessageCallback {
@@ -614,7 +614,6 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		for (int i = 0; i < telemetry.length; i++) {
 			Telemetry first = null;
 			for (Telemetry t : telemetry[i]) {
-
 				if (first == null) {
 					// first time through
 					first = t;
@@ -636,11 +635,16 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 			}// for
 		}// for
 
+		int ftp20 = 0;
+		long ftp20T = 0;
+		int ftp = 0;
+		long ftpT = 0;
 		long total = 0;
 		XYSeries series = new XYSeries(userPrefs.getString("mmp"));
 		for (Entry<Integer, Long> entry : powerValues.descendingMap()
 				.entrySet()) {
 			Integer pwr = entry.getKey(); // power, Y axis
+			
 			if (total == 0) {
 				// first time thru
 				total = entry.getValue();
@@ -651,10 +655,21 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 			} else {
 				total += entry.getValue(); // time in milliseconds - X axis
 			}
+			if (total > (20*60*1000) && ftp20 == 0) {
+				// 20 minutes
+				ftp20 = pwr;
+				ftp20T = total/1000;
+			}
+			if (total > (60*60*1000) && ftp == 0) {
+				// 20 minutes
+				ftp = pwr;
+				ftpT = total/1000;
+			}
+			
 			series.addOrUpdate(total / 1000, (double) pwr);
 		}// for
 
-		MMPGraph mmp = new MMPGraph(series);
+		MMPGraph mmp = new MMPGraph(series, ftp20, ftp20T, ftp, ftpT);
 
 		JFrame frame = new JFrame(userPrefs.getString("mmp"));
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");

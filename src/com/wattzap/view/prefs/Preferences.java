@@ -54,7 +54,7 @@ import com.wattzap.model.power.PowerProfiles;
 /*
  * Preferences main panel
  * 
- * @author David George (c) Copyright 2013
+ * @author David George (c) Copyright 2013-2015
  * @date 19 June 2013
  */
 //TODO: Add video directory location
@@ -84,7 +84,7 @@ public class Preferences extends JFrame implements ActionListener,
 	private final JComboBox languageList = new JComboBox();
 	// Supported languages for dropdown TODO make this dynamic
 	private final Locale[] locales = { new Locale("fr"), new Locale("en"),
-			new Locale("de") };
+			new Locale("de"), new Locale("nl"), new Locale("hu"), new Locale("es") };
 	private final TurboPanel trainerPanel;
 	private AntPanel antPanel = null;
 	private final SocialPanel socialPanel;
@@ -333,11 +333,29 @@ public class Preferences extends JFrame implements ActionListener,
 		}
 
 		if (antPanel != null) {
+			// check something is selected!
+			if (!antPanel.scCheckBox.isSelected()) {
+				if (!antPanel.hrmCheckBox.isSelected()) {
+					if (!antPanel.speedCheckBox.isSelected()) {
+						if (!antPanel.powCheckBox.isSelected()) {
+							if (!antPanel.cadCheckBox.isSelected()) {
+								JOptionPane.showMessageDialog(this, "No Ant Device Selected",
+										userPrefs.getString("warning"),
+										JOptionPane.WARNING_MESSAGE);
+							}
+						}
+						
+					}
+					
+				}
+			}
+			
 			userPrefs.setSCId(antPanel.getSCId());
 			userPrefs.setSpeedId(antPanel.getSpeedId());
 			userPrefs.setCadenceId(antPanel.getCadenceId());
 			userPrefs.setHRMId(antPanel.getHRMId());
 			userPrefs.setPowerId(antPanel.getPwrId());
+			userPrefs.setPowerSmooth(antPanel.getSmoothing());
 
 			antPanel.close();
 		}
