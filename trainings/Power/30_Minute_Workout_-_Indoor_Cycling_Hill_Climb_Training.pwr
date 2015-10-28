@@ -1,0 +1,31 @@
+# Global Cycling Network 30 Minute Workout
+# From Youtube: http://youtu.be/lQxo1lZ8H1Q
+# Intensity Factor: 54%
+# Steadily rising effort
+# Warm Up 4 minutes
+0,1,70,25
+# 4 Minutes Endurance
+4:07,2,85,18
+# Anaerobic 10 second Sprint
+7:58,6,95,30
+# 4 Minutes Level 3 Tempo
+8:08,3,90,18
+# Anaerobic 10 second Sprint
+11:58,6,95,30
+12:08,3,100,20
+# Anaerobic 10 second Sprint
+15:58,6,100,30
+16:08,4,90,20
+# Anaerobic 10 second Sprint
+20:58,6,95,30
+# Lactate Threshold 4 minutes
+21:08,4,80,20
+# Change in tempo
+24:09,4,100,20
+# Anaerobic 10 second Sprint
+24:58,6,100,30
+# VO2 Max for 4 minutes
+25:08,5,90,22
+# Anaerobic 10 second Sprint
+28:58,6,90,30
+29:08,2,85,18
