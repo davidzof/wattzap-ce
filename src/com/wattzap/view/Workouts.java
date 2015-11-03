@@ -78,7 +78,7 @@ import com.wattzap.view.training.TrainingAnalysis;
 /**
  * List of workouts stored in the system
  * 
- * @author David George (c) 2014,2015
+ * @author David George (c) 2014-2016
  * @date 17 April 2014
  */
 public class Workouts extends JPanel implements ActionListener, MessageCallback {
@@ -261,7 +261,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		scatMenu.add(powerWattsMenuItem);
 
 		quadAnalysisMenuItem = new JMenuItem(
-				userPrefs.messages.getString("quadAnal"));
+				userPrefs.getString("quadAnal"));
 		quadAnalysisMenuItem.setActionCommand(qaGraph);
 		quadAnalysisMenuItem.addActionListener(this);
 		scatMenu.add(quadAnalysisMenuItem);
@@ -373,9 +373,9 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				logger.info("Out of time "
 						+ UserPreferences.INSTANCE.getEvalTime());
 				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE.messages
+						UserPreferences.INSTANCE
 								.getString("trial_expired"),
-						UserPreferences.INSTANCE.messages.getString("warning"),
+						UserPreferences.INSTANCE.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				return;
 			}
@@ -401,10 +401,10 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 
 			StringBuilder importedFiles = new StringBuilder();
 			if (ar.getImportedFileList().isEmpty()) {
-				importedFiles.append(userPrefs.messages.getString("noFiles"));
+				importedFiles.append(userPrefs.getString("noFiles"));
 			} else {
 
-				importedFiles.append(userPrefs.messages.getString("imported") + ":\n\n");
+				importedFiles.append(userPrefs.getString("imported") + ":\n\n");
 				for (String file : ar.getImportedFileList()) {
 					importedFiles.append(file);
 					importedFiles.append("\n");
@@ -414,7 +414,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 
 			}
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),
-					userPrefs.messages.getString("import"), JOptionPane.INFORMATION_MESSAGE);
+					userPrefs.getString("import"), JOptionPane.INFORMATION_MESSAGE);
 
 			return;
 		}
@@ -448,8 +448,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public int getKey(Telemetry t) {
 					return getKey(t.getPower());
 				}
-			}, 15, userPrefs.messages.getString("pdGr"),
-					userPrefs.messages.getString("poWtt"));
+			}, 15, userPrefs.getString("pdGr"),
+					userPrefs.getString("poWtt"));
 			return;
 		}
 		if (cdGraph.equals(command)) {
@@ -458,8 +458,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public int getKey(Telemetry t) {
 					return getKey(t.getCadence());
 				}
-			}, 5, userPrefs.messages.getString("cDgr"),
-					userPrefs.messages.getString("cDrpm"));
+			}, 5, userPrefs.getString("cDgr"),
+					userPrefs.getString("cDrpm"));
 			return;
 		}
 		if (hrdGraph.equals(command)) {
@@ -471,8 +471,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 
 					return getKey(t.getHeartRate());
 				}
-			}, 10, userPrefs.messages.getString("hrDgr"),
-					userPrefs.messages.getString("hrBpm"));
+			}, 10, userPrefs.getString("hrDgr"),
+					userPrefs.getString("hrBpm"));
 			return;
 		}
 		if (tlGraph.equals(command)) {
@@ -488,7 +488,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public String getValueLabel(int v) {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
-			}, 0, userPrefs.messages.getString("trainDist"), userPrefs.messages.getString("trainlevel"));
+			}, 0, userPrefs.getString("trainDist"), userPrefs.getString("trainlevel"));
 			return;
 		}
 		if (tlhrGraph.equals(command)) {
@@ -504,7 +504,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public String getValueLabel(int v) {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
-			}, 0, userPrefs.messages.getString("trainlevelhr"), userPrefs.messages.getString("trainlevel"));
+			}, 0, userPrefs.getString("trainlevelhr"), userPrefs.getString("trainlevel"));
 			return;
 		}
 	}
@@ -522,7 +522,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	private boolean load() {
 		if (selectedRows == null || selectedRows.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					userPrefs.messages.getString("noDataDisp"), userPrefs.messages.getString("noData"),
+					userPrefs.getString("noDataDisp"), userPrefs.getString("noData"),
 					JOptionPane.ERROR_MESSAGE);
 			return false;
 		} else if (listChanged == false && telemetry != null) {
@@ -560,7 +560,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	void reanalyze() {
 		if (selectedRows == null || selectedRows.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					userPrefs.messages.getString("noDataDisp"), userPrefs.messages.getString("noData"),
+					userPrefs.getString("noDataDisp"), userPrefs.getString("noData"),
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -614,7 +614,6 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		for (int i = 0; i < telemetry.length; i++) {
 			Telemetry first = null;
 			for (Telemetry t : telemetry[i]) {
-
 				if (first == null) {
 					// first time through
 					first = t;
@@ -636,11 +635,16 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 			}// for
 		}// for
 
+		int ftp20 = 0;
+		long ftp20T = 0;
+		int ftp = 0;
+		long ftpT = 0;
 		long total = 0;
-		XYSeries series = new XYSeries(userPrefs.messages.getString("mmp"));
+		XYSeries series = new XYSeries(userPrefs.getString("mmp"));
 		for (Entry<Integer, Long> entry : powerValues.descendingMap()
 				.entrySet()) {
 			Integer pwr = entry.getKey(); // power, Y axis
+			
 			if (total == 0) {
 				// first time thru
 				total = entry.getValue();
@@ -651,12 +655,23 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 			} else {
 				total += entry.getValue(); // time in milliseconds - X axis
 			}
+			if (total > (20*60*1000) && ftp20 == 0) {
+				// 20 minutes
+				ftp20 = pwr;
+				ftp20T = total/1000;
+			}
+			if (total > (60*60*1000) && ftp == 0) {
+				// 20 minutes
+				ftp = pwr;
+				ftpT = total/1000;
+			}
+			
 			series.addOrUpdate(total / 1000, (double) pwr);
 		}// for
 
-		MMPGraph mmp = new MMPGraph(series);
+		MMPGraph mmp = new MMPGraph(series, ftp20, ftp20T, ftp, ftpT);
 
-		JFrame frame = new JFrame(userPrefs.messages.getString("mmp"));
+		JFrame frame = new JFrame(userPrefs.getString("mmp"));
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -675,7 +690,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	 * Quadrant Analysis
 	 */
 	private void QuadrantAnalysis() {
-		XYSeries series = new XYSeries(userPrefs.messages.getString("forceVeloc"));
+		XYSeries series = new XYSeries(userPrefs.getString("forceVeloc"));
 
 		for (int i = 0; i < telemetry.length; i++) {
 			for (Telemetry t : telemetry[i]) {
@@ -719,7 +734,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		series3.add(3, aepf);
 		mmp.addLine(series3);
 
-		JFrame frame = new JFrame(userPrefs.messages.getString("quadAnal"));
+		JFrame frame = new JFrame(userPrefs.getString("quadAnal"));
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -737,7 +752,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	 * Cadence / Speed Scatter plot
 	 */
 	private void CSScatterPlot() {
-		XYSeries series = new XYSeries(userPrefs.messages.getString("cadPow"));
+		XYSeries series = new XYSeries(userPrefs.getString("cadPow"));
 
 		for (int i = 0; i < telemetry.length; i++) {
 			for (Telemetry t : telemetry[i]) {
@@ -749,9 +764,9 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}// for
 
 		GenericScatterGraph mmp = new GenericScatterGraph(series,
-				userPrefs.messages.getString("poWtt"),
-				userPrefs.messages.getString("cDrpm"));
-		JFrame frame = new JFrame(userPrefs.messages.getString("cadPow"));
+				userPrefs.getString("poWtt"),
+				userPrefs.getString("cDrpm"));
+		JFrame frame = new JFrame(userPrefs.getString("cadPow"));
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -767,7 +782,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	}
 
 	public void HRWattsScatterPlot() {
-		XYSeries series = new XYSeries(userPrefs.messages.getString("hrWatts"));
+		XYSeries series = new XYSeries(userPrefs.getString("hrWatts"));
 
 		for (int i = 0; i < telemetry.length; i++) {
 			for (Telemetry t : telemetry[i]) {
@@ -779,9 +794,9 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}// for
 
 		GenericScatterGraph mmp = new GenericScatterGraph(series,
-				userPrefs.messages.getString("poWtt"),
-				userPrefs.messages.getString("hrBpm"));
-		JFrame frame = new JFrame(userPrefs.messages.getString("hrPow"));
+				userPrefs.getString("poWtt"),
+				userPrefs.getString("hrBpm"));
+		JFrame frame = new JFrame(userPrefs.getString("hrPow"));
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -822,8 +837,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	 */
 	public void SCHRGraph() {
 		if (selectedRows != null && selectedRows.size() > 1) {
-			JOptionPane.showMessageDialog(this, userPrefs.messages.getString("sglWk"),
-					userPrefs.messages.getString("selErr"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, userPrefs.getString("sglWk"),
+					userPrefs.getString("selErr"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		if (!load()) {
@@ -835,7 +850,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		pchrGraph.updateValues(1);
 		pchrGraph.updateWorkoutData(workoutData);
 
-		JFrame frame = new JFrame(userPrefs.messages.getString("rideSum"));
+		JFrame frame = new JFrame(userPrefs.getString("rideSum"));
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -857,7 +872,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}
 
 		StringBuilder output = new StringBuilder();
-		output.append(UserPreferences.INSTANCE.messages.getString("delMsg")
+		output.append(UserPreferences.INSTANCE.getString("delMsg")
 				+ "\n\n");
 
 		int[] rows = new int[selectedRows.size()];
@@ -907,25 +922,25 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	 * Setup button text, makes it easy to update if locale is changed
 	 */
 	private void doText() {
-		frame.setTitle("Wattzap Analyzer - " + userPrefs.messages.getString("training_analysis"));
+		frame.setTitle("Wattzap Analyzer - " + userPrefs.getString("training_analysis"));
 		
-		summaryMenu.setText(userPrefs.messages.getString("summary"));
-		mmpMenuItem.setText(userPrefs.messages.getString("mmp"));
-		schrMenuItem.setText(userPrefs.messages.getString("schr"));
+		summaryMenu.setText(userPrefs.getString("summary"));
+		mmpMenuItem.setText(userPrefs.getString("mmp"));
+		schrMenuItem.setText(userPrefs.getString("schr"));
 
-		importMenuItem.setText(userPrefs.messages.getString("import"));
-		fatMenu.setText(userPrefs.messages.getString("fatigue"));
-		scatMenu.setText(userPrefs.messages.getString("scatter"));
-		cpgMenuItem.setText(userPrefs.messages.getString("cpg"));
-		powerWattsMenuItem.setText(userPrefs.messages.getString("poWt"));
-		quadAnalysisMenuItem.setText(userPrefs.messages.getString("quadAnal"));
+		importMenuItem.setText(userPrefs.getString("import"));
+		fatMenu.setText(userPrefs.getString("fatigue"));
+		scatMenu.setText(userPrefs.getString("scatter"));
+		cpgMenuItem.setText(userPrefs.getString("cpg"));
+		powerWattsMenuItem.setText(userPrefs.getString("poWt"));
+		quadAnalysisMenuItem.setText(userPrefs.getString("quadAnal"));
 
-		distMenu.setText(userPrefs.messages.getString("distribution"));
-		pdgMenuItem.setText(userPrefs.messages.getString("power"));
-		cadMenuItem.setText(userPrefs.messages.getString("cadence"));
-		hrMenuItem.setText(userPrefs.messages.getString("heartrate"));
-		tlMenuItem.setText(userPrefs.messages.getString("trainlevel"));
-		tlhrMenuItem.setText(userPrefs.messages.getString("trainlevelhr"));
+		distMenu.setText(userPrefs.getString("distribution"));
+		pdgMenuItem.setText(userPrefs.getString("power"));
+		cadMenuItem.setText(userPrefs.getString("cadence"));
+		hrMenuItem.setText(userPrefs.getString("heartrate"));
+		tlMenuItem.setText(userPrefs.getString("trainlevel"));
+		tlhrMenuItem.setText(userPrefs.getString("trainlevelhr"));
 
 		for (int i = 0; i < table.getColumnCount(); i++) {
 			TableColumn column1 = table.getTableHeader().getColumnModel()

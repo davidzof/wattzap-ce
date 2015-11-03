@@ -177,29 +177,29 @@ public class MenuBar implements MessageCallback {
 	 * Setup menubar text, makes it easy to update menu if locale is changed
 	 */
 	private void doText() {
-		appMenu.setText(userPrefs.messages.getString("application"));
-		prefMenuItem.setText(userPrefs.messages.getString("preferences"));
-		aboutMenuItem.setText(userPrefs.messages.getString("about"));
-		quitMenuItem.setText(userPrefs.messages.getString("quit"));
-		fileMenu.setText(userPrefs.messages.getString("route"));
-		openMenuItem.setText(userPrefs.messages.getString("open"));
-		closeMenuItem.setText(userPrefs.messages.getString("close"));
+		appMenu.setText(userPrefs.getString("application"));
+		prefMenuItem.setText(userPrefs.getString("preferences"));
+		aboutMenuItem.setText(userPrefs.getString("about"));
+		quitMenuItem.setText(userPrefs.getString("quit"));
+		fileMenu.setText(userPrefs.getString("route"));
+		openMenuItem.setText(userPrefs.getString("open"));
+		closeMenuItem.setText(userPrefs.getString("close"));
 		
-		trainingMenu.setText(userPrefs.messages.getString("training"));
+		trainingMenu.setText(userPrefs.getString("training"));
 		analizeMenuItem.setText(
-				userPrefs.messages.getString("analyze"));
+				userPrefs.getString("analyze"));
 		viewMenuItem.setText(
-				userPrefs.messages.getString("view"));
+				userPrefs.getString("view"));
 		recoverMenuItem.setText(
-				userPrefs.messages.getString("recover"));
+				userPrefs.getString("recover"));
 		saveMenuItem.setText(
-				userPrefs.messages.getString("save"));
+				userPrefs.getString("save"));
 		//
 		socialMenu.setText("Social");
 		selfLoopsUploadItem.setText("SelfLoops Upload");
 		
 		trainMenuItem.setText(
-					userPrefs.messages.getString("open"));
+					userPrefs.getString("open"));
 	}
 
 	/**

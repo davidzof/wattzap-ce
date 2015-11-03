@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.utils;
 
 import java.text.ParseException;
@@ -43,7 +43,7 @@ import com.wattzap.model.power.Power;
  */
 public class GpxImporter extends DefaultHandler {
 	State currentState = State.UNDEFINED;
-	StringBuilder buffer;
+	StringBuilder buffer = new StringBuilder();
 	// GPX files have two data formats
 	private static final SimpleDateFormat msdateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -69,7 +69,8 @@ public class GpxImporter extends DefaultHandler {
 		currentState = State.UNDEFINED;
 		data = new ArrayList<Telemetry>();
 		distance = 0;
-		tzOffset = Calendar.getInstance().getTimeZone().getRawOffset() + Calendar.getInstance().getTimeZone().getDSTSavings();
+		tzOffset = Calendar.getInstance().getTimeZone().getRawOffset()
+				+ Calendar.getInstance().getTimeZone().getDSTSavings();
 	}
 
 	public void startElement(String uri, String name, String qName,
@@ -82,12 +83,18 @@ public class GpxImporter extends DefaultHandler {
 				point.setLatitude(Double.parseDouble(atts.getValue("lat")));
 				point.setLongitude(Double.parseDouble(atts.getValue("lon")));
 			}
-		} else {
+		} else if (currentState == State.TRKPT) {
+			if ("extensions".equalsIgnoreCase(name)) {
+				currentState = State.EXTENSION;
+			}
+		}
+		if (buffer.length() > 0) {
 			buffer = new StringBuilder();
 		}
 	}
 
 	public void endElement(String uri, String name, String qName) {
+
 		if (currentState == State.TRKPT) {
 			if ("time".equalsIgnoreCase(name)) {
 				try {
@@ -95,21 +102,20 @@ public class GpxImporter extends DefaultHandler {
 					if (t.length() == 20) {
 						// there are two different formats of time stamp
 						Date d = timestampFormatter.parse(t);
-						point.setTime(d.getTime()+tzOffset);
+						point.setTime(d.getTime() + tzOffset);
 					} else if (t.length() == 24) {
 						Date d = msdateFormat.parse(t);
-						point.setTime(d.getTime()+tzOffset);
+						point.setTime(d.getTime() + tzOffset);
 					}
 
 				} catch (ParseException e) {
 					logger.error(e + " " + buffer);
 				}
-			}
-			if ("ele".equalsIgnoreCase(name)) {
+			} else if ("ele".equalsIgnoreCase(name)) {
 				point.setElevation(gAve.add(Double.parseDouble(buffer
 						.toString())));
-
 			} else if ("trkpt".equalsIgnoreCase(name)) {
+
 				index++;
 				int current = data.size();
 				if (current > 0) {
@@ -173,6 +179,19 @@ public class GpxImporter extends DefaultHandler {
 				data.add(point);
 				currentState = State.UNDEFINED;
 			}
+		} else if (currentState == State.EXTENSION) {
+			// System.out.println(name);
+			if ("extensions".equalsIgnoreCase(name)) {
+				currentState = State.TRKPT;
+			} else if ("atemp".equalsIgnoreCase(name)) {
+				System.out.println("temp " + buffer);
+			} else if ("hr".equalsIgnoreCase(name)) {
+				point.setHeartRate(Integer.parseInt(buffer
+						.toString()));
+			} else if ("cad".equalsIgnoreCase(name)) {
+				point.setCadence(Integer.parseInt(buffer
+						.toString()));
+			}
 		}
 	}
 
@@ -184,6 +203,6 @@ public class GpxImporter extends DefaultHandler {
 	}
 
 	public enum State {
-		TRKPT, UNDEFINED
+		TRKPT, EXTENSION, UNDEFINED
 	}
 }

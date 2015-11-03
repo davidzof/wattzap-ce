@@ -107,8 +107,8 @@ public class Profile extends JPanel implements MessageCallback {
 			final JFreeChart chart = ChartFactory.createXYAreaChart(
 					routeData.getName(), // chart
 					// title
-					userPrefs.messages.getString("distancekm"), // domain axis label
-					userPrefs.messages.getString("heightMeters"), // range axis label
+					userPrefs.getString("distancekm"), // domain axis label
+					userPrefs.getString("heightMeters"), // range axis label
 					xyDataset, // data
 					PlotOrientation.VERTICAL, // orientation
 					false, // include legend

@@ -17,6 +17,7 @@ package com.wattzap.model;
 
 import java.awt.Rectangle;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -35,7 +36,8 @@ import com.wattzap.view.Workouts;
 /**
  * Singleton helper to read/write user preferences to a backing store
  * 
- * @author David George / 15 September 2013 (C) Copyright 2013
+ * @author David George / 15 September 2013
+ * (C) Copyright 2013-2015
  */
 public enum UserPreferences {
 	INSTANCE;
@@ -342,6 +344,14 @@ public enum UserPreferences {
 	public void setPowerId(int i) {
 		setInt(user, "powerId", i);
 	}
+	
+	public int getPowerSmoothing() {
+		return getInt(user, "powerSmooth", 0);
+	}
+
+	public void setPowerSmooth(int i) {
+		setInt(user, "powerSmooth", i);
+	}
 
 	public int getHRMId() {
 		return getInt(user, "hrmid", 0);
@@ -366,7 +376,6 @@ public enum UserPreferences {
 
 	public boolean isRegistered() {
 		if (get("", "rsnn", null) == null) {
-			// return false;
 			return false;
 		}
 		return true;
@@ -555,5 +564,18 @@ public enum UserPreferences {
 			}
 		}
 		return userDataDirectory;
+	}
+	
+	// Hack For UTF resources
+	public String getString(String key) {
+		String val = messages.getString(key); 
+		try {
+			return new String(val.getBytes("ISO-8859-1"), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 }

@@ -40,7 +40,7 @@ public class TacxFlow extends Power {
 		return power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Tacx Flow";
 	}
 

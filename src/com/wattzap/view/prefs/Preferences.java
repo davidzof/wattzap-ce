@@ -39,6 +39,9 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import net.miginfocom.swing.MigLayout;
 
 import com.wattzap.controller.MessageBus;
@@ -51,7 +54,7 @@ import com.wattzap.model.power.PowerProfiles;
 /*
  * Preferences main panel
  * 
- * @author David George (c) Copyright 2013
+ * @author David George (c) Copyright 2013-2015
  * @date 19 June 2013
  */
 //TODO: Add video directory location
@@ -81,11 +84,13 @@ public class Preferences extends JFrame implements ActionListener,
 	private final JComboBox languageList = new JComboBox();
 	// Supported languages for dropdown TODO make this dynamic
 	private final Locale[] locales = { new Locale("fr"), new Locale("en"),
-			new Locale("de") };
+			new Locale("de"), new Locale("nl"), new Locale("hu"), new Locale("es") };
 	private final TurboPanel trainerPanel;
 	private AntPanel antPanel = null;
 	private final SocialPanel socialPanel;
 	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+	
+	private static Logger logger = LogManager.getLogger("Preferences");
 
 	public Preferences() {
 		ImageIcon img = new ImageIcon("icons/preferences.jpg");
@@ -211,6 +216,7 @@ public class Preferences extends JFrame implements ActionListener,
 			lang = userPrefs.getLocale().getISO3Language();
 		} catch (MissingResourceException e) {
 			// do nothing
+			logger.error("missing resource " + e);
 		}
 		for (Locale locale : locales) {
 			languageList.addItem(locale.getDisplayLanguage());
@@ -234,18 +240,18 @@ public class Preferences extends JFrame implements ActionListener,
 
 		} else if ("units".equals(command)) {
 			if (units.isSelected()) {
-				weightLabel.setText(UserPreferences.INSTANCE.messages
+				weightLabel.setText(UserPreferences.INSTANCE
 						.getString("your_weight") + " (kg) ");
-				bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+				bikeWeightLabel.setText(UserPreferences.INSTANCE
 						.getString("bike_weight") + " (kg) ");
 				userPrefs.setUnits(true);
 				weight.setText(String.format("%.1f", userPrefs.getWeight()));
 				bikeWeight.setText(String.format("%.1f",
 						userPrefs.getBikeWeight()));
 			} else {
-				weightLabel.setText(UserPreferences.INSTANCE.messages
+				weightLabel.setText(UserPreferences.INSTANCE
 						.getString("your_weight") + " (lbs)");
-				bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+				bikeWeightLabel.setText(UserPreferences.INSTANCE
 						.getString("bike_weight") + " (lbs)");
 				userPrefs.setUnits(false);
 				weight.setText(String.format("%.1f", userPrefs.getWeight()));
@@ -327,11 +333,29 @@ public class Preferences extends JFrame implements ActionListener,
 		}
 
 		if (antPanel != null) {
+			// check something is selected!
+			if (!antPanel.scCheckBox.isSelected()) {
+				if (!antPanel.hrmCheckBox.isSelected()) {
+					if (!antPanel.speedCheckBox.isSelected()) {
+						if (!antPanel.powCheckBox.isSelected()) {
+							if (!antPanel.cadCheckBox.isSelected()) {
+								JOptionPane.showMessageDialog(this, "No Ant Device Selected",
+										userPrefs.getString("warning"),
+										JOptionPane.WARNING_MESSAGE);
+							}
+						}
+						
+					}
+					
+				}
+			}
+			
 			userPrefs.setSCId(antPanel.getSCId());
 			userPrefs.setSpeedId(antPanel.getSpeedId());
 			userPrefs.setCadenceId(antPanel.getCadenceId());
 			userPrefs.setHRMId(antPanel.getHRMId());
 			userPrefs.setPowerId(antPanel.getPwrId());
+			userPrefs.setPowerSmooth(antPanel.getSmoothing());
 
 			antPanel.close();
 		}
@@ -357,31 +381,31 @@ public class Preferences extends JFrame implements ActionListener,
 	 * Setup menubar text, makes it easy to update menu if locale is changed
 	 */
 	private void doText() {
-		this.setTitle(UserPreferences.INSTANCE.messages
+		this.setTitle(UserPreferences.INSTANCE
 				.getString("preferences"));
-		saveButton.setText(UserPreferences.INSTANCE.messages
+		saveButton.setText(UserPreferences.INSTANCE
 				.getString("saveclose"));
-		cancelButton.setText(UserPreferences.INSTANCE.messages
+		cancelButton.setText(UserPreferences.INSTANCE
 				.getString("cancel"));
 		jtp.setTitleAt(0,
-				UserPreferences.INSTANCE.messages.getString("personal_data"));
+				UserPreferences.INSTANCE.getString("personal_data"));
 
 		if (userPrefs.isMetric()) {
-			weightLabel.setText(UserPreferences.INSTANCE.messages
+			weightLabel.setText(UserPreferences.INSTANCE
 					.getString("your_weight") + " (kg) ");
-			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+			bikeWeightLabel.setText(UserPreferences.INSTANCE
 					.getString("bike_weight") + " (kg) ");
 		} else {
-			weightLabel.setText(UserPreferences.INSTANCE.messages
+			weightLabel.setText(UserPreferences.INSTANCE
 					.getString("your_weight") + " (lbs)");
-			bikeWeightLabel.setText(UserPreferences.INSTANCE.messages
+			bikeWeightLabel.setText(UserPreferences.INSTANCE
 					.getString("bike_weight") + " (lbs)");
 		}
-		wheelLabel.setText(UserPreferences.INSTANCE.messages
+		wheelLabel.setText(UserPreferences.INSTANCE
 				.getString("wheel_size") + " (mm)");
 		hrLabel.setText("FT Heart Rate");
-		pwrLabel.setText(UserPreferences.INSTANCE.messages.getString("ftp"));
-		langLabel.setText(UserPreferences.INSTANCE.messages
+		pwrLabel.setText(UserPreferences.INSTANCE.getString("ftp"));
+		langLabel.setText(UserPreferences.INSTANCE
 				.getString("selectLanguage"));
 	}
 

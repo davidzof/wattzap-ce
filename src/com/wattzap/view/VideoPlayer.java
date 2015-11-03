@@ -18,6 +18,9 @@ package com.wattzap.view;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,7 +47,7 @@ import com.wattzap.model.dto.Telemetry;
 import com.wattzap.utils.Rolling;
 
 /**
- * (c) 2013-2014 David George / TrainingLoops.com
+ * (c) 2013-2016 David George / www.WattzAp.com
  * 
  * Video Player.
  * 
@@ -93,11 +96,12 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 		this.mainFrame = main;
 
 		setTitle("Video - www.WattzAp.com");
+		//setUndecorated(true);
 		ImageIcon img = new ImageIcon("icons/video.jpg");
 		setIconImage(img.getImage());
 
 		/* Messages we are interested in */
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		//MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
 		MessageBus.INSTANCE.register(Messages.STOP, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
@@ -306,6 +310,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 			revalidate(this);
 			revalidate(mainFrame);
 			setVisible(false);
+			MessageBus.INSTANCE.unregister(Messages.SPEED, this);
 			mapStartTime = 0;
 			if (routeData != null) {
 				routeData.close();
@@ -344,6 +349,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 					// revalidate(); Java 1.7 code
 					revalidate(this);
 					setVisible(true);
+					MessageBus.INSTANCE.register(Messages.SPEED, this);
 		
 					fps = mPlayer.getFps();
 					len = mPlayer.getLength();
@@ -366,6 +372,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 				revalidate(mainFrame);
 				// mPlayer = null;
 				setVisible(false);
+				MessageBus.INSTANCE.unregister(Messages.SPEED, this);
 			}
 
 			break;

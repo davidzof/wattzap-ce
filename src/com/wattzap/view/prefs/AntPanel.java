@@ -26,6 +26,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -47,6 +48,8 @@ import com.wattzap.model.dto.Telemetry;
  * 
  * @author David George
  * @date 25th August 2013
+ * 
+ * (c) 2013-2015 David George / Wattzap.com
  */
 public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		MessageCallback {
@@ -73,6 +76,8 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 	private int speedID;
 	private int cadenceID;
 	private int powerID;
+	
+	private JSlider powerSmooth;
 
 	// Checkboxen
 	JCheckBox scCheckBox;
@@ -196,7 +201,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		add(hrmIdLabel);
 		add(hrmIdField);
 		add(hrm);
-		add(hrmCheckBox, "gapleft 30, wrap");
+		add(hrmCheckBox, "gapleft 30, wrap 15px");
 		
 		if (userPrefs.getHRMId() > 0) {
 			hrmCheckBox.setVisible(true);
@@ -206,12 +211,24 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		}
 		hrmCheckBox.addItemListener(this);
 		
+		
+		JLabel pwrSliderLabel = new JLabel("Power Smoothing");
+		
+		powerSmooth = new JSlider(JSlider.HORIZONTAL,
+                0, 30, 1);
+		powerSmooth.setMajorTickSpacing(5);
+		powerSmooth.setMinorTickSpacing(1);
+		powerSmooth.setPaintTicks(true);
+		powerSmooth.setVisible(true);
+		add(pwrSliderLabel, "wrap");
+		add(powerSmooth, "wrap 15px");
+		
 		pairButton = new JButton("Pair");
 		pairButton.setPreferredSize(new Dimension(60, 30));
 		pairButton.setActionCommand("pair");
 		pairButton.addActionListener(this);
 
-		JButton stopButton = new JButton(userPrefs.messages.getString("stop"));
+		JButton stopButton = new JButton(userPrefs.getString("stop"));
 		stopButton.setPreferredSize(new Dimension(60, 30));
 		stopButton.setActionCommand("stop");
 		stopButton.addActionListener(this);
@@ -223,9 +240,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 		status.setText("");
 		add(status, "span");
 
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
-		MessageBus.INSTANCE.register(Messages.CADENCE, this);
-		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
 
 		setText();
@@ -284,6 +299,11 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			if (speedCheckBox.isSelected()) {
 				scCheckBox.setSelected(false);
 			}
+		} else if (source == powCheckBox) {
+			// power checkbox selected, don't use speed
+			if (speedCheckBox.isSelected()) {
+				scCheckBox.setSelected(false);
+			}
 		}
 	}
 
@@ -314,12 +334,18 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			sandcField.setText(": 0");
 			hrmIdField.setText(": 0");
 			
+			MessageBus.INSTANCE.register(Messages.SPEED, this);
+			MessageBus.INSTANCE.register(Messages.CADENCE, this);
+			MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+			
 			antDevice.open();
 			status.setText("Attempting pairing...");
 
 		} else {
 			status.setText("Pairing complete...");
-			MessageBus.INSTANCE.unregister();
+			MessageBus.INSTANCE.unregister(Messages.SPEED, this);
+			MessageBus.INSTANCE.unregister(Messages.CADENCE, this);
+			MessageBus.INSTANCE.unregister(Messages.HEARTRATE, this);
 			hrmID = antDevice.getChannelId(HeartRateListener.name);
 			if (hrmID > 0) {
 				hrmCheckBox.setVisible(true);
@@ -403,5 +429,9 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			return powerID;
 		}
 		return 0;
+	}
+	
+	public int getSmoothing() {
+		return powerSmooth.getValue();
 	}
 }

@@ -37,7 +37,7 @@ import com.wattzap.model.dto.TrainingItem;
 /*
  * Wrapper class for Tacx Real Life Video Routes
  * 
- * @author David George (c) Copyright 2013
+ * @author David George (c) Copyright 2013-2015
  * @author PiR43
  * @date 19 November 2013
  */
@@ -511,6 +511,7 @@ public class RLVReader extends RouteReader {
 			din.close();
 		} catch (FileNotFoundException fe) {
 			logger.error("FileNotFoundException : " + fe);
+			throw new RuntimeException("No PGMF file found for ");
 		} catch (IOException ioe) {
 			logger.error("IOException : " + ioe);
 		}

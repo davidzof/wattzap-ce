@@ -55,7 +55,7 @@ public class CyclopsJetFluidPro extends Power {
 		return cubic.x1;
 	}
 
-	public String description() {
+	public String toString() {
 		return "CycleOps Jet Fluid Pro";
 	}
 

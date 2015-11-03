@@ -92,7 +92,7 @@ public class EliteVolareSpeed extends Power {
 		return speed;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Volare Mag Speed";
 	}
 

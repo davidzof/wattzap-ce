@@ -50,7 +50,7 @@ public class TacxBlueMaticTwist extends Power {
 		return slope.length;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Tacx Blue Twist / Blue Matic";
 	}
 }

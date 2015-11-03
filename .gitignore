@@ -1,5 +1,9 @@
 out/
 dist-ce/
+dist-pe/
+dist-osx/
+docs/
+dist-mac/
 .idea/
 bin/
 src-pe/

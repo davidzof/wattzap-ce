@@ -65,7 +65,7 @@ public class BucketPanel extends JPanel implements ActionListener, MessageCallba
 			setBackground(Color.LIGHT_GRAY);
 			this.add(combo);
 		}
-		keepZero = new JCheckBox(userPrefs.messages
+		keepZero = new JCheckBox(userPrefs
 				.getString("zeroValue"));
 		keepZero.setSelected(true);
 		keepZero.setActionCommand("zeros");
@@ -96,9 +96,9 @@ public class BucketPanel extends JPanel implements ActionListener, MessageCallba
 	 * Setup button text, makes it easy to update if locale is changed
 	 */
 	private void doText() {
-		binLabel.setText(userPrefs.messages
+		binLabel.setText(userPrefs
 				.getString("binSize") + ": ");
-		keepZero.setText(userPrefs.messages
+		keepZero.setText(userPrefs
 				.getString("zeroValue"));
 		
 	}

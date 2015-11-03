@@ -18,6 +18,7 @@ package com.wattzap.model.power;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.LogManager;
@@ -57,7 +58,7 @@ public enum PowerProfiles {
 
 	public Power getProfile(String description) {
 		for (Power p : profiles) {
-			if (description.equals(p.description())) {
+			if (description.equals(p.toString())) {
 
 				return p;
 			}
@@ -75,9 +76,10 @@ public enum PowerProfiles {
 
 			for (Class c : classes) {
 				Power p = (Power) c.newInstance();
-				logger.info("adding power " + p.description());
+				logger.info("adding power " + p);
 				profiles.add(p);
 			}
+			Collections.sort(profiles);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

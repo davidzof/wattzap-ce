@@ -108,7 +108,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel fiveSecondPowerLabel = new JLabel();
 		fiveSecondPowerLabel.setFont(font1);
-		fiveSecondPowerLabel.setText(userPrefs.messages.getString("5secpow"));
+		fiveSecondPowerLabel.setText(userPrefs.getString("5secpow"));
 		add(fiveSecondPowerLabel);
 
 		fiveSecondPower = new JLabel();
@@ -121,7 +121,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel oneMinutePowerLabel = new JLabel();
 		oneMinutePowerLabel.setFont(font1);
-		oneMinutePowerLabel.setText(userPrefs.messages.getString("1minpow"));
+		oneMinutePowerLabel.setText(userPrefs.getString("1minpow"));
 		add(oneMinutePowerLabel);
 
 		oneMinutePower = new JLabel();
@@ -133,7 +133,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel fiveMinutePowerLabel = new JLabel();
 		fiveMinutePowerLabel.setFont(font1);
-		fiveMinutePowerLabel.setText(userPrefs.messages.getString("5minpow"));
+		fiveMinutePowerLabel.setText(userPrefs.getString("5minpow"));
 		add(fiveMinutePowerLabel);
 
 		fiveMinutePower = new JLabel();
@@ -146,7 +146,7 @@ public class TrainingAnalysis extends JFrame {
 		JLabel twentyMinutePowerLabel = new JLabel();
 		twentyMinutePowerLabel.setFont(font1);
 		twentyMinutePowerLabel
-				.setText(userPrefs.messages.getString("20minpow"));
+				.setText(userPrefs.getString("20minpow"));
 		add(twentyMinutePowerLabel);
 
 		twentyMinutePower = new JLabel();
@@ -159,7 +159,7 @@ public class TrainingAnalysis extends JFrame {
 		if (userPrefs.isAntEnabled()) {
 			JLabel maxHeartRateLabel = new JLabel();
 			maxHeartRateLabel.setFont(font1);
-			maxHeartRateLabel.setText(userPrefs.messages.getString("maxhr"));
+			maxHeartRateLabel.setText(userPrefs.getString("maxhr"));
 			add(maxHeartRateLabel);
 
 			maxHeartRate = new JLabel();
@@ -168,7 +168,7 @@ public class TrainingAnalysis extends JFrame {
 
 			JLabel aveHeartRateLabel = new JLabel();
 			aveHeartRateLabel.setFont(font1);
-			aveHeartRateLabel.setText(userPrefs.messages.getString("avehr"));
+			aveHeartRateLabel.setText(userPrefs.getString("avehr"));
 			add(aveHeartRateLabel);
 
 			aveHeartRate = new JLabel();
@@ -177,7 +177,7 @@ public class TrainingAnalysis extends JFrame {
 
 			JLabel fTHRLabel = new JLabel();
 			fTHRLabel.setFont(font1);
-			fTHRLabel.setText(userPrefs.messages.getString("fthr"));
+			fTHRLabel.setText(userPrefs.getString("fthr"));
 			add(fTHRLabel);
 
 			fTHR = new JLabel();
@@ -196,7 +196,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel distanceLabel = new JLabel();
 		distanceLabel.setFont(font1);
-		distanceLabel.setText(userPrefs.messages.getString("distance"));
+		distanceLabel.setText(userPrefs.getString("distance"));
 		add(distanceLabel);
 
 		distance = new JLabel();
@@ -205,7 +205,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel powerLabel = new JLabel();
 		powerLabel.setFont(font1);
-		powerLabel.setText(userPrefs.messages.getString("power"));
+		powerLabel.setText(userPrefs.getString("power"));
 		add(powerLabel);
 
 		totalPower = new JLabel();
@@ -214,7 +214,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel aveLabel = new JLabel();
 		aveLabel.setFont(font1);
-		aveLabel.setText(userPrefs.messages.getString("avepow"));
+		aveLabel.setText(userPrefs.getString("avepow"));
 		add(aveLabel);
 
 		avePower = new JLabel();
@@ -223,7 +223,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel maxLabel = new JLabel();
 		maxLabel.setFont(font1);
-		maxLabel.setText(userPrefs.messages.getString("maxpow"));
+		maxLabel.setText(userPrefs.getString("maxpow"));
 		add(maxLabel);
 
 		maxPower = new JLabel();
@@ -232,7 +232,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel qLabel = new JLabel();
 		qLabel.setFont(font1);
-		qLabel.setText(userPrefs.messages.getString("qpow"));
+		qLabel.setText(userPrefs.getString("qpow"));
 		add(qLabel);
 
 		qPower = new JLabel();
@@ -241,7 +241,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel ftpLabel = new JLabel();
 		ftpLabel.setFont(font1);
-		ftpLabel.setText(userPrefs.messages.getString("cftp"));
+		ftpLabel.setText(userPrefs.getString("cftp"));
 		add(ftpLabel);
 
 		ftPower = new JLabel();
@@ -250,7 +250,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel ftp1Label = new JLabel();
 		ftp1Label.setFont(font1);
-		ftp1Label.setText(userPrefs.messages.getString("1minftp"));
+		ftp1Label.setText(userPrefs.getString("1minftp"));
 		add(ftp1Label);
 
 		ft1Power = new JLabel();
@@ -259,7 +259,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel ftp2Label = new JLabel();
 		ftp2Label.setFont(font1);
-		ftp2Label.setText(userPrefs.messages.getString("20minftp"));
+		ftp2Label.setText(userPrefs.getString("20minftp"));
 		add(ftp2Label);
 
 		ft20Power = new JLabel();
@@ -268,7 +268,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel loadLabel = new JLabel();
 		loadLabel.setFont(font1);
-		loadLabel.setText(userPrefs.messages.getString("load"));
+		loadLabel.setText(userPrefs.getString("load"));
 		add(loadLabel);
 
 		load = new JLabel();
@@ -277,7 +277,7 @@ public class TrainingAnalysis extends JFrame {
 
 		JLabel stressLabel = new JLabel();
 		stressLabel.setFont(font1);
-		stressLabel.setText(userPrefs.messages.getString("stress"));
+		stressLabel.setText(userPrefs.getString("stress"));
 		add(stressLabel);
 
 		stress = new JLabel();

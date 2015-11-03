@@ -50,7 +50,7 @@ public class TacxSatoriBlueMotion extends Power {
 		return slope.length;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Tacx Satori / Blue Motion";
 	}
 }

@@ -101,7 +101,7 @@ public class EliteChronoHydroMag extends Power {
 		return speed;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Chrono HydroMag";
 	}
 

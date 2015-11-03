@@ -100,37 +100,37 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 		JLabel pwrText = new JLabel();
 		pwrText.setFont(font1);
-		pwrText.setText(userPrefs.messages.getString("power"));
+		pwrText.setText(userPrefs.getString("power"));
 		pwrText.setForeground(textColor);
 		add(pwrText);
 
 		JLabel hrText = new JLabel();
 		hrText.setFont(font1);
-		hrText.setText(userPrefs.messages.getString("heartrate"));
+		hrText.setText(userPrefs.getString("heartrate"));
 		hrText.setForeground(textColor);
 		add(hrText);
 
 		JLabel cadText = new JLabel();
 		cadText.setFont(font1);
-		cadText.setText(userPrefs.messages.getString("cadence"));
+		cadText.setText(userPrefs.getString("cadence"));
 		cadText.setForeground(textColor);
 		add(cadText);
 
 		slopeText = new JLabel();
 		slopeText.setFont(font1);
-		slopeText.setText(userPrefs.messages.getString("slope") + " %");
+		slopeText.setText(userPrefs.getString("slope") + " %");
 		slopeText.setForeground(textColor);
 		add(slopeText);
 
 		levelText = new JLabel();
 		levelText.setFont(font1);
-		levelText.setText(userPrefs.messages.getString("altitude"));
+		levelText.setText(userPrefs.getString("altitude"));
 		levelText.setForeground(textColor);
 		add(levelText);
 
 		JLabel resistanceText = new JLabel();
 		resistanceText.setFont(font1);
-		resistanceText.setText(userPrefs.messages.getString("stopwatch"));
+		resistanceText.setText(userPrefs.getString("stopwatch"));
 		resistanceText.setForeground(textColor);
 		add(resistanceText, "Wrap");
 
@@ -194,11 +194,11 @@ public class AntOdometer extends JPanel implements MessageCallback {
 	private void initLabels(boolean metric) {
 		if (metric) {
 			speedText
-					.setText(userPrefs.messages.getString("speed") + " (km/h)");
-			distText.setText(userPrefs.messages.getString("distance") + " (km)");
+					.setText(userPrefs.getString("speed") + " (km/h)");
+			distText.setText(userPrefs.getString("distance") + " (km)");
 		} else {
-			speedText.setText(userPrefs.messages.getString("speed") + " (mph)");
-			distText.setText(userPrefs.messages.getString("distance")
+			speedText.setText(userPrefs.getString("speed") + " (mph)");
+			distText.setText(userPrefs.getString("distance")
 					+ " (miles)");
 
 		}
@@ -316,8 +316,8 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
 				logger.info("Out of time " + userPrefs.getEvalTime());
 				JOptionPane.showMessageDialog(this,
-						userPrefs.messages.getString("trial_expired"),
-						userPrefs.messages.getString("warning"),
+						userPrefs.getString("trial_expired"),
+						userPrefs.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				userPrefs.shutDown();
 				System.exit(0);
@@ -327,13 +327,13 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			type = routeData.routeType();
 			switch (type) {
 			case RouteReader.POWER:
-				slopeText.setText(userPrefs.messages.getString("target_power"));
+				slopeText.setText(userPrefs.getString("target_power"));
 				levelText
-						.setText(userPrefs.messages.getString("distance_left"));
+						.setText(userPrefs.getString("distance_left"));
 				break;
 			case RouteReader.SLOPE:
-				slopeText.setText(userPrefs.messages.getString("slope") + " %");
-				levelText.setText(userPrefs.messages.getString("altitude"));
+				slopeText.setText(userPrefs.getString("slope") + " %");
+				levelText.setText(userPrefs.getString("altitude"));
 
 				break;
 			}

@@ -32,6 +32,7 @@ public class AscentFluid extends Power {
 	private static final double d = 0;
 	private static final Cubic cubic = new Cubic();
 
+
 	public int getPower(double speed, int resistance) {
 
 		double power = (c * speed) + (b * speed * speed)
@@ -39,7 +40,7 @@ public class AscentFluid extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Ascent Fluid";
 	}
 

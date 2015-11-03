@@ -106,7 +106,7 @@ public class Odometer extends JPanel implements MessageCallback {
 			JLabel vspeedText = new JLabel();
 			vspeedText.setFont(font1);
 			vspeedText.setForeground(textColor);
-			vspeedText.setText(userPrefs.messages.getString("trainer_speed"));
+			vspeedText.setText(userPrefs.getString("trainer_speed"));
 			add(vspeedText);
 		}
 
@@ -285,12 +285,12 @@ public class Odometer extends JPanel implements MessageCallback {
 			switch (type) {
 			case RouteReader.POWER:
 				levelText
-						.setText(userPrefs.messages.getString("distance_left"));
+						.setText(userPrefs.getString("distance_left"));
 				slopeText.setVisible(false);
 				slopeLabel.setVisible(false);
 				break;
 			case RouteReader.SLOPE:
-				levelText.setText(userPrefs.messages.getString("altitude"));
+				levelText.setText(userPrefs.getString("altitude"));
 				slopeText.setVisible(true);
 				slopeLabel.setVisible(true);
 				break;
@@ -317,8 +317,8 @@ public class Odometer extends JPanel implements MessageCallback {
 			if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
 				logger.info("Out of time " + userPrefs.getEvalTime());
 				JOptionPane.showMessageDialog(this,
-						userPrefs.messages.getString("trial_expired"),
-						userPrefs.messages.getString("warning"),
+						userPrefs.getString("trial_expired"),
+						userPrefs.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				userPrefs.shutDown();
 				System.exit(0);
@@ -336,19 +336,19 @@ public class Odometer extends JPanel implements MessageCallback {
 	 * Setup button text, makes it easy to update if locale is changed
 	 */
 	private void doText() {
-		pwrText.setText(userPrefs.messages.getString("power"));
-		resistanceText.setText(userPrefs.messages.getString("resistance"));
-		slopeText.setText(userPrefs.messages.getString("slope") + " %");
-		levelText.setText(userPrefs.messages.getString("altitude"));
-		chronoText.setText(userPrefs.messages.getString("stopwatch"));
+		pwrText.setText(userPrefs.getString("power"));
+		resistanceText.setText(userPrefs.getString("resistance"));
+		slopeText.setText(userPrefs.getString("slope") + " %");
+		levelText.setText(userPrefs.getString("altitude"));
+		chronoText.setText(userPrefs.getString("stopwatch"));
 		
 		if (userPrefs.isMetric()) {
 			speedText
-					.setText(userPrefs.messages.getString("speed") + " (km/h)");
-			distText.setText(userPrefs.messages.getString("distance") + " (km)");
+					.setText(userPrefs.getString("speed") + " (km/h)");
+			distText.setText(userPrefs.getString("distance") + " (km)");
 		} else {
-			speedText.setText(userPrefs.messages.getString("speed") + " (mph)");
-			distText.setText(userPrefs.messages.getString("distance")
+			speedText.setText(userPrefs.getString("speed") + " (mph)");
+			distText.setText(userPrefs.getString("distance")
 					+ " (miles)");
 		}
 		

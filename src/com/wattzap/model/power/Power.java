@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.power;
 
 /*
@@ -20,10 +20,11 @@ package com.wattzap.model.power;
  * @author David George
  * @date 11 November 2013
  */
-public abstract class Power {
+public abstract class Power implements Comparable<Power> {
 	private int neutral = getNeutral();
 	private double posDivider = 1;
 	private double negDivider = 1;
+	String description;
 
 	/**
 	 * Returns power in watts for a given trainer resistance
@@ -34,12 +35,27 @@ public abstract class Power {
 	 */
 	public abstract int getPower(double speed, int resistance);
 
+	public boolean equals(Object o) {
+		if (!(o instanceof Power))
+			return false;
+		Power n = (Power) o;
+		return n.toString().equals(toString());
+	}
+
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
+	public int compareTo(Power n) {
+		return toString().compareTo(n.toString());
+	}
+
 	/**
 	 * Returns a description of the Power class
 	 * 
 	 * @return
 	 */
-	public abstract String description();
+	public abstract String toString();
 
 	public abstract int getResitanceLevels();
 

@@ -77,8 +77,8 @@ public class SocialPanel extends JPanel implements MessageCallback {
 	 * Setup menubar text, makes it easy to update menu if locale is changed
 	 */
 	private void doText() {
-		selfLoopsUserLabel.setText(userPrefs.messages.getString("user"));
-		selfLoopsPassLabel.setText(userPrefs.messages.getString("pass"));
+		selfLoopsUserLabel.setText(userPrefs.getString("user"));
+		selfLoopsPassLabel.setText(userPrefs.getString("pass"));
 	}
 
 	/**

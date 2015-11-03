@@ -47,7 +47,7 @@ public class SportCraftersOmnium extends Power {
 		return quadraticEquationRoot1(b, c, d - power);
 	}
 
-	public String description() {
+	public String toString() {
 		return "SportCrafters Omnium";
 	}
 	

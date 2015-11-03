@@ -45,7 +45,7 @@ public class TacxBooster extends Power {
 		return slope.length;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Tacx Booster";
 	}
 }

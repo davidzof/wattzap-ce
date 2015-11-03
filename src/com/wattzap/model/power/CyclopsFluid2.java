@@ -48,7 +48,7 @@ public class CyclopsFluid2 extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "CycleOps Fluid2";
 	}
 

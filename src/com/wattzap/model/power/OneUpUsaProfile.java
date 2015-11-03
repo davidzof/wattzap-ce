@@ -46,7 +46,7 @@ public class OneUpUsaProfile extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "OneUp USA";
 	}
 

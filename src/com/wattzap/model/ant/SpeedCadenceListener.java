@@ -34,7 +34,7 @@ import com.wattzap.model.dto.Telemetry;
  * @author David George
  * @date 11 June 2013
  * 
- * (c) 2013,2014 David George / Wattzap.com
+ * (c) 2013-2015 David George / Wattzap.com
  */
 public class SpeedCadenceListener implements
 		BroadcastListener<BroadcastDataMessage> {

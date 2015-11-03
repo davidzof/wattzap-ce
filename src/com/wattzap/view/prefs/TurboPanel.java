@@ -69,16 +69,16 @@ public class TurboPanel extends JPanel implements ActionListener {
 		MigLayout layout = new MigLayout();
 		setLayout(layout);
 		JLabel label2 = new JLabel();
-		label2.setText(userPrefs.messages.getString("trainer"));
+		label2.setText(userPrefs.getString("trainer"));
 		label2.setFont(font1);
 		add(label2, "wrap");
 
-		String trainerDescription = userPrefs.getPowerProfile().description();
+		String trainerDescription = userPrefs.getPowerProfile().toString();
 		int index = 0;
 		Power selectedProfile = null;
 		for (Power p : profiles) {
-			trainerList.addItem(p.description());
-			if (p.description().equals(trainerDescription)) {
+			trainerList.addItem(p.toString());
+			if (p.toString().equals(trainerDescription)) {
 				trainerList.setSelectedIndex(index);
 				selectedProfile = p;
 			}
@@ -92,7 +92,7 @@ public class TurboPanel extends JPanel implements ActionListener {
 		virtualPower.setSelected(userPrefs.isVirtualPower());
 		add(virtualPower, "wrap");
 
-		resistanceLabel.setText(userPrefs.messages.getString("resistance"));
+		resistanceLabel.setText(userPrefs.getString("resistance"));
 		resistanceLabel.setFont(font1);
 		add(resistanceLabel, "wrap");
 		resistanceLabel.setVisible(false);
@@ -136,8 +136,8 @@ public class TurboPanel extends JPanel implements ActionListener {
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				resistanceLevels.addItem("" + i);
 			}
-			if (p.description().equals(
-					userPrefs.getPowerProfile().description())) {
+			if (p.equals(
+					userPrefs.getPowerProfile())) {
 				// previously selected trainer, set selected resistance level
 				resistanceLevels.setSelectedIndex(userPrefs.getResistance());
 			}

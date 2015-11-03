@@ -305,5 +305,14 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="track-parser">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/java1.7/track-parser.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

@@ -77,7 +77,7 @@ public class EliteArionMag extends Power {
 		return speed;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Arion Mag";
 	}
 	

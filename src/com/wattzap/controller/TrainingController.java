@@ -67,8 +67,8 @@ public class TrainingController implements ActionListener {
 			ArrayList<Telemetry> data = trainingDisplay.getData();
 			if (data == null || data.size() == 0) {
 				JOptionPane.showMessageDialog(mainFrame,
-						userPrefs.messages.getString("noDataSave"),
-						userPrefs.messages.getString("warning"),
+						userPrefs.getString("noDataSave"),
+						userPrefs.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				logger.warn("No data to save");
 				return;
@@ -80,8 +80,8 @@ public class TrainingController implements ActionListener {
 			if (zero != null && zero.getLatitude() <= 90) {
 				// gpsData == 0 is Yes
 				gpsData = JOptionPane.showConfirmDialog(mainFrame,
-						userPrefs.messages.getString("saveGPS"),
-						userPrefs.messages.getString("saveGPS"), dialogButton);
+						userPrefs.getString("saveGPS"),
+						userPrefs.getString("saveGPS"), dialogButton);
 			}
 			TcxWriter writer = new TcxWriter();
 
@@ -94,7 +94,7 @@ public class TrainingController implements ActionListener {
 
 			JOptionPane.showMessageDialog(
 					mainFrame,
-					userPrefs.messages.getString("wktSave") + ": "
+					userPrefs.getString("wktSave") + ": "
 							+ userPrefs.getUserDataDirectory()
 							+ TcxWriter.WORKOUTDIR + fileName, "Workout Saved",
 					JOptionPane.INFORMATION_MESSAGE);

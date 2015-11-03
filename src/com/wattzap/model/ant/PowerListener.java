@@ -76,6 +76,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 			if (message.getUnsignedData()[1] != count) {
 				powerWatts = (message.getUnsignedData()[7] << 8)
 						| message.getUnsignedData()[6];
+				powerWatts = (int) averagePower.add(powerWatts);
 				count = message.getUnsignedData()[1] & 0xFF;
 			}
 
@@ -170,7 +171,8 @@ public class PowerListener extends AntListener implements MessageCallback {
 			power = userPrefs.getPowerProfile();
 			simulSpeed = userPrefs.isVirtualPower();
 			lastTime = -1;
-			averagePower = new Rolling(1);
+			System.out.println(userPrefs.getPowerSmoothing());
+			averagePower = new Rolling(userPrefs.getPowerSmoothing());
 			break;
 		case STARTPOS:
 			distance = (Double) o;

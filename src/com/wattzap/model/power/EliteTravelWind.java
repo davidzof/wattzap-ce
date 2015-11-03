@@ -43,7 +43,7 @@ public class EliteTravelWind extends Power {
 		return (int) power;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Travel Generic Wind Trainer";
 	}
 

@@ -69,7 +69,7 @@ import java.util.HashMap;
 /**
  * Main entry point
  * 
- * (c) 2013,2015 David George / Wattzap.com
+ * (c) 2013-2016 David George / Wattzap.com
  * 
  * @author David George
  * @date 11 June 2013
@@ -121,6 +121,7 @@ public class Main implements Runnable {
 					break;
 				}
 			}
+			//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
 			EventQueue.invokeLater(new Main());
 		} catch (Exception e) {
@@ -176,11 +177,11 @@ public class Main implements Runnable {
 			odo = new AntOdometer();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
-					userPrefs.messages.getString("warning"),
+					userPrefs.getString("warning"),
 					JOptionPane.WARNING_MESSAGE);
 			logger.error("ANT+ " + e.getMessage());
 			new DummySpeedCadenceListener();
-			userPrefs.setAntEnabled(true);
+			userPrefs.setAntEnabled(false);
 			odo = new Odometer();
 		}
 
@@ -190,7 +191,7 @@ public class Main implements Runnable {
 			videoPlayer.init();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frame, e.getMessage(),
-					userPrefs.messages.getString("warning"),
+					userPrefs.getString("warning"),
 					JOptionPane.INFORMATION_MESSAGE);
 			logger.info(e.getMessage());
 

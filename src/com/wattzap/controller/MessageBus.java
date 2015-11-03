@@ -30,7 +30,7 @@ import java.util.Map;
  * analogy, there are a number of pieces that come together to form the message
  * bus:
  * 
- * (c) 2013 David George / Wattzap.com
+ * (c) 2013-2015 David George / Wattzap.com
  * 
  * @author David George
  * @date 12 November 2013
@@ -65,7 +65,13 @@ public enum MessageBus {
 	}
 
 	// TODO Implement this
-	public void unregister() {
+	public boolean unregister(Messages m, MessageCallback o) {
+		if (objects.containsKey(m)) {
+			HashSet<MessageCallback> listeners = objects.get(m);
+			return listeners.remove(o);
+		}
+		
+		return false;
 	};
 
 	public void send(Messages m, Object o) {

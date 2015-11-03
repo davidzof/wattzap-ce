@@ -42,7 +42,7 @@ public class SmoothingPanel extends JPanel implements ItemListener {
 		this.graph = graph;
 
 		JLabel label = new JLabel();
-		label.setText(userPrefs.messages.getString("smooth") + ": ");
+		label.setText(userPrefs.getString("smooth") + ": ");
 		add(label);
 
 		JComboBox combo = new JComboBox();

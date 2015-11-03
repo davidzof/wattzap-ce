@@ -104,7 +104,7 @@ public class EliteChronoMagForceGel extends Power {
 		return speed;
 	}
 
-	public String description() {
+	public String toString() {
 		return "Elite Chrono Mag Force Gel";
 	}
 
