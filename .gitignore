@@ -5,3 +5,4 @@ bin/
 src-pe/
 plugins/
 jre6/
+*.log

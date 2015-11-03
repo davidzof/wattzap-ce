@@ -29,6 +29,8 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
+import com.wattzap.utils.DataInjector;
+import com.wattzap.view.training.JavaSwingGaugesView;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.FileAppender;
@@ -55,6 +57,14 @@ import com.wattzap.view.Map;
 import com.wattzap.view.Odometer;
 import com.wattzap.view.Profile;
 import com.wattzap.view.VideoPlayer;
+import net.miginfocom.swing.MigLayout;
+import org.apache.log4j.*;
+
+import javax.swing.*;
+import javax.swing.UIManager.LookAndFeelInfo;
+import java.awt.*;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * Main entry point
@@ -192,24 +202,35 @@ public class Main implements Runnable {
 		contentPane.setBackground(Color.BLACK);
 		contentPane.setLayout(layout);
 
-		// create view
-		new Map(frame);
-		Profile profile = new Profile(screenSize);
-		profile.setVisible(false);
+        // create view
+        new Map(frame);
+        Profile profile = new Profile(screenSize);
+        profile.setVisible(false);
 
-		// Menu Bar
-		new MenuBar(frame);
+        // Menu Bar
+        new MenuBar(frame);
 
-		frame.add(profile, "cell 0 1, grow");
-		// by default add to telemetry frame
-		frame.add(odo, "cell 0 2, grow");
+        frame.add(profile, "cell 0 1, grow");
+        // by default add to telemetry frame
+        frame.add(odo, "cell 0 2, grow");
 
-		ControlPanel cp = new ControlPanel();
-		frame.add(cp, "cell 0 3");
+        ControlPanel cp = new ControlPanel();
+        frame.add(cp, "cell 0 3");
 
 		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
+
+        // show Gauge view (javafx version)
+//		JavaFxGaugesView gaugesView = new JavaFxGaugesView();
+//		gaugesView.show();
+
+        // show Gauge view (swing version)
+        JavaSwingGaugesView gaugesView = new JavaSwingGaugesView();
+        gaugesView.show();
+
+        // for testing purposes
+        new DataInjector();
 	}
 
 	private static Level setLogLevel() {
