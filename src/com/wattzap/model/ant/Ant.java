@@ -15,11 +15,10 @@
  */
 package com.wattzap.model.ant;
 
-import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-
+import com.wattzap.controller.MessageBus;
+import com.wattzap.controller.MessageCallback;
+import com.wattzap.controller.Messages;
+import com.wattzap.model.UserPreferences;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.cowboycoders.ant.Channel;
@@ -36,10 +35,10 @@ import org.cowboycoders.ant.messages.commands.ChannelRequestMessage.Request;
 import org.cowboycoders.ant.messages.data.BroadcastDataMessage;
 import org.cowboycoders.ant.messages.responses.ChannelIdResponse;
 
-import com.wattzap.controller.MessageBus;
-import com.wattzap.controller.MessageCallback;
-import com.wattzap.controller.Messages;
-import com.wattzap.model.UserPreferences;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
 
 /**
  * Gets data from Ant device and calculates speed, distance, cadence etc.
