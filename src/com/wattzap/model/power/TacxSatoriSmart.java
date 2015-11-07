@@ -16,16 +16,16 @@
 package com.wattzap.model.power;
 
 /**
- * (c) 2013 David George / Wattzap.com
+ * (c) 2015 David George / Wattzap.com
  * 
  * 
  * @author David George
- * @date 11 June 2013
+ * @date 1st November 2015
  */
 @PowerAnnotation
 public class TacxSatoriSmart extends Power {
-	private final double[] slope = { 11.75, 13, 14.2, 15.45, 16.65, 17.9, 19.1, 20.35, 21.65, 22.85 };
-	private final double[] intercept = { -10, -9, -7, -6, -4, -3, -1, 0, 0, 0 };
+	private final double[] slope = {       9.75, 10.95, 12.15,  13.35, 14.55, 15.75, 16.9,  18.1,  19.3, 20.5 };
+	private final double[] intercept = { -52.5, -56.5, -60.5, -63.5, -67.5, -71.5, -74.0, -78.0, -81.0, -85.0 };
 
 	public int getPower(double speed, int resistance) {
 		int power = (int) ((speed * slope[resistance]) + intercept[resistance]);
