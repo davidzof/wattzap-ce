@@ -51,7 +51,6 @@ public enum UserPreferences {
 	private static final double LBSTOKG = 0.45359237;
 	private ResourceBundle messages;
 	private boolean antEnabled = true;
-	private boolean antUSBM = false;
 
 	private UserPreferences() {
 		user = System.getProperty("user.name");
@@ -141,7 +140,6 @@ public enum UserPreferences {
 	}
 
 	public void setVideoBounds(Rectangle r) {
-
 		setInt("", "videoHeight", r.height);
 		setInt("", "videoWidth", r.width);
 		setInt("", "videoX", r.x);
@@ -305,7 +303,8 @@ public enum UserPreferences {
 	}
 
 	public int getResistance() {
-		return getInt(user, "resistance", 1);
+		int i = getInt(user, "resistance", 1);
+		return i;
 	}
 
 	public void setResistance(int r) {
@@ -577,5 +576,16 @@ public enum UserPreferences {
 		}
 		
 		return null;
+	}
+	
+	/*
+	 * Reset certain properties to their defaults.
+	 */
+	public void factoryReset() {
+		Rectangle r = new Rectangle(0, 0, 800, 600);
+		setVideoBounds(r);
+		
+		r = new Rectangle(10, 10, 800, 400);
+		this.setMainBounds(r);
 	}
 }

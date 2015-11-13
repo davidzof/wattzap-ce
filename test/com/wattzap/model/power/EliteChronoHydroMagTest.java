@@ -33,7 +33,7 @@ public class EliteChronoHydroMagTest {
 	@Test
 	public void checkSpeed() {
 		BigDecimal bd;
-		for (int s = 6; s < 60; s++) {
+		for (int s = 0; s < 60; s++) {
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				int power = p.getPower(s, i);
 
@@ -48,7 +48,7 @@ public class EliteChronoHydroMagTest {
 	public void checkPower() {
 		System.out.println("speed,power");
 
-		for (int speed = 10; speed <= 50; speed++) {
+		for (int speed = 0; speed <= 50; speed++) {
 			for (int resistance = 1; resistance <= p.getResitanceLevels(); resistance++) {
 				if (resistance == 1) {
 					System.out.printf("%d", speed);

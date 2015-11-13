@@ -19,6 +19,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.util.HashMap;
@@ -88,6 +89,16 @@ public class Main implements Runnable {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} // create appender
+		
+
+		if (args.length > 0) {
+			for (String s: args) {
+				if ("-R".equals(s)) {
+					UserPreferences.INSTANCE.factoryReset();
+				}
+	        }
+		}
+
 
 		// Turn on Debug window
 		if (userPrefs.isDebug()) {

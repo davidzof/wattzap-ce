@@ -43,6 +43,7 @@ public class DummySpeedCadenceListener extends Thread implements
 		MessageCallback {
 	private boolean running = true;
 	private double distance = 0.0;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 	RouteReader routeData = null;
 	Rolling rPower;
@@ -79,14 +80,14 @@ public class DummySpeedCadenceListener extends Thread implements
 
 				// half FTP
 				// int powerWatts = (int)
-				// ((UserPreferences.INSTANCE.getMaxPower() + (Math
+				// ((userPrefs.getMaxPower() + (Math
 				// .random() * 10)) * 0.5);
 
-				int powerWatts = (int) (UserPreferences.INSTANCE.getMaxPower() * 0.5);
+				int powerWatts = (int) (userPrefs.getMaxPower() * 0.5);
 
 				double speed = 0;
 				// if ant disabled always use this calculation
-				if ((virtualPower || !UserPreferences.INSTANCE.isAntEnabled())
+				if ((virtualPower || !userPrefs.isAntEnabled())
 						&& routeData != null) {
 
 					if (routeData.routeType() == RouteReader.SLOPE) {
@@ -100,14 +101,15 @@ public class DummySpeedCadenceListener extends Thread implements
 									* (p.getGradient() / routeData
 											.getMaxSlope());
 
-							if (UserPreferences.INSTANCE.getResistance() == 0) {
+							if (userPrefs.getResistance() == power.getResitanceLevels() ) {
+								// AUTO
 								int r = power.getResistance(p.getGradient());
 								t.setResistance(r);
 								speed = power.getSpeed(powerWatts, r);
 							} else {
 								// speed corresponding to this power
 								speed = power.getSpeed(powerWatts,
-										UserPreferences.INSTANCE
+										userPrefs
 												.getResistance());
 							}
 
@@ -142,18 +144,18 @@ public class DummySpeedCadenceListener extends Thread implements
 						rPower.add(powerWatts);
 						powerWatts = (int) rPower.getAverage();
 
-						if (UserPreferences.INSTANCE.getResistance() == 0) {
+						if (userPrefs.getResistance() == 0) {
 							t.setResistance(1);
 							speed = power.getSpeed(powerWatts, 1);
 						} else {
 							// speed corresponding to this power
 							speed = power.getSpeed(powerWatts,
-									UserPreferences.INSTANCE.getResistance());
+									userPrefs.getResistance());
 							BigDecimal bd = new BigDecimal(speed).setScale(2,
 									RoundingMode.HALF_UP);
 
 							t.setVirtualSpeed(bd.intValue());
-							t.setResistance(UserPreferences.INSTANCE
+							t.setResistance(userPrefs
 									.getResistance());
 							if (routeData.getExtension().equals("pwr")) {
 								speed = p.getSpeed();
@@ -201,11 +203,11 @@ public class DummySpeedCadenceListener extends Thread implements
 
 		case START:
 			// get uptodate values
-			mass = UserPreferences.INSTANCE.getTotalWeight();
-			wheelSize = UserPreferences.INSTANCE.getWheelSizeCM();
-			resistance = UserPreferences.INSTANCE.getResistance();
-			power = UserPreferences.INSTANCE.getPowerProfile();
-			virtualPower = UserPreferences.INSTANCE.isVirtualPower();
+			mass = userPrefs.getTotalWeight();
+			wheelSize = userPrefs.getWheelSizeCM();
+			resistance = userPrefs.getResistance();
+			power = userPrefs.getPowerProfile();
+			virtualPower = userPrefs.isVirtualPower();
 			if (this.getState() == Thread.State.NEW) {
 				start();
 			}
@@ -219,16 +221,16 @@ public class DummySpeedCadenceListener extends Thread implements
 			break;
 		case GPXLOAD:
 			// code to see if we are registered
-			if (!UserPreferences.INSTANCE.isRegistered()
-					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
+			if (!userPrefs.isRegistered()
+					&& (userPrefs.getEvalTime()) <= 0) {
 				logger.info("Out of time "
-						+ UserPreferences.INSTANCE.getEvalTime());
-				UserPreferences.INSTANCE.shutDown();
+						+ userPrefs.getEvalTime());
+				userPrefs.shutDown();
 				System.exit(0);
 			}
 
 			this.routeData = (RouteReader) o;
-			power = UserPreferences.INSTANCE.getPowerProfile();
+			power = userPrefs.getPowerProfile();
 			power.setGrades(routeData.getMaxSlope(), routeData.getMinSlope());
 
 			distance = 0.0;

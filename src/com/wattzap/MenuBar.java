@@ -43,7 +43,7 @@ import com.wattzap.view.training.TrainingPicker;
  * Externalize menu setup to this class. Registers for Locale change messages so
  * we can reinitialize text when language changes.
  * 
- * (c) 2014 David George / Wattzap.com
+ * (c) 2014-2015 David George / Wattzap.com
  * 
  * @author David George
  * @date 25 November 2014
@@ -87,7 +87,7 @@ public class MenuBar implements MessageCallback {
 		// TODO - choose between OS and non OS edtion
 		AboutPanel about = new AboutPanel();
 		aboutMenuItem.addActionListener(about);
-
+		
 		quitMenuItem = new JMenuItem();
 		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit
 				.getDefaultToolkit().getMenuShortcutKeyMask(), false));

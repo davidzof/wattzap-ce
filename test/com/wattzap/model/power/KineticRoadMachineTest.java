@@ -33,7 +33,7 @@ public class KineticRoadMachineTest {
 	@Test
 	public void checkSpeed() {
 		BigDecimal bd;
-		for (int s = 6; s < 60; s++) {
+		for (int s = 0; s < 60; s++) {
 			int i = 1;
 			int power = p.getPower(s, i);
 
@@ -48,7 +48,7 @@ public class KineticRoadMachineTest {
 	public void checkPower() {
 		System.out.println("speed,power");
 
-		for (int speed = 10; speed <= 65; speed++) {
+		for (int speed = 0; speed <= 65; speed++) {
 
 			int power = p.getPower(speed, 1);
 			System.out.printf("%d,%d\n", speed, power);

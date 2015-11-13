@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import java.awt.Rectangle;
@@ -33,6 +33,8 @@ import com.wattzap.model.UserPreferences;
 
 /**
  * Main Window, displays telemetry data and responds to close events
+ * 
+ * (c) 2013-2015
  * 
  * @author David George
  * @date 31 July 2013
@@ -66,9 +68,12 @@ public class MainFrame extends JFrame implements ActionListener,
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		logger.info(command);
-		MessageBus.INSTANCE.send(Messages.CLOSE, null);
-		UserPreferences.INSTANCE.shutDown();
-		System.exit(0);
+		
+			// QUIT
+			MessageBus.INSTANCE.send(Messages.CLOSE, null);
+			UserPreferences.INSTANCE.shutDown();
+			System.exit(0);
+
 	}
 
 	@Override
@@ -76,11 +81,11 @@ public class MainFrame extends JFrame implements ActionListener,
 		logger.info(message);
 		switch (message) {
 		case CLOSE:
-			// remember position and size	
+			// remember position and size
 			Rectangle r = this.getBounds();
 			UserPreferences.INSTANCE.setMainBounds(r);
-			
-			//this.invalidate();
+
+			// this.invalidate();
 			this.validate();
 			// this.revalidate(); JDK 1.7 only
 

@@ -54,7 +54,6 @@ public class PowerListener extends AntListener implements MessageCallback {
 
 	// initialize for pairing
 	private double wheelSize = userPrefs.getWheelSizeCM();
-	private int resistance = userPrefs.getResistance();
 	private Power power = userPrefs.getPowerProfile();
 
 	public PowerListener() {
@@ -167,11 +166,9 @@ public class PowerListener extends AntListener implements MessageCallback {
 			// get up to date values
 			mass = userPrefs.getTotalWeight();
 			wheelSize = userPrefs.getWheelSizeCM();
-			resistance = userPrefs.getResistance();
 			power = userPrefs.getPowerProfile();
 			simulSpeed = userPrefs.isVirtualPower();
 			lastTime = -1;
-			System.out.println(userPrefs.getPowerSmoothing());
 			averagePower = new Rolling(userPrefs.getPowerSmoothing());
 			break;
 		case STARTPOS:

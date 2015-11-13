@@ -457,20 +457,12 @@ public class RLVReader extends RouteReader {
 	}
 
 	private final ArrayList<Point> readPGMF(String fileName) {
-
 		ArrayList<Point> p = new ArrayList<Point>();
 		maxPower = 0f;
+		DataInputStream din = null;
 
 		try {
-			// create FileInputStream object
-			FileInputStream fin = new FileInputStream(fileName);
-
-			/*
-			 * To create DataInputStream object, use DataInputStream(InputStream
-			 * in) constructor.
-			 */
-
-			DataInputStream din = new DataInputStream(fin);
+			din = new DataInputStream(new FileInputStream(fileName));
 
 			/*
 			 * To read a Java short primitive from file, use byte readShort()
@@ -514,6 +506,14 @@ public class RLVReader extends RouteReader {
 			throw new RuntimeException("No PGMF file found for ");
 		} catch (IOException ioe) {
 			logger.error("IOException : " + ioe);
+		} finally {
+			try {
+				if (din != null) {
+					din.close();
+				}
+			} catch (IOException e) {
+				logger.error("IOException : " + e);
+			}
 		}
 
 		return p;
@@ -700,15 +700,7 @@ public class RLVReader extends RouteReader {
 		DataInputStream din = null;
 
 		try {
-			// create FileInputStream object
-			FileInputStream fin = new FileInputStream(file);
-
-			/*
-			 * To create DataInputStream object, use DataInputStream(InputStream
-			 * in) constructor.
-			 */
-
-			din = new DataInputStream(fin);
+			din = new DataInputStream(new FileInputStream(file));
 
 			/*
 			 * To read a Java short primitive from file, use byte readShort()
@@ -756,10 +748,11 @@ public class RLVReader extends RouteReader {
 			logger.error("IOException : " + ioe);
 		} finally {
 			try {
-				din.close();
+				if (din != null) {
+					din.close();
+				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("IOException : " + e);
 			}
 		}
 

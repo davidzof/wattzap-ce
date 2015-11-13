@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.model.power;
 
 import java.math.BigDecimal;
@@ -22,23 +22,24 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AscentFluidTest {
+public class TacxGeniusSmartTest {
 	Power p;
 
 	@Before
 	public void setup() {
-		p = new AscentFluid();
+		p = new TacxGeniusSmart();
 	}
-	
+
 	@Test
 	public void checkSpeed() {
 		BigDecimal bd;
-		for (int s = 0; s < 60; s++) {
+		for (int s = 2; s < 60; s++) {
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				int power = p.getPower(s, i);
 
 				double speed = p.getSpeed(power, i);
-				bd = new BigDecimal(speed).setScale(0, RoundingMode.HALF_DOWN);
+				bd = new BigDecimal(speed).setScale(0,
+				RoundingMode.UP);
 				Assert.assertEquals(bd.intValue(), s);
 			}
 		}
@@ -47,13 +48,11 @@ public class AscentFluidTest {
 	@Test
 	public void checkPower() {
 		System.out.println("speed,power");
-		for (int resistance = 0; resistance < p.getResitanceLevels(); resistance++) {
-			for (int speed = 10; speed <= 60; speed++) {
-				int power = p.getPower(speed, resistance);
-				System.out.printf("%d,%d\n", speed, power);
-			}
 
+		for (int speed = 0; speed <= 65; speed++) {
+
+			int power = p.getPower(speed, 1);
+			System.out.printf("%d,%d\n", speed, power);
 		}
 	}
-
 }

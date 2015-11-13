@@ -129,16 +129,8 @@ public class TTSReader extends RouteReader {
 	@Override
 	public void load(String fileName) {
 		this.fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-		try {
-			parseFile(fileName);
-		} catch (IOException ex) {
-			logger.error("Cannot read " + fileName + "::"
-					+ ex.getLocalizedMessage());
-		} catch (IllegalArgumentException ex) {
-			logger.error("Wrong file format " + fileName + "::"
-					+ ex.getLocalizedMessage());
-		}
-
+		parseFile(fileName);
+		
 	}
 
 	@Override
@@ -170,31 +162,48 @@ public class TTSReader extends RouteReader {
 		return minSlope;
 	}
 
-	private void parseFile(String fileName) throws FileNotFoundException,
-			IOException, IllegalArgumentException {
+	private void parseFile(String fileName) {
 
 		content = new ArrayList<byte[]>();
 		pre = new byte[2];
 		int lastSize = -1;
-		InputStream is = new FileInputStream(fileName);
-		for (;;) {
-			if (!readData(is, pre, false)) {
-				break;
-			}
-			if (isHeader(pre)) {
-				byte[] header = new byte[14];
-				if (readData(is, header, true)) {
-					content.add(header);
-					lastSize = getUInt(header, 6) * getUInt(header, 10);
-				} else {
-					throw new IllegalArgumentException("Cannot read header");
-				}
+		InputStream is = null;
 
-				// one byte data.. unconditionally read as data, no-one is able
-				// to check it
-				if (lastSize < 2) {
+		try {
+			is = new FileInputStream(fileName);
+			for (;;) {
+				if (!readData(is, pre, false)) {
+					break;
+				}
+				if (isHeader(pre)) {
+					byte[] header = new byte[14];
+					if (readData(is, header, true)) {
+						content.add(header);
+						lastSize = getUInt(header, 6) * getUInt(header, 10);
+					} else {
+						throw new IllegalArgumentException("Cannot read header");
+					}
+
+					// one byte data.. unconditionally read as data, no-one is
+					// able
+					// to check it
+					if (lastSize < 2) {
+						byte[] data = new byte[lastSize];
+						if (readData(is, data, false)) {
+							content.add(data);
+						} else {
+							throw new IllegalArgumentException("Cannot read "
+									+ lastSize + "b data");
+						}
+						lastSize = -1;
+					}
+				} else {
+					if (lastSize < 2) {
+						throw new IllegalArgumentException(
+								"Data not allowed, header " + getUShort(pre, 0));
+					}
 					byte[] data = new byte[lastSize];
-					if (readData(is, data, false)) {
+					if (readData(is, data, true)) {
 						content.add(data);
 					} else {
 						throw new IllegalArgumentException("Cannot read "
@@ -202,24 +211,23 @@ public class TTSReader extends RouteReader {
 					}
 					lastSize = -1;
 				}
-			} else {
-				if (lastSize < 2) {
-					throw new IllegalArgumentException(
-							"Data not allowed, header " + getUShort(pre, 0));
+			}// for
+		} catch (IOException ex) {
+			logger.error("Cannot read " + fileName + "::"
+					+ ex.getLocalizedMessage());
+		} catch (IllegalArgumentException ex) {
+			logger.error("Wrong file format " + fileName + "::"
+					+ ex.getLocalizedMessage());
+		} finally {
+			try {
+				if (is != null) {
+					is.close();
 				}
-				byte[] data = new byte[lastSize];
-				if (readData(is, data, true)) {
-					content.add(data);
-				} else {
-					throw new IllegalArgumentException("Cannot read "
-							+ lastSize + "b data");
-				}
-				lastSize = -1;
+			} catch (IOException e) {
+				logger.error("IOException : " + e);
 			}
-		}// for
-		is.close();
+		}
 		loadHeaders();
-
 	}
 
 	private static String toHex(byte bb) {
@@ -518,7 +526,7 @@ public class TTSReader extends RouteReader {
 		case 1:
 			programType = "watt";
 			throw new RuntimeException("Power files not currently supported");
-			//break;
+			// break;
 		case 2:
 			programType = "heartRate";
 			break;
@@ -570,8 +578,8 @@ public class TTSReader extends RouteReader {
 			double lat = Float.intBitsToFloat(getUInt(data, i * 16 + 4));
 			double lon = Float.intBitsToFloat(getUInt(data, i * 16 + 8));
 			double altitude = Float.intBitsToFloat(getUInt(data, i * 16 + 12));
-			
-			//System.out.println("alt " + altitude + " distance " + distance);
+
+			// System.out.println("alt " + altitude + " distance " + distance);
 
 			// GPX Data
 			Waypoint wayPoint = new Waypoint(lat, lon);
@@ -628,13 +636,10 @@ public class TTSReader extends RouteReader {
 	}
 
 	/*
-	 * Slope/Distance Program:
-	 * Distance to Frame Mapping
-	 * Format: 2102675 (cm)/77531 (frames)
+	 * Slope/Distance Program: Distance to Frame Mapping Format: 2102675
+	 * (cm)/77531 (frames)
 	 * 
 	 * Watt/Time Program:
-	 * 
-
 	 */
 	private void distanceToFrame(int version, byte[] data) {
 		if (data.length % 8 != 0) {
@@ -662,13 +667,14 @@ public class TTSReader extends RouteReader {
 		}
 		logger.info("Frame Rate " + frameRate);
 
-		//System.out.println("Frame Rate " + frameRate);
-		
+		// System.out.println("Frame Rate " + frameRate);
+
 		for (int i = 0; i < data.length / 8; i++) {
 			Point p = new Point();
 			p.setDistanceFromStart(getUInt(data, i * 8));
 			int frame = getUInt(data, i * 8 + 4);
-			//System.out.println("frame " + frame + " dist " + (p.getDistanceFromStart()/1000));
+			// System.out.println("frame " + frame + " dist " +
+			// (p.getDistanceFromStart()/1000));
 
 			p.setTime((int) (frame / frameRate));
 			pointList.add(p);
@@ -679,7 +685,7 @@ public class TTSReader extends RouteReader {
 	/**
 	 * PROGRAM data
 	 * 
-     *
+	 * 
 	 * Format: slope/distance information or power/time
 	 * 
 	 * short slope // FLOAT RollingFriction; // Usually 4.0 // Now it is integer
@@ -705,7 +711,7 @@ public class TTSReader extends RouteReader {
 
 			// slope %, distance meters
 			distance += (getUInt(data, i * 6 + 2));
-			//System.out.println("slope " + slope + " distance " + distance);
+			// System.out.println("slope " + slope + " distance " + distance);
 			ProgramPoint p = new ProgramPoint();
 			p.slope = (double) slope / 100;
 			if (i == 0) {

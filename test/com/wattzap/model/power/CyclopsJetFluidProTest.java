@@ -33,7 +33,7 @@ public class CyclopsJetFluidProTest {
 	@Test
 	public void checkSpeed() {
 		BigDecimal bd;
-		for (int s = 6; s < 60; s++) {
+		for (int s = 0; s < 60; s++) {
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				int power = p.getPower(s, i);
 
@@ -48,7 +48,7 @@ public class CyclopsJetFluidProTest {
 	public void checkPower() {
 		System.out.println("speed,power");
 		for (int resistance = 0; resistance < p.getResitanceLevels(); resistance++) {
-			for (int speed = 10; speed <= 65; speed++) {
+			for (int speed = 0; speed <= 65; speed++) {
 
 				int power = p.getPower(speed, resistance);
 				System.out.printf("%d,%d\n", speed, power);

@@ -43,7 +43,7 @@ public class TurboPanel extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final static Font font1 = new Font("Arial", Font.CENTER_BASELINE,
 			12);
-	private UserPreferences userPrefs = UserPreferences.INSTANCE;
+	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 	private JCheckBox virtualPower;
 	private JComboBox resistanceLevels;
 	private JComboBox trainerList = new JComboBox();
@@ -128,13 +128,13 @@ public class TurboPanel extends JPanel implements ActionListener {
 			resistanceLabel.setVisible(true);
 			resistanceLevels = new JComboBox();
 
-			if (!userPrefs.isAntEnabled()) {
-				// special variable resistance level when no ANT device
-				resistanceLevels.addItem("auto");
-			}
 
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				resistanceLevels.addItem("" + i);
+			}
+			if (!userPrefs.isAntEnabled()) {
+				// special variable resistance level when no ANT device
+				resistanceLevels.addItem("Auto");
 			}
 			if (p.equals(
 					userPrefs.getPowerProfile())) {

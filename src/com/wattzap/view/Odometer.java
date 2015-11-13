@@ -301,7 +301,8 @@ public class Odometer extends JPanel implements MessageCallback {
 			startTime = 0;
 			speedLabel.setText("0.0");
 			powerLabel.setText("0");
-			if (userPrefs.getResistance() == 0) {
+			if (userPrefs.getResistance() == userPrefs.getPowerProfile().getResitanceLevels()) {
+				// AUTO
 				resistanceLabel.setVisible(true);
 				resistanceText.setVisible(true);
 				resistanceLabel.setText("1");

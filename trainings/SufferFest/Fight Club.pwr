@@ -1,55 +1,55 @@
 #
 # SufferFest Fight Club Powerfile for Wattzap
-# http://www.wattzap.com/
-# http://www.thesufferfest.com 
+# (c) 2016, http://www.wattzap.com/
+# (c) http://www.thesufferfest.com 
 #
-# Intensity Factor: 93%
+# Intensity Factor: 93% - that's pretty tough
 #
 # hh:mm:ss,RPE,Cad,Speed
 00:00,1,90,30
 #
 # Warm Up
-02:18,1,90,30
-05:15,2,90,30
+02:18,1,80,30
+05:15,2,85,35
 #
 # Increase speed
-07:26,2,90,30
+07:26,2,90,40
 #
 # Lap 1 - Tempo
-09:02,3,90,30
+09:02,3,90,45
 #
 # Attack
-10:54,6,90,30
+10:54,6,100,50
 #
 # Tempo
-11:08,3,90,30
+11:08,3,90,40
 #
 # Attack
-11:51,6,90,30
+11:51,6,105,55
 #
 # Tempo
 12:05,3,90,30
 #
 # Attack
-12:31,6,90,30
+12:31,6,100,30
 #
 # Tempo
-12:45,3,90,30
+12:45,3,90,40
 #
 # Attack
-13:40,6,90,30
+13:40,6,105,60
 #
 # Tempo
-13:53,3,90,30
+13:53,3,90,40
 #
 # Recovery
-15:03,1,90,30
+15:03,1,85,30
 #
 # Lap 2 - Time Trial
 16:46,3,90,30
 #
 # Attack
-17:51,6,90,30
+17:51,6,100,55
 #
 # Time Trial
 18:05,3,90,30
