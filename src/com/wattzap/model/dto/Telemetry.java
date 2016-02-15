@@ -24,39 +24,32 @@ import java.io.Serializable;
  * @author David George (c) Copyright 2013
  * @date 19 June 2013
  */
-public class Telemetry implements Serializable {
+public class Telemetry extends Point implements Serializable {
 	private static final double KMTOMILES = 1.609344;
 
-	private double speed;
 	private int cadence;
 	private double distance;
-	private int power;
-	private double elevation;
-	private double gradient;
-	private double latitude;
-	private double longitude;
 	private int heartRate;
 	private long time;
 	private int resistance;
 
 	public Telemetry() {
-		speed = -1;
-		power = -1;
-		latitude = 91;
-		longitude = 181;
+		setSpeed(-1);
+		setPower(-1);
+		setLatitude(91);
+		setLongitude(181);
 		heartRate = -1;
-
 	}
 
 	public Telemetry(Telemetry t) {
-		speed = t.speed;
+		setSpeed(t.getSpeed());
 		cadence = t.cadence;
 		distance = t.distance;
-		power = t.power;
-		elevation = t.elevation;
-		gradient = t.gradient;
-		latitude = t.latitude;
-		longitude = t.longitude;
+		setPower(t.getPower());
+		setElevation(t.getElevation());
+		setGradient(t.getGradient());
+		setLatitude(t.getLatitude());
+		setLongitude(t.getLongitude());
 		heartRate = t.heartRate;
 		time = t.time;
 	}
@@ -77,58 +70,14 @@ public class Telemetry implements Serializable {
 		this.heartRate = heartRate;
 	}
 
-	public double getLatitude() {
-		return latitude;
-	}
-
-	public void setLatitude(double latitude) {
-		this.latitude = latitude;
-	}
-
-	public double getLongitude() {
-		return longitude;
-	}
-
-	public void setLongitude(double longitude) {
-		this.longitude = longitude;
-	}
-
-	public double getElevation() {
-		return elevation;
-	}
-
-	public void setElevation(double elevation) {
-		this.elevation = elevation;
-	}
-
-	public double getGradient() {
-		return gradient;
-	}
-
-	public void setGradient(double gradient) {
-		this.gradient = gradient;
-	}
-
-	public int getPower() {
-		return power;
-	}
-
-	public void setPower(int power) {
-		this.power = power;
-	}
-
-	public void setSpeed(double speed) {
-		this.speed = speed;
+	public double getSpeedMPH() {
+		return getSpeed() / KMTOMILES;
 	}
 
 	public double getSpeedKMH() {
-		return speed;
+		return getSpeed();
 	}
-
-	public double getSpeedMPH() {
-		return speed / KMTOMILES;
-	}
-
+	
 	public void setCadence(int cadence) {
 		this.cadence = cadence;
 	}
@@ -178,11 +127,33 @@ public class Telemetry implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Telemetry [speed=" + speed + ", cadence=" + cadence
-				+ ", distance=" + distance + ", power=" + power
-				+ ", elevation=" + elevation + ", gradient=" + gradient
-				+ ", latitude=" + latitude + ", longitude=" + longitude
-				+ ", heartRate=" + heartRate + " tt " + heartRate + ", time="
-				+ time / 1000 + "]";
+		return "Telemetry [cadence=" + cadence
+				+ ", distance=" + distance + ", heartRate=" + heartRate + " tt " + heartRate + ", time="
+				+ time / 1000 + "]" + super.toString();
+	}
+	
+	@Override
+	public String getTcxExtensionsXml() {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("          <HeartRateBpm>");
+		sb.append("<Value>");
+		sb.append(heartRate);
+		sb.append("</Value>");
+		sb.append("</HeartRateBpm>\n");
+		sb.append("          <Cadence>");
+		sb.append(Math.min(254, cadence));
+		sb.append("</Cadence>\n");
+		sb.append("          <Extensions>");
+		sb.append("<TPX xmlns=\"http://www.garmin.com/xmlschemas/ActivityExtension/v2\">");
+		sb.append("<Watts>");
+		sb.append(getPower());
+		sb.append("</Watts>");
+		sb.append("<Speed>");
+		sb.append(getSpeedKMH());
+		sb.append("</Speed>");
+		sb.append("</TPX></Extensions>");
+		
+		return sb.toString();
 	}
 }

@@ -18,13 +18,13 @@ package com.wattzap.view;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.Robot;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -70,6 +70,8 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 	private EmbeddedMediaPlayer mPlayer;
 	private MediaPlayerFactory mediaPlayerFactory;
 	private Canvas canvas;
+	private ScreenGrabber grabber = null;
+	int imageCount = 0;
 
 	long startTime = 0;
 	long mapStartTime;
@@ -96,12 +98,12 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 		this.mainFrame = main;
 
 		setTitle("Video - www.WattzAp.com");
-		//setUndecorated(true);
+		// setUndecorated(true);
 		ImageIcon img = new ImageIcon("icons/video.jpg");
 		setIconImage(img.getImage());
 
 		/* Messages we are interested in */
-		//MessageBus.INSTANCE.register(Messages.SPEED, this);
+		// MessageBus.INSTANCE.register(Messages.SPEED, this);
 		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
 		MessageBus.INSTANCE.register(Messages.STOP, this);
 		MessageBus.INSTANCE.register(Messages.CLOSE, this);
@@ -264,21 +266,29 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 	 */
 	@Override
 	public void callback(Messages message, Object o) {
+
 		switch (message) {
 		case SPEED:
+			if (grabber == null && UserPreferences.INSTANCE.isScreenshot()) {
+				(grabber = new ScreenGrabber(this, 300)).start();
+			}
 			if (videoLoaded && routeData != null) {
 				Telemetry t = (Telemetry) o;
 				setSpeed(t);
 			}
+
 			break;
 
 		case STOP:
 			if (mPlayer != null) {
-
 				if (mPlayer.isPlaying()) {
 					logger.debug("Pausing video player");
 					mPlayer.pause();
 				}
+			}
+			if (grabber != null) {
+				grabber.shutdown();
+				grabber = null;
 			}
 			break;
 		case START:
@@ -297,8 +307,10 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 					mPlayer.setPosition(pos);
 				}
 			}
+
 			break;
 		case CLOSE:
+
 			// by default add to telemetry frame
 			remove(odo);
 			mainFrame.add(odo, "cell 0 2, grow");
@@ -315,6 +327,10 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 			if (routeData != null) {
 				routeData.close();
 				len = 0;
+			}
+			if (grabber != null) {
+				grabber.shutdown();
+				grabber = null;
 			}
 			break;
 		case GPXLOAD:
@@ -337,12 +353,11 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 					mainFrame.repaint();
 					mPlayer.enableOverlay(false);
 					mPlayer.prepareMedia(videoFile + ext);
-				
+
 					long DurationInSeconds;// gives us video time
 					mPlayer.parseMedia();
 					DurationInSeconds = (mPlayer.getMediaMeta().getLength());
-					//System.out.println("duration " + DurationInSeconds);
-					
+					// System.out.println("duration " + DurationInSeconds);
 
 					add(odo, java.awt.BorderLayout.SOUTH);
 					videoLoaded = true;
@@ -350,12 +365,11 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 					revalidate(this);
 					setVisible(true);
 					MessageBus.INSTANCE.register(Messages.SPEED, this);
-		
+
 					fps = mPlayer.getFps();
 					len = mPlayer.getLength();
-					//System.out.println("fps " + fps + " len " + len);
-					
-					
+					// System.out.println("fps " + fps + " len " + len);
+
 					break;
 				}
 			}
@@ -382,6 +396,61 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 	private void revalidate(JFrame frame) {
 		// frame.invalidate();
 		frame.validate();
+	}
+
+	/**
+	 * Helper class to take periodic screen shots
+	 */
+	public class ScreenGrabber extends Thread {
+		JFrame frame;
+		long seconds;
+		private String userDir;
+		private volatile boolean done = false;
+
+		ScreenGrabber(JFrame frame, long seconds) {
+			this.seconds = seconds;
+			this.frame = frame;
+			userDir = UserPreferences.INSTANCE.getUserDataDirectory();
+		}
+
+		public void run() {
+			while (!done) {
+				try {
+					Thread.sleep(seconds * 1000);
+				} catch (InterruptedException e) {
+				}
+				screenshot();
+				imageCount++;
+			}
+		}
+
+		public void shutdown() {
+			done = true;
+		}
+
+		/**
+		 * take a screen shot
+		 */
+		void screenshot() {
+			try {
+
+				Robot robot = new Robot();
+				// Capture the screen shot of the area of the screen defined by
+				// the rectangle
+				
+				BufferedImage bi = robot.createScreenCapture(new Rectangle(
+						 frame.getX(),  frame.getY(), 
+								frame.getWidth(), frame.getHeight()));
+				ImageIO.write(bi, "png", new File(userDir + "/screen-"
+						+ imageCount + ".png"));
+
+			} catch (Exception e) {
+				logger.error("Exception to write image "
+						+ e.getLocalizedMessage());
+			}
+
+		}
+
 	}
 
 }

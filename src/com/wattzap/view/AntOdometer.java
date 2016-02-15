@@ -193,13 +193,11 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 	private void initLabels(boolean metric) {
 		if (metric) {
-			speedText
-					.setText(userPrefs.getString("speed") + " (km/h)");
+			speedText.setText(userPrefs.getString("speed") + " (km/h)");
 			distText.setText(userPrefs.getString("distance") + " (km)");
 		} else {
 			speedText.setText(userPrefs.getString("speed") + " (mph)");
-			distText.setText(userPrefs.getString("distance")
-					+ " (miles)");
+			distText.setText(userPrefs.getString("distance") + " (miles)");
 
 		}
 	}
@@ -225,21 +223,24 @@ public class AntOdometer extends JPanel implements MessageCallback {
 						t.getDistanceMiles()));
 			}
 
-			if (current != null) {
-				int i = current.isPowerInRange(t.getPower());
-				if (i < 0) {
-					powerLabel.setForeground(skyBlue);
-					powerLabel.setText("" + t.getPower());
-				} else if (i > 0) {
-					powerLabel.setForeground(Color.RED);
-					powerLabel.setText("" + t.getPower());
-				} else {
-					powerLabel.setForeground(Color.WHITE);
-					powerLabel.setText("" + t.getPower());
-				}
+			int power = t.getPower();
+			if (power != -1) {
+				if (current != null) {
+					int i = current.isPowerInRange(power);
+					if (i < 0) {
+						powerLabel.setForeground(skyBlue);
+						powerLabel.setText("" + power);
+					} else if (i > 0) {
+						powerLabel.setForeground(Color.RED);
+						powerLabel.setText("" + power);
+					} else {
+						powerLabel.setForeground(Color.WHITE);
+						powerLabel.setText("" + power);
+					}
 
-			} else {
-				powerLabel.setText("" + t.getPower());
+				} else {
+					powerLabel.setText("" + power);
+				}
 			}
 
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
@@ -328,8 +329,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 			switch (type) {
 			case RouteReader.POWER:
 				slopeText.setText(userPrefs.getString("target_power"));
-				levelText
-						.setText(userPrefs.getString("distance_left"));
+				levelText.setText(userPrefs.getString("distance_left"));
 				break;
 			case RouteReader.SLOPE:
 				slopeText.setText(userPrefs.getString("slope") + " %");

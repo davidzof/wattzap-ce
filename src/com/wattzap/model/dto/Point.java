@@ -19,7 +19,7 @@ package com.wattzap.model.dto;
  * 
  * Represents a data point from a route or power file (gpx, rlv, pwr etc)
  * 
- * @author David George (c) Copyright 2013
+ * @author David George (c) Copyright 2013-2016
  * @date 19 June 2013
  */
 public class Point {
@@ -27,9 +27,9 @@ public class Point {
 	private double longitude;
 	private double elevation;
 	private double distanceFromStart;
-	private double gradientOrPower;
+	private double gradient;
+	private int power;
 	private double speed;
-	// private double level;
 	private long time;
 
 	public double getSpeed() {
@@ -49,19 +49,19 @@ public class Point {
 	}
 
 	public double getGradient() {
-		return gradientOrPower;
+		return gradient;
 	}
 
-	public double getPower() {
-		return gradientOrPower; // overload gradient with power
+	public int getPower() {
+		return power; // overload gradient with power
 	}
 
 	public void setGradient(double gradient) {
-		this.gradientOrPower = gradient;
+		this.gradient = gradient;
 	}
 
-	public void setPower(double power) {
-		this.gradientOrPower = power;
+	public void setPower(int power) {
+		this.power = power;
 	}
 
 	public double getLatitude() {
@@ -100,7 +100,11 @@ public class Point {
 	public String toString() {
 		return "Point [latitude=" + latitude + ", longitude=" + longitude
 				+ ", elevation=" + elevation + ", distanceFromStart="
-				+ distanceFromStart + ", gradient=" + gradientOrPower
-				+ ", speed=" + speed + ", time=" + time + "]";
+				+ distanceFromStart + ", gradient=" + gradient + ", power="
+				+ power + ", speed=" + speed + ", time=" + time + "]";
+	}
+	
+	public String getTcxExtensionsXml() {
+		return "";
 	}
 }

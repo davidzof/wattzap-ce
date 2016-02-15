@@ -144,6 +144,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		}
 
 		support = ChartFactory.createSimpleXYChart(descriptor);
+		
 		chart = support.getChart();
 		add(chart, BorderLayout.CENTER);
 		chart.setVisible(true);

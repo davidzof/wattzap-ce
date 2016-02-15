@@ -35,7 +35,7 @@ import com.wattzap.utils.Rolling;
  * @author David George
  * @date 24th November 2014
  * 
- *       (c) 2014 David George / Wattzap.com
+ *       (c) 2014-2016 David George / Wattzap.com
  */
 public class SpeedListener extends AntListener implements MessageCallback {
 	public static String name = "C:SPD";
@@ -49,8 +49,8 @@ public class SpeedListener extends AntListener implements MessageCallback {
 	private boolean initializing = false;
 	private Rolling powerRatio;
 	private boolean simulSpeed;
-	private static long elapsedTime;
-	private static long elapsedTimestamp = 0;
+	//private static long elapsedTime;
+	//private static long elapsedTimestamp = 0;
 	private double distance = 0.0;
 
 	RouteReader routeData;
@@ -94,8 +94,6 @@ public class SpeedListener extends AntListener implements MessageCallback {
 	 * @return Telemetry or null if no reliable data could be calculated.
 	 */
 	Telemetry getTelemetry(int time, int count) {
-		
-		
 		if (lastCount == -1) {
 			// first time thru, initialize counters
 			lastCount = count;
@@ -108,7 +106,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 				initializing = false;
 				lastCount = count;
 				lastTime = time;
-				elapsedTime = System.currentTimeMillis();
+				//elapsedTime = System.currentTimeMillis();
 			}
 			return null;
 		}
@@ -128,25 +126,33 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			return null;
 		}
 
-		if(tDiff == 0){
+		//if(tDiff == 0){
 			//no new value received from sensor could be normal at slow speed if cCount < 6 
-			cCount++;
-		} else {
+			//cCount++;
+		//} else {
 			//a new value received from sensor clear cCount
-			cCount = 0;
-		}
+			//cCount = 0;
+		//}
 
 		double speed = 0;
 		double distanceKM = 0;
 		Telemetry t = new Telemetry();
 		
-		//allow trainer speed null for down
-		long timestamp = System.currentTimeMillis();
-		if (tDiff == 0  && elapsedTimestamp > 0 && routeData != null && routeData.getPoint(distance).getGradient() < 0) {
-			tDiff = (int) (timestamp - elapsedTimestamp)*1024/1000;
-		}
-
-		elapsedTimestamp = timestamp;
+		/*
+		 * This allows us to record a speed when we are slowing down to stop by using realtime rather than anttime for readings.
+		 * 
+		 * tDiff is zero - so no time difference.
+		 * elapsedtime is not zero so we've started recording
+		 * gradient is less than zero, so downhill
+		 */
+		//long timestamp = System.currentTimeMillis();
+		//if (tDiff == 0  && elapsedTimestamp > 0 && routeData != null && routeData.getPoint(distance).getGradient() < 0) {
+			//tDiff = (int) (timestamp - elapsedTimestamp)*1024/1000;
+			//System.out.println(">>> " + tDiff + " sDiff " + sDiff);
+			
+		//}
+		//elapsedTimestamp = timestamp;
+		
 		if (tDiff > 0 ) {
 			if(sDiff == 0){
 				if(cCount < 12){
@@ -159,7 +165,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			}
 			
 			double timeS = ((double) tDiff) / 1024;
-			elapsedTime += (int) (timeS * 1000);
+			//elapsedTime += (int) (timeS * 1000);
 			distanceKM = (sDiff * wheelSize) / 100000;
 
 			speed = distanceKM / (timeS / (3600));
@@ -172,14 +178,14 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			// based on power and gradient using magic sauce
 			if (simulSpeed && routeData != null) {
 				Point p = routeData.getPoint(distance);
-
+				
 				if (routeData.routeType() == RouteReader.SLOPE) {
 					if (p == null) {
 						// end of the road
 						distance = 0.0;
 						return null;
 					}
-					if (powerWatts >= 0) {
+					if (powerWatts > 0) {
 						// only works when power is positive, this is most of
 						// the time on a turbo
 						double realSpeed = (power.getRealSpeed(mass,
@@ -198,21 +204,25 @@ public class SpeedListener extends AntListener implements MessageCallback {
 					 * Power Profile: speed is the ratio of our trainer power to
 					 * the expected power, we also apply a bit of smoothing
 					 */
-					double ratio = powerRatio.add(powerWatts / p.getPower());
+					double ratio = powerRatio.add(powerWatts / (double)p.getPower());
 
 					// speed is video speed * power ratio
 					speed = p.getSpeed() * ratio;
 					distanceKM = (speed / 3600) * timeS;
 				}
-				if(distanceKM == 0){
+				//if(distanceKM == 0){
 					//the down is to small for have speed. we stop chrono (rollback the increase of elapsedTime)
-					elapsedTime -= (int) (timeS * 1000);
-				}	
+					//elapsedTime -= (int) (timeS * 1000);
+				//}	
 			}
-
-		} else if (cCount < 6) {
-			// a zero value may just be due to too fast sensor update, wait 6 messages before sending zero
-			return null;
+			
+			cCount = 0; // received a value, reset counter
+		} else {
+			cCount++;
+			if (cCount < 6) {
+				// a zero value may just be due to too fast sensor update, wait 6 messages before sending zero
+				return null;
+			}
 		}
 
 		lastTime = time;
@@ -231,7 +241,9 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			t.setLongitude(p.getLongitude());
 		}
 		t.setSpeed(speed);
-		t.setTime(elapsedTime);
+		//t.setTime(elapsedTime);
+		t.setTime(System.currentTimeMillis()); // use realtime
+		
 		distance += distanceKM;
 
 		logger.debug("sending " + t);

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -32,6 +33,7 @@ import org.apache.log4j.Logger;
 
 import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
+import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
 
 /**
@@ -92,7 +94,7 @@ public class TcxWriter /* implements TrackWriter */{
 		pw.println();
 	}
 
-	public void writeStartTrack(Telemetry start, Telemetry end) {
+	public void writeStartTrack(Point start, Point end) {
 		if (pw == null) {
 			return;
 		}
@@ -107,7 +109,7 @@ public class TcxWriter /* implements TrackWriter */{
 		pw.print((end.getTime() - start.getTime()) / 1000);
 		pw.println("</TotalTimeSeconds>");
 		pw.print("        <DistanceMeters>");
-		pw.print(end.getDistanceMeters());
+		pw.print(end.getDistanceFromStart());
 		pw.println("</DistanceMeters>");
 		// TODO max speed etc.
 		// Calories are a required element just put in 0.
@@ -122,7 +124,7 @@ public class TcxWriter /* implements TrackWriter */{
 		}
 	}
 
-	public void writeLocation(Telemetry t, int gpsData) {
+	public void writeLocation(Point t, int gpsData) {
 		if (pw == null) {
 			return;
 		}
@@ -146,30 +148,17 @@ public class TcxWriter /* implements TrackWriter */{
 
 			pw.println("          </Position>");
 
+			pw.print("          <AltitudeMeters>");
+			pw.print(t.getElevation());
+			pw.println("</AltitudeMeters>");
 		}
-		pw.print("          <AltitudeMeters>");
-		pw.print(t.getElevation());
-		pw.println("</AltitudeMeters>");
 		pw.print("          <DistanceMeters>");
-		pw.print(t.getDistanceMeters());
+		pw.print(t.getDistanceFromStart());
 		pw.println("</DistanceMeters>");
-		pw.print("          <HeartRateBpm>");
-		pw.print("<Value>");
-		pw.print(t.getHeartRate());
-		pw.print("</Value>");
-		pw.println("</HeartRateBpm>");
-		pw.print("          <Cadence>");
-		pw.print(Math.min(254, t.getCadence()));
-		pw.println("</Cadence>");
-		pw.print("          <Extensions>");
-		pw.print("<TPX xmlns=\"http://www.garmin.com/xmlschemas/ActivityExtension/v2\">");
-		pw.print("<Watts>");
-		pw.print(t.getPower());
-		pw.print("</Watts>");
-		pw.print("<Speed>");
-		pw.print(t.getSpeedKMH());
-		pw.print("</Speed>");
-		pw.println("</TPX></Extensions>");
+		
+		pw.print(t.getTcxExtensionsXml());;
+		
+		
 		pw.println("        </Trackpoint>");
 	}
 
@@ -267,15 +256,15 @@ public class TcxWriter /* implements TrackWriter */{
 	 *            0 - save GPS data, 1 - drop GPS data
 	 * @return
 	 */
-	public String save(ArrayList<Telemetry> data, int gpsData) {
+	public String save(List<? extends Point> data, int gpsData) {
 		String fileName = null;
 		if (data == null || data.size() == 0) {
 			logger.info("No training data to save");
 			return fileName;
 		}
 
-		Telemetry firstPoint = data.get(0);
-		Telemetry lastPoint = data.get(data.size() - 1);
+		Point firstPoint = data.get(0);
+		Point lastPoint = data.get(data.size() - 1);
 
 		fileName = getWorkoutName(firstPoint.getTime());
 		File file = new File(UserPreferences.INSTANCE.getUserDataDirectory()
@@ -295,8 +284,8 @@ public class TcxWriter /* implements TrackWriter */{
 			writeStartTrack(firstPoint, lastPoint);
 			writeOpenSegment();
 
-			Telemetry last = null;
-			for (Telemetry t : data) {
+			Point last = null;
+			for (Point t : data) {
 				if (t.getLatitude() > 90 || t.getLongitude() > 180) {
 					// No GPS data to save
 					writeLocation(t, 1);

@@ -9,3 +9,9 @@ bin/
 src-pe/
 plugins/
 jre6/
+jre7/
+.classpath
+.project
+build-mac.xml
+libvlc.dll
+libvlccore.dll

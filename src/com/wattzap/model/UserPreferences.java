@@ -228,6 +228,15 @@ public enum UserPreferences {
 	public void setUnits(boolean value) {
 		setBoolean("units", value);
 	}
+	
+	// For automatic screen shots
+	public boolean isScreenshot() {
+		return getBoolean("screenshot", false);
+	}
+
+	public void setScreenshot(boolean value) {
+		setBoolean("screenshot", value);
+	}
 
 	// Social
 	public String getSLUser() {

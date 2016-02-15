@@ -79,7 +79,7 @@ public class FitImporter implements MesgListener, MesgDefinitionListener {
 							point.getGradient(), point.getSpeedKMH());
 
 					if (p > userPrefs.getMaxPower()
-							&& (p > (last.getPower() * 2.0))) {
+							&& (p > (last.getPower() * 2))) {
 						// We are above FTP and power has doubled, remove power
 						// spikes
 						p = (int) (last.getPower() * 1.05);

@@ -17,6 +17,9 @@ package com.wattzap.model;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -25,6 +28,7 @@ import org.junit.Test;
 
 import com.gpxcreator.gpxpanel.GPXFile;
 import com.wattzap.model.dto.Point;
+import com.wattzap.utils.TcxWriter;
 
 public class TTSReaderTest {
 	TTSReader ttsReader;
@@ -52,7 +56,7 @@ public class TTSReaderTest {
 		Assert.assertEquals(TTSReader.SLOPE, ttsReader.routeType());
 	}
 
-	// @Test
+	@Test
 	public void loadMortiroloRoute() {
 
 		// String[] files = new String[] { "./resources/test/tts/IT_Eroica.tts",
@@ -71,21 +75,31 @@ public class TTSReaderTest {
 				System.err.println("File " + file);
 			}
 
+			
 			out.println("File " + file);
 			ttsReader.load(file);
+			
+			TcxWriter writer = new TcxWriter();
+			List<Point> list =  new ArrayList<Point>(Arrays.asList(ttsReader.getPoints()));
+			String fileName = writer.save(list, 0);
+			
 
 			out.println("");
 		}
 	}
 
-	// @Test
+	//@Test
 	public void loadEroicaRoute() {
 
 		String file = "./resources/test/tts/IT_Eroica.tts";
 		out.println("File " + file);
 		ttsReader.load(file);
+		
+		TcxWriter writer = new TcxWriter();
+		List<Point> list =  new ArrayList<Point>(Arrays.asList(ttsReader.getPoints()));
+		String fileName = writer.save(list, 0);
 
-		out.println("");
+		out.println("" + fileName);
 	}
 
 	@Test
@@ -108,6 +122,8 @@ public class TTSReaderTest {
 				+ gpx.getEleMaxMeters());
 		File f = new File("/home/david/tmp.gpx");
 		gpx.saveToGPXFile(f);
+		
+		
 	}
 
 	// @Test

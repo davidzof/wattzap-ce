@@ -69,7 +69,8 @@ public class Preferences extends JFrame implements ActionListener,
 	JTextField maxHR;
 	JTextField maxPwr;
 	JCheckBox units;
-
+	JCheckBox screenshot;
+	
 	JButton saveButton;
 	JButton cancelButton;
 	JTabbedPane jtp;
@@ -207,7 +208,6 @@ public class Preferences extends JFrame implements ActionListener,
 		tab.add(units);
 
 		langLabel = new JLabel();
-
 		tab.add(langLabel);
 
 		int index = 0;
@@ -227,6 +227,12 @@ public class Preferences extends JFrame implements ActionListener,
 			index++;
 		}
 		tab.add(languageList, "span");
+		
+		screenshot = new JCheckBox("Auto Screenshot");
+		screenshot.setSelected(userPrefs.isScreenshot());
+		screenshot.setActionCommand("screenshot");
+		screenshot.addActionListener(this);
+		tab.add(screenshot);
 	}
 
 	@Override
@@ -259,6 +265,12 @@ public class Preferences extends JFrame implements ActionListener,
 						userPrefs.getBikeWeight()));
 			}
 
+		} else if ("screenshot".equals(command)) {
+			if (screenshot.isSelected()) {
+				userPrefs.setScreenshot(true);
+			} else {
+				userPrefs.setScreenshot(false);
+			}
 		} else if ("cancel".equals(command)) {
 			setVisible(false); // you can't see me!
 			dispose(); // Destroy the JFrame object
@@ -325,6 +337,7 @@ public class Preferences extends JFrame implements ActionListener,
 		PowerProfiles pp = PowerProfiles.INSTANCE;
 		Power p = pp.getProfile(profile);
 		userPrefs.setPowerProfile(profile);
+		
 		if (p.getResitanceLevels() > 1) {
 			int level = trainerPanel.getResistanceLevel();
 			userPrefs.setResistance(level);

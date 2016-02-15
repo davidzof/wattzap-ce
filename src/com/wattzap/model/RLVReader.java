@@ -204,7 +204,7 @@ public class RLVReader extends RouteReader {
 				normPower = 1.2 * (UserPreferences.INSTANCE.getMaxPower() / maxPower);
 			}
 			// 40% of FTP
-			float recoveryPower = UserPreferences.INSTANCE.getMaxPower() * 0.4f;
+			int recoveryPower = (int) (UserPreferences.INSTANCE.getMaxPower() / 0.4);
 			if (recoveryPower == 0) {
 				recoveryPower = 75;
 			}
@@ -221,7 +221,7 @@ public class RLVReader extends RouteReader {
 						runningDistance += distance;
 
 						// Normalize power
-						rlvP.setPower(p.getPower() * normPower);
+						rlvP.setPower((int) (p.getPower() * normPower));
 						if (rlvP.getPower() < recoveryPower) {
 							// put a floor on minimum power
 							rlvP.setPower(recoveryPower);
@@ -249,7 +249,7 @@ public class RLVReader extends RouteReader {
 					}
 				}
 				// Normalize power
-				p.setPower(p.getPower() * normPower);
+				p.setPower((int) (p.getPower() * normPower));
 				if (p.getPower() < recoveryPower) {
 					// put a floor on minimum power
 					p.setPower(recoveryPower);

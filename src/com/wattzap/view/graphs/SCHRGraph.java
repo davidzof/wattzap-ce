@@ -54,7 +54,7 @@ import com.wattzap.utils.Rolling;
 /**
  * Speed, Cadence, Heart-Rate Graph
  * 
- * @author David George (c) Copyright 2014,2015
+ * @author David George (c) Copyright 2014-2016
  * @date 18 April 2014
  */
 public class SCHRGraph extends JPanel {
@@ -246,6 +246,7 @@ public class SCHRGraph extends JPanel {
 		SmoothingPanel smoothingPanel = new SmoothingPanel(this);
 		add(smoothingPanel, BorderLayout.SOUTH);
 
+		
 		//infoPanel = new InfoPanel();
 		//add(infoPanel, BorderLayout.NORTH);
 		setVisible(true);
@@ -291,6 +292,8 @@ public class SCHRGraph extends JPanel {
 		}
 		infoPanel.update(data);
 	}
+	
+	
 
 	private static final long serialVersionUID = 1L;
 }

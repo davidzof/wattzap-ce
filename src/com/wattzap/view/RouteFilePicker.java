@@ -30,6 +30,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import com.gpxcreator.gpxpanel.GPXFile;
+import com.wattzap.MenuBar;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.Messages;
 import com.wattzap.model.Readers;
@@ -46,7 +48,8 @@ import com.wattzap.model.UserPreferences;
  */
 public class RouteFilePicker extends JFileChooser implements ActionListener {
 	private static final long serialVersionUID = 1L;
-	JFrame frame;
+	private JFrame frame;
+	private RouteReader track;
 
 	private static Logger logger = LogManager.getLogger("Route File Picker");
 
@@ -91,27 +94,43 @@ public class RouteFilePicker extends JFileChooser implements ActionListener {
 		String command = e.getActionCommand();
 		logger.debug(command);
 
-		int retVal = showOpenDialog(frame);
-		File file = getSelectedFile();
-		try {
-			if (retVal == JFileChooser.APPROVE_OPTION) {
-				UserPreferences.INSTANCE.setRouteDir(file.getParent());
-				RouteReader track;
-				String ext = file.getName().substring(
-						file.getName().length() - 3);
-				track = Readers.INSTANCE.getReader(ext);
-				if (track != null) {
-					track.load(file.getAbsolutePath());
-					MessageBus.INSTANCE.send(Messages.GPXLOAD, track);
-				}
+		if (command.equals(MenuBar.SAVEROUTE)) {
+			GPXFile gpx = track.getGpxFile();
+			if (gpx == null || !"tts".equals(track.getExtension())) {
+				JOptionPane.showMessageDialog(
+						frame,
+						"No routing information or not TTS "
+								+ track.getFilename(), "Error",
+						JOptionPane.ERROR_MESSAGE);
 			} else {
-				logger.info("Open command cancelled by user.");
+				File f = new File(track.getFilename() + ".gpx");
+				gpx.saveToGPXFile(f);
 			}
-		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(frame,
-					ex.getMessage() + " " + file.getAbsolutePath(), "Error",
-					JOptionPane.ERROR_MESSAGE);
+		} else {
+
+			int retVal = showOpenDialog(frame);
+			File file = getSelectedFile();
+			try {
+				if (retVal == JFileChooser.APPROVE_OPTION) {
+					UserPreferences.INSTANCE.setRouteDir(file.getParent());
+
+					String ext = file.getName().substring(
+							file.getName().length() - 3);
+					track = Readers.INSTANCE.getReader(ext);
+					if (track != null) {
+						track.load(file.getAbsolutePath());
+						MessageBus.INSTANCE.send(Messages.GPXLOAD, track);
+					}
+				} else {
+					logger.info("Open command cancelled by user.");
+				}
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(frame, ex.getMessage() + " "
+						+ file.getAbsolutePath(), "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
 		}
+
 	}
 
 	/** Listen to the slider. */

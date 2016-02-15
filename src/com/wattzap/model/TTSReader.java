@@ -579,11 +579,10 @@ public class TTSReader extends RouteReader {
 			double lon = Float.intBitsToFloat(getUInt(data, i * 16 + 8));
 			double altitude = Float.intBitsToFloat(getUInt(data, i * 16 + 12));
 
-			// System.out.println("alt " + altitude + " distance " + distance);
-
-			// GPX Data
+			// GPS Data
 			Waypoint wayPoint = new Waypoint(lat, lon);
 			wayPoint.setEle(altitude);
+			
 			path.addWaypoint(wayPoint);
 
 			while (pointCount < pointList.size()) {

@@ -43,13 +43,15 @@ import com.wattzap.view.training.TrainingPicker;
  * Externalize menu setup to this class. Registers for Locale change messages so
  * we can reinitialize text when language changes.
  * 
- * (c) 2014-2015 David George / Wattzap.com
+ * (c) 2014-2016 David George / Wattzap.com
  * 
  * @author David George
  * @date 25 November 2014
  */
 public class MenuBar implements MessageCallback {
 	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
+	
+	public final static String SAVEROUTE = "save";
 
 	private final JMenu fileMenu;
 	private final JMenu trainingMenu;
@@ -61,6 +63,7 @@ public class MenuBar implements MessageCallback {
 	private final JMenuItem quitMenuItem;
 	// File Menu Items
 	private final JMenuItem openMenuItem;
+	private final JMenuItem saveRouteMenuItem;
 	private MenuItem closeMenuItem;
 	// Training
 	private final JMenuItem trainMenuItem;
@@ -79,6 +82,8 @@ public class MenuBar implements MessageCallback {
 		// Preferences
 		Preferences preferences = new Preferences();
 		prefMenuItem = new JMenuItem();
+		prefMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 		prefMenuItem.addActionListener(preferences);
 
 		// About Dialog
@@ -106,6 +111,12 @@ public class MenuBar implements MessageCallback {
 
 		RouteFilePicker picker = new RouteFilePicker(frame);
 		openMenuItem.addActionListener(picker);
+		
+		saveRouteMenuItem = new JMenuItem();
+		saveRouteMenuItem.setActionCommand(SAVEROUTE);
+
+		saveRouteMenuItem.addActionListener(picker);
+		fileMenu.add(saveRouteMenuItem);
 
 		closeMenuItem = new MenuItem(Messages.CLOSE);
 		fileMenu.add(closeMenuItem);
@@ -129,18 +140,26 @@ public class MenuBar implements MessageCallback {
 			trainMenuItem.addActionListener(tPicker);
 		}
 		analizeMenuItem = new JMenuItem();
+		analizeMenuItem.setAccelerator(KeyStroke.getKeyStroke('A', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 		trainingMenu.add(analizeMenuItem);
 		analizeMenuItem.setActionCommand(TrainingController.analyze);
 
 		saveMenuItem = new JMenuItem();
+		saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 		saveMenuItem.setActionCommand(TrainingController.save);
 		trainingMenu.add(saveMenuItem);
 
 		viewMenuItem = new JMenuItem();
+		viewMenuItem.setAccelerator(KeyStroke.getKeyStroke('V', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 		viewMenuItem.setActionCommand(TrainingController.view);
 		trainingMenu.add(viewMenuItem);
 
 		recoverMenuItem = new JMenuItem();
+		recoverMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', Toolkit
+				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
 		recoverMenuItem.setActionCommand(TrainingController.recover);
 		trainingMenu.add(recoverMenuItem);
 
@@ -184,6 +203,7 @@ public class MenuBar implements MessageCallback {
 		fileMenu.setText(userPrefs.getString("route"));
 		openMenuItem.setText(userPrefs.getString("open"));
 		closeMenuItem.setText(userPrefs.getString("close"));
+		saveRouteMenuItem.setText(userPrefs.getString("saveroute"));
 		
 		trainingMenu.setText(userPrefs.getString("training"));
 		analizeMenuItem.setText(

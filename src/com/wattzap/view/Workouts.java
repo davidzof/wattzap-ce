@@ -70,6 +70,7 @@ import com.wattzap.model.dto.WorkoutData;
 import com.wattzap.utils.ActivityReader;
 import com.wattzap.utils.TcxWriter;
 import com.wattzap.view.graphs.DistributionGraph;
+import com.wattzap.view.graphs.GPanel;
 import com.wattzap.view.graphs.GenericScatterGraph;
 import com.wattzap.view.graphs.MMPGraph;
 import com.wattzap.view.graphs.SCHRGraph;
@@ -141,7 +142,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		this.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 		selectedRows = null;
 
-		DefaultTableModel model = new DefaultTableModel(0,columnNames.length);
+		DefaultTableModel model = new DefaultTableModel(0, columnNames.length);
 
 		loadData(model);
 		table = new JTable(model);
@@ -203,7 +204,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		// need button for Load, Delete
 
 		// Create and set up the window.
-		frame = new JFrame( );
+		frame = new JFrame();
 
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
@@ -260,8 +261,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		powerWattsMenuItem.addActionListener(this);
 		scatMenu.add(powerWattsMenuItem);
 
-		quadAnalysisMenuItem = new JMenuItem(
-				userPrefs.getString("quadAnal"));
+		quadAnalysisMenuItem = new JMenuItem(userPrefs.getString("quadAnal"));
 		quadAnalysisMenuItem.setActionCommand(qaGraph);
 		quadAnalysisMenuItem.addActionListener(this);
 		scatMenu.add(quadAnalysisMenuItem);
@@ -373,8 +373,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				logger.info("Out of time "
 						+ UserPreferences.INSTANCE.getEvalTime());
 				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE
-								.getString("trial_expired"),
+						UserPreferences.INSTANCE.getString("trial_expired"),
 						UserPreferences.INSTANCE.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				return;
@@ -414,7 +413,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 
 			}
 			JOptionPane.showMessageDialog(this, importedFiles.toString(),
-					userPrefs.getString("import"), JOptionPane.INFORMATION_MESSAGE);
+					userPrefs.getString("import"),
+					JOptionPane.INFORMATION_MESSAGE);
 
 			return;
 		}
@@ -448,8 +448,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public int getKey(Telemetry t) {
 					return getKey(t.getPower());
 				}
-			}, 15, userPrefs.getString("pdGr"),
-					userPrefs.getString("poWtt"));
+			}, 15, userPrefs.getString("pdGr"), userPrefs.getString("poWtt"));
 			return;
 		}
 		if (cdGraph.equals(command)) {
@@ -458,8 +457,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public int getKey(Telemetry t) {
 					return getKey(t.getCadence());
 				}
-			}, 5, userPrefs.getString("cDgr"),
-					userPrefs.getString("cDrpm"));
+			}, 5, userPrefs.getString("cDgr"), userPrefs.getString("cDrpm"));
 			return;
 		}
 		if (hrdGraph.equals(command)) {
@@ -471,8 +469,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 
 					return getKey(t.getHeartRate());
 				}
-			}, 10, userPrefs.getString("hrDgr"),
-					userPrefs.getString("hrBpm"));
+			}, 10, userPrefs.getString("hrDgr"), userPrefs.getString("hrBpm"));
 			return;
 		}
 		if (tlGraph.equals(command)) {
@@ -488,7 +485,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public String getValueLabel(int v) {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
-			}, 0, userPrefs.getString("trainDist"), userPrefs.getString("trainlevel"));
+			}, 0, userPrefs.getString("trainDist"),
+					userPrefs.getString("trainlevel"));
 			return;
 		}
 		if (tlhrGraph.equals(command)) {
@@ -504,7 +502,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 				public String getValueLabel(int v) {
 					return TrainingItem.getTrainingName(v) + " " + v;
 				}
-			}, 0, userPrefs.getString("trainlevelhr"), userPrefs.getString("trainlevel"));
+			}, 0, userPrefs.getString("trainlevelhr"),
+					userPrefs.getString("trainlevel"));
 			return;
 		}
 	}
@@ -522,8 +521,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	private boolean load() {
 		if (selectedRows == null || selectedRows.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					userPrefs.getString("noDataDisp"), userPrefs.getString("noData"),
-					JOptionPane.ERROR_MESSAGE);
+					userPrefs.getString("noDataDisp"),
+					userPrefs.getString("noData"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		} else if (listChanged == false && telemetry != null) {
 			// data already loaded and nothing changed
@@ -560,8 +559,8 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	void reanalyze() {
 		if (selectedRows == null || selectedRows.isEmpty()) {
 			JOptionPane.showMessageDialog(this,
-					userPrefs.getString("noDataDisp"), userPrefs.getString("noData"),
-					JOptionPane.ERROR_MESSAGE);
+					userPrefs.getString("noDataDisp"),
+					userPrefs.getString("noData"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -644,7 +643,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		for (Entry<Integer, Long> entry : powerValues.descendingMap()
 				.entrySet()) {
 			Integer pwr = entry.getKey(); // power, Y axis
-			
+
 			if (total == 0) {
 				// first time thru
 				total = entry.getValue();
@@ -655,23 +654,24 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 			} else {
 				total += entry.getValue(); // time in milliseconds - X axis
 			}
-			if (total > (20*60*1000) && ftp20 == 0) {
+			if (total > (20 * 60 * 1000) && ftp20 == 0) {
 				// 20 minutes
 				ftp20 = pwr;
-				ftp20T = total/1000;
+				ftp20T = total / 1000;
 			}
-			if (total > (60*60*1000) && ftp == 0) {
+			if (total > (60 * 60 * 1000) && ftp == 0) {
 				// 20 minutes
 				ftp = pwr;
-				ftpT = total/1000;
+				ftpT = total / 1000;
 			}
-			
+
 			series.addOrUpdate(total / 1000, (double) pwr);
 		}// for
 
 		MMPGraph mmp = new MMPGraph(series, ftp20, ftp20T, ftp, ftpT);
 
-		JFrame frame = new JFrame(userPrefs.getString("mmp"));
+		String title = userPrefs.getString("mmp");
+		JFrame frame = new JFrame(title);
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -679,7 +679,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		// Create and set up the content pane.
 
 		mmp.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(mmp);
+		frame.setContentPane(new GPanel(mmp, removeNonASCII(title)));
 
 		// Display the window.
 		frame.pack();
@@ -734,14 +734,15 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		series3.add(3, aepf);
 		mmp.addLine(series3);
 
-		JFrame frame = new JFrame(userPrefs.getString("quadAnal"));
+		String title = userPrefs.getString("quadAnal");
+		JFrame frame = new JFrame(title);
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		// Create and set up the content pane.
 		mmp.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(mmp);
+		frame.setContentPane(new GPanel(mmp, removeNonASCII(title)));
 
 		// Display the window.
 		frame.pack();
@@ -764,9 +765,10 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}// for
 
 		GenericScatterGraph mmp = new GenericScatterGraph(series,
-				userPrefs.getString("poWtt"),
-				userPrefs.getString("cDrpm"));
-		JFrame frame = new JFrame(userPrefs.getString("cadPow"));
+				userPrefs.getString("poWtt"), userPrefs.getString("cDrpm"));
+		
+		String title = userPrefs.getString("cadPow");
+		JFrame frame = new JFrame(title);
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -774,7 +776,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		// Create and set up the content pane.
 
 		mmp.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(mmp);
+		frame.setContentPane(new GPanel(mmp, removeNonASCII(title)));
 
 		// Display the window.
 		frame.pack();
@@ -794,9 +796,10 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}// for
 
 		GenericScatterGraph mmp = new GenericScatterGraph(series,
-				userPrefs.getString("poWtt"),
-				userPrefs.getString("hrBpm"));
-		JFrame frame = new JFrame(userPrefs.getString("hrPow"));
+				userPrefs.getString("poWtt"), userPrefs.getString("hrBpm"));
+		
+		String title = userPrefs.getString("hrPow");
+		JFrame frame = new JFrame(title);
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -804,7 +807,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		// Create and set up the content pane.
 
 		mmp.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(mmp);
+		frame.setContentPane(new GPanel(mmp, removeNonASCII(title)));
 
 		// Display the window.
 		frame.pack();
@@ -825,7 +828,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		// Create and set up the content pane.
 
 		dgGraph.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(dgGraph);
+		frame.setContentPane(new GPanel(dgGraph, removeNonASCII(title)));
 
 		// Display the window.
 		frame.pack();
@@ -850,14 +853,14 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		pchrGraph.updateValues(1);
 		pchrGraph.updateWorkoutData(workoutData);
 
-		JFrame frame = new JFrame(userPrefs.getString("rideSum"));
+		String title = userPrefs.getString("rideSum");
+		JFrame frame = new JFrame(title);
 		ImageIcon img = new ImageIcon("icons/turbo.jpg");
 		frame.setIconImage(img.getImage());
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-		// Create and set up the content pane.
 		pchrGraph.setOpaque(true); // content panes must be opaque
-		frame.setContentPane(pchrGraph);
+		frame.setContentPane(new GPanel(pchrGraph, removeNonASCII(title)));
 
 		// Display the window.
 		frame.pack();
@@ -872,8 +875,7 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}
 
 		StringBuilder output = new StringBuilder();
-		output.append(UserPreferences.INSTANCE.getString("delMsg")
-				+ "\n\n");
+		output.append(UserPreferences.INSTANCE.getString("delMsg") + "\n\n");
 
 		int[] rows = new int[selectedRows.size()];
 		Iterator<Integer> row = selectedRows.iterator();
@@ -922,8 +924,9 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 	 * Setup button text, makes it easy to update if locale is changed
 	 */
 	private void doText() {
-		frame.setTitle("Wattzap Analyzer - " + userPrefs.getString("training_analysis"));
-		
+		frame.setTitle("Wattzap Analyzer - "
+				+ userPrefs.getString("training_analysis"));
+
 		summaryMenu.setText(userPrefs.getString("summary"));
 		mmpMenuItem.setText(userPrefs.getString("mmp"));
 		schrMenuItem.setText(userPrefs.getString("schr"));
@@ -962,6 +965,10 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}
 	}
 
+	private String removeNonASCII(String s) {
+		return s.replaceAll("[^\\x00-\\x7F]", "");
+	}
+	
 	public class MyCellRenderer extends DefaultTableCellRenderer {
 
 		private static final long serialVersionUID = 1L;
