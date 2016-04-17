@@ -28,7 +28,7 @@ public class Telemetry extends Point implements Serializable {
 	private static final double KMTOMILES = 1.609344;
 
 	private int cadence;
-	private double distance;
+	//private double distance;
 	private int heartRate;
 	private long time;
 	private int resistance;
@@ -44,7 +44,8 @@ public class Telemetry extends Point implements Serializable {
 	public Telemetry(Telemetry t) {
 		setSpeed(t.getSpeed());
 		cadence = t.cadence;
-		distance = t.distance;
+		//distance = t.distance;
+		setDistanceFromStart(t.getDistanceFromStart());
 		setPower(t.getPower());
 		setElevation(t.getElevation());
 		setGradient(t.getGradient());
@@ -86,19 +87,19 @@ public class Telemetry extends Point implements Serializable {
 	 * Distance in meters
 	 */
 	public void setDistanceMeters(double distance) {
-		this.distance = distance;
+		super.setDistanceFromStart(distance);
 	}
 
 	public double getDistanceMeters() {
-		return distance;
+		return getDistanceFromStart();
 	}
 
 	public double getDistanceKM() {
-		return distance / 1000;
+		return getDistanceFromStart() / 1000;
 	}
 
 	public double getDistanceMiles() {
-		return distance / (KMTOMILES * 1000);
+		return getDistanceFromStart() / (KMTOMILES * 1000);
 	}
 
 	public int getCadence() {
@@ -128,7 +129,7 @@ public class Telemetry extends Point implements Serializable {
 	@Override
 	public String toString() {
 		return "Telemetry [cadence=" + cadence
-				+ ", distance=" + distance + ", heartRate=" + heartRate + " tt " + heartRate + ", time="
+				+ ", heartRate=" + heartRate + " tt " + heartRate + ", time="
 				+ time / 1000 + "]" + super.toString();
 	}
 	

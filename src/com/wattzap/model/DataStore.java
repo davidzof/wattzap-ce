@@ -219,7 +219,7 @@ public class DataStore {
 			psUpdate.setString(16, user);
 			psUpdate.setString(17, data.getTcxFile());
 			
-			int i = psUpdate.executeUpdate();
+			psUpdate.executeUpdate();
 
 			conn.commit();
 		} catch (SQLException e) {

@@ -84,8 +84,8 @@ public class Preferences extends JFrame implements ActionListener,
 
 	private final JComboBox languageList = new JComboBox();
 	// Supported languages for dropdown TODO make this dynamic
-	private final Locale[] locales = { new Locale("fr"), new Locale("en"),
-			new Locale("de"), new Locale("nl"), new Locale("hu"), new Locale("es") };
+	private final Locale[] locales = { new Locale("cs"), new Locale("nl"), new Locale("en"), new Locale("fr"), 
+			new Locale("de"),  new Locale("hu"), new Locale("it"), new Locale("es") };
 	private final TurboPanel trainerPanel;
 	private AntPanel antPanel = null;
 	private final SocialPanel socialPanel;
