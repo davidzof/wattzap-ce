@@ -1,0 +1,210 @@
+# Hell Hath No Fury version 1.0 - 14th November 2014
+# time mm:ss,power,cadence,speed
+# Start
+00:00,1,100,30
+03:35,2,100,40
+#
+# Stage 1 Flat and light tempo
+# 5m30
+07:14,3,100,50
+#
+# Stand to climb
+08:30,4,80,35
+#
+# Back to Tempo
+08:51,3,100,50
+#
+# Stand to climb
+09:29,4,80,35
+#
+# Back to tempo
+09:58,3,90,50
+#
+# A little faster
+11:22,3,100,52
+#
+# Stage 2
+13:35,3,100,50
+#
+# Attack
+14:53,5,100,55
+#
+# Steady On
+15:10,4,100,50
+#
+# Back Together
+15:38,3,90,50
+# 
+# Another attack!
+15:51,5,100,55
+# 
+# Dont Pull
+16:09,4,100,50
+#
+# Steady Effort
+16:38,3,90,45
+#
+# Attack, go with her
+17:28,5,100,55
+#
+# Steady Effort
+17:46,3,90,45
+#
+# Climb
+21:58,4,90,25
+#
+# Steady Effort
+24:35,3,100,45
+#
+# Hill Sprint
+26:32,4,80,25
+#
+# A Little More
+26:59,4,80,28
+#
+# Steady Effort
+27:18,3,90,40
+#
+# Climb
+27:57,4,80,20
+#
+# Bridge
+28:59,4,80,18
+#
+# Grind It
+29:29,4,70,14
+#
+# Speed
+31:00,3,100,45
+#
+# Attack
+31:37,5,100,55
+#
+# Steady Effort
+31:48,3,90,45
+#
+# Another Attack
+31:57,4,100,50
+#
+# Steady Effort
+32:14,3,90,40
+#
+# Accelerate
+# RPE 8.75/100
+32:45,4,95,50
+#
+# Steady Effort
+# Take it easy for the sprint
+32:58,3,90,42
+#
+#
+# Sprint
+33:29,6,110,55
+#
+# Recovery
+33:56,3,90,40
+# Stage 3
+40:12,3,90,42
+#
+# Break
+40:39,4,100,50
+#
+# Share the work, RPE 7.5/100
+41:12,3,90,45
+#
+# Pull, RPE 8/100
+41:50,4,100,50
+#
+# Steady RPE 7.5/90
+42:02,3,90,50
+#
+# Pull, RPE 8/100
+42:33,4,100,50
+#
+# Steady RPE 7.5/90
+42:45,3,90,50
+#
+# Pull
+43:14,4,100,50
+#
+# Steady
+43:27,3,90,50
+# 
+# thirsty
+43:49,3,90,45
+#
+# Pull
+43:57,4,100,50
+#
+# Pull back a bit
+44:29,3,90,45
+#
+# Downhill
+45:06,2,110,55
+#
+# Back at it
+45:19,3,90,45
+#
+# Stand to climb
+45:59,4,80,35
+#
+# Back down
+46:11,3,90,45
+#
+# Attack
+47:50,4,90,55
+#
+# Climb
+48:07,4,80,40
+#
+# Accelerate
+49:37,4,80,35
+#
+# Steady Effort
+49:54,3,90,45
+#
+# Steady Effort
+51:11,3,90,40
+#
+# Tempo
+51:42,4,90,45
+#
+# Downhill
+52:07,2,110,55
+#
+# Sprint Back
+52:38,4,100,50
+#
+# Back on
+52:47,3,90,45
+#
+# Last hill
+53:46,4,80,40
+#
+# Downhill
+55:03,2,110,55
+#
+# Bridge
+55:32,4,100,55
+#
+# Recover
+55:45,3,90,45
+#
+# Bridge
+56:21,4,100,50
+#
+# Break
+56:47,3,90,50
+#
+# Sprint
+59:54,5,110,55
+#
+# Recovery
+60:18,2,85,35
+#
+# TTT
+65:05,4,100,55
+# Kill It
+67:44,5,100,60
+# Cool Down
+68:26,2,90,35
