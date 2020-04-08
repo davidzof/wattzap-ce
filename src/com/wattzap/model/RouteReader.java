@@ -60,7 +60,7 @@ public abstract class RouteReader {
 		if (currentPoint == points.length) {
 			return null;
 		} else if (currentPoint > 0) {
-			return points[currentPoint - 1];
+			return Point.middlePoint(points[currentPoint - 1], points[currentPoint], (float)((distance * 1000 - points[currentPoint - 1].getDistanceFromStart())/( points[currentPoint].getDistanceFromStart() -  points[currentPoint - 1].getDistanceFromStart())));
 		} else {
 			return points[0];
 		}

@@ -107,4 +107,17 @@ public class Point {
 	public String getTcxExtensionsXml() {
 		return "";
 	}
+
+	public static Point middlePoint(Point p1, Point p2, float ratio){
+		Point p = new Point();
+		p.latitude = ratio * p2.latitude + (1-ratio) * p1.latitude;
+		p.longitude = ratio * p2.longitude + (1-ratio) * p1.longitude;
+		p.elevation = ratio * p2.elevation + (1-ratio) * p1.elevation;
+		p.distanceFromStart = ratio * p2.distanceFromStart + (1-ratio) * p1.distanceFromStart;
+		p.gradient = ratio * p2.gradient + (1-ratio) * p1.gradient;
+		p.power = (int)(ratio * p2.power + (1-ratio) * p1.power);
+		p.speed = ratio * p2.speed + (1-ratio) * p1.speed;
+		p.time = (long)(ratio * p2.time + (1-ratio) * p1.time);
+		return p;
+	}
 }
