@@ -1,17 +1,37 @@
-Wattzap Community Edition
-=========================
+Wattzap Home Trainer Virtual Reality Software
+=============================================
 
-This is the community edition of the Wattzap Turbo Trainer Software. It is provided "as is" and without support. It is primarily
-intended for developers who want to add new features to Wattzap.
+WattzAp enables home trainer users (turbo trainers, rollers) to record details of their workout, follow training programmes all within a
+virtual reality environment.
 
-see: http://www.wattzap.com/ for more information
+WattzAp can:
+
+  * display heart rate, cadence, rider speed and power both graphically and as real time data
+  * follow workouts that target power, cadence and heart rate
+  * synchronize the playback of compatible videos (Tacx RLV, Tacx TTS, Tacx Ergo, GPX, PWR) with your speed
+  * share your results on sites such as Strava, SelfLoops etc
+  
+WattzAp works with standard turbo trainers and rollers. You don't need a complicated VR turbo trainer.
+WattzAp is an open platform, you can create your own videos and workouts and share these with other users.
+
+This is the community edition of the Wattzap Turbo Trainer Software. It is provided "as is" and without support.
+
+Latest Release
+==============
+
+Version 2.8.0 April 10th 2020
+
+Windows Download : https://drive.google.com/open?id=1x4wEG70LWf1sQiXIfRp9APIfxOXPvijE
+Linux Download :
+OSX Download :
+User Manual : https://drive.google.com/open?id=1R_3j5_DBuqHOqQYc5LY4cxTJihBQHh0E
+Training Programmes : https://drive.google.com/open?id=1Fm1BL2769SinFiN12xRxDsO5fJB53FES
 
 
 Basic Architecture
 ==================
 
-Wattzap is a Java Swing based application. An "Enterprise Bus" pattern is used for
-internal communication.
+Wattzap is a Java Swing based application. An "Enterprise Bus" pattern is used for internal communication.
 
 Mac OSX IMPORTANT
 =================
@@ -30,7 +50,7 @@ Video Playback
 ==============
 
 To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. On Windows download VLC.
-Copy plugins, libvcl.dll and libvlccore.dll to the Wattzap home directory.
+Copy plugins, libvcl.dll and libvlccore.dll to the Wattzap home directory or use the installer above.
 
 Working on the Project
 ======================

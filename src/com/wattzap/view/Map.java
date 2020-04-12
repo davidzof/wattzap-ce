@@ -49,7 +49,7 @@ public class Map extends GPXPanel implements MessageCallback {
 
 	public Map(MainFrame frame) {
 		super();
-		System.out.println("use bing aerial");
+
 		this.setTileSource(bingAerial);
 		// Alternative Source
 		// check to see if tiles exist and use offline

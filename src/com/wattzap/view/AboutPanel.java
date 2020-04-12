@@ -53,7 +53,8 @@ public class AboutPanel extends JFrame implements ActionListener {
 	private static Logger logger = LogManager.getLogger("About");
 
 	public AboutPanel() {
-		aboutText.append("<html>WattzAp Unified Edition<br/><br/>Version 2.8.0<br/>10th April 2020<p>© 2013-2020 David George<br/>Additional contributions from:<br/>Pir43");
+		aboutText.append("<html>WattzAp Unified Edition<br/><br/>Version 2.8.0<br/>10th April 2020");
+		aboutText.append("<br/><br/>© 2013-2020 David George<br/>Additional contributions from:<br/>Pierre Engles (Pir43)");
 		
 		setTitle("About Panel");
 		ImageIcon img = new ImageIcon("icons/preferences.jpg");
@@ -63,8 +64,10 @@ public class AboutPanel extends JFrame implements ActionListener {
 
 		setBackground(Color.GRAY);
 
+		
+		
 		int style1 = Font.CENTER_BASELINE;
-		Font font = new Font("Arial", style1, 13);
+		Font font = new Font("Arial", style1, 14);
 
 		about = new JLabel();
 		about.setFont(font);
