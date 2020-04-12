@@ -42,7 +42,7 @@ import com.wattzap.model.UserPreferences;
 public class MainFrame extends JFrame implements ActionListener,
 		MessageCallback {
 	private static final long serialVersionUID = -4597500546349817204L;
-	private static final String appName = "WattzAp v2.7.2 (20-02-2016)";
+	private static final String appName = "WattzAp v2.8.0 (10 April 2020)";
 
 	private Logger logger = LogManager.getLogger("Main Frame");
 

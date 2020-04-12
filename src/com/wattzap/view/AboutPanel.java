@@ -47,10 +47,14 @@ public class AboutPanel extends JFrame implements ActionListener {
 	JTextField regKey;
 	UserPreferences userPrefs = UserPreferences.INSTANCE;
 	StringBuilder serial = new StringBuilder();
+	
+	private static final StringBuffer aboutText = new StringBuffer();
 
 	private static Logger logger = LogManager.getLogger("About");
 
 	public AboutPanel() {
+		aboutText.append("<html>WattzAp Unified Edition<br/><br/>Version 2.8.0<br/>10th April 2020<p>© 2013-2020 David George<br/>Additional contributions from:<br/>Pir43");
+		
 		setTitle("About Panel");
 		ImageIcon img = new ImageIcon("icons/preferences.jpg");
 		setIconImage(img.getImage());
@@ -68,7 +72,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 		if (key == null || key.length() == 0) {
 			userPrefs.setRegistrationKey("Community Edition");
 		}
-		about.setText("<html>WattzAp Community Edition<br/><br/>Version 2.7.3<br/>2nd July 2016");
+		about.setText(aboutText.toString());
 		add(about,"alignx right, span");
 
 		debug = new JCheckBox("Enable Debugging");

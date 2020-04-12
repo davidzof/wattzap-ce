@@ -12,13 +12,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Wattzap.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package com.wattzap.view;
 
 import javax.swing.JOptionPane;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.openstreetmap.gui.jmapviewer.interfaces.TileSource;
+import org.openstreetmap.gui.jmapviewer.tilesources.BingAerialTileSource;
 
 import com.gpxcreator.gpxpanel.GPXFile;
 import com.gpxcreator.gpxpanel.GPXPanel;
@@ -41,12 +43,14 @@ public class Map extends GPXPanel implements MessageCallback {
 	private static long count = 0;
 	private int displayPeriod = 50;
 	GPXFile gpxFile;
+	final TileSource bingAerial = new BingAerialTileSource();
 
 	private static Logger logger = LogManager.getLogger("Map");
 
 	public Map(MainFrame frame) {
 		super();
-
+		System.out.println("use bing aerial");
+		this.setTileSource(bingAerial);
 		// Alternative Source
 		// check to see if tiles exist and use offline
 		// see:
@@ -84,7 +88,7 @@ public class Map extends GPXPanel implements MessageCallback {
 			setCrosshairLat(t.getLatitude());
 			setCrosshairLon(t.getLongitude());
 			// int zoom = this.getZoom();
-			setDisplayPositionByLatLon(t.getLatitude(), t.getLongitude(), zoom);
+			this.setDisplayPositionByLatLon(t.getLatitude(), t.getLongitude(), zoom);
 			setShowCrosshair(true);
 			repaint();
 			break;
@@ -95,7 +99,7 @@ public class Map extends GPXPanel implements MessageCallback {
 					this.removeGPXFile(gpxFile);
 				}
 				setVisible(false);
-				//frame.invalidate();
+				// frame.invalidate();
 				frame.validate();
 				// frame.revalidate(); JDK 1.7 ONLY
 			}
@@ -107,8 +111,7 @@ public class Map extends GPXPanel implements MessageCallback {
 				logger.info("Out of time "
 						+ UserPreferences.INSTANCE.getEvalTime());
 				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE
-								.getString("trial_expired"),
+						UserPreferences.INSTANCE.getString("trial_expired"),
 						UserPreferences.INSTANCE.getString("warning"),
 						JOptionPane.WARNING_MESSAGE);
 				UserPreferences.INSTANCE.shutDown();
@@ -134,6 +137,7 @@ public class Map extends GPXPanel implements MessageCallback {
 				setDisplayPositionByLatLon(centerLat, centerLon, 12);
 
 				this.addGPXFile(gpxFile);
+
 				// setSize(400, 400);
 
 				frame.add(this, "cell 0 0");
