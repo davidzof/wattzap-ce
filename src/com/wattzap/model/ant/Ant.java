@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
+import org.cowboycoders.ant.interfaces.AntCommunicationException;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -202,16 +203,18 @@ public class Ant implements MessageCallback {
 
 	public void close() {
 		// stop listening
-		for (Channel channel : antChannels.values()) {
-			if (!channel.isFree()) {
-				logger.debug("Stopping ANT device");
-				channel.close();
-				
-				// resets channel configuration
-				channel.unassign();
-				
-				// return the channel to the pool of available channels
-				node.freeChannel(channel);
+		if(antChannels != null){
+			for (Channel channel : antChannels.values()) {
+				if (!channel.isFree()) {
+					logger.debug("Stopping ANT device");
+					channel.close();
+					
+					// resets channel configuration
+					channel.unassign();
+					
+					// return the channel to the pool of available channels
+					node.freeChannel(channel);
+				}
 			}
 		}
 		// cleans up : gives up control of usb device etc.
@@ -220,10 +223,18 @@ public class Ant implements MessageCallback {
 	
 	public void open() {
 		/* must be called before any configuration takes place */
-		node.start();
+		try{
+			node.start();
+		} catch(AntCommunicationException e){
+			System.out.println("AntCommunicationException: "+e.getMessage());
+		}
 
 		/* sends reset request : resets channels to default state */
-		node.reset();
+		try{
+			node.reset();
+		} catch(AntCommunicationException e){
+			System.out.println("AntCommunicationException: "+e.getMessage());
+		}
 
 		// specs say wait 500ms after reset before sending any more host
 		// commands

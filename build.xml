@@ -86,7 +86,6 @@
 
     <copy file="wattzap.sh" tofile="${dist}/wattzap/wattzap.sh"/>
       <chmod file="${dist}/wattzap/wattzap.sh" perm="755"/>
-    <copy file="wattzap.jar" todir="${dist}/wattzap/lib/"/>
 
     <tar destfile="${dist}/wattzap.tar" basedir="${dist}/wattzap"/>
     <gzip destfile="${dist}/wattzap.tar.gz" src="${dist}/wattzap.tar"/>

@@ -20,6 +20,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import org.cowboycoders.ant.interfaces.AntCommunicationException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -104,7 +105,11 @@ public class ControlPanel extends JPanel implements ActionListener,
 						JOptionPane.WARNING_MESSAGE);
 			}
 
-			MessageBus.INSTANCE.send(Messages.START, new Double(start));
+			try{
+				MessageBus.INSTANCE.send(Messages.START, new Double(start));
+			}catch(AntCommunicationException ace){
+				System.out.println("AntCommunicationException: "+ace.getMessage());
+			}
 			startStopButton.setText("Stop");
 			started = true;
 		}

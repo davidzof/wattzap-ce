@@ -145,13 +145,14 @@ public class Main implements Runnable {
 		try {
 			HashMap<String, AntListener> antListeners = new HashMap<String, AntListener>();
 			int id = userPrefs.getSCId();
-			if (id > 0) {
+			if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
 				AntListener listener = new AdvancedSpeedCadenceListener();
 				antListeners.put(listener.getName(), listener);
 			}
 
 			id = userPrefs.getSpeedId();
-			if (id > 0) {
+			if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
+
 				AntListener listener = new SpeedListener();
 				antListeners.put(listener.getName(), listener);
 			}
