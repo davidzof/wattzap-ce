@@ -201,7 +201,7 @@ public class GPXReader extends RouteReader {
 			int j = 0;
 			Rolling gradient = new Rolling(10);
 			for (Point p : segment) {
-				if (p.getDistanceFromStart() > segment[i]
+				while (p.getDistanceFromStart() > segment[i]
 						.getDistanceFromStart() + gradientDistance) {
 					double slope = 100
 							* (p.getElevation() - segment[i].getElevation())

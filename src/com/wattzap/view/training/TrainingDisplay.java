@@ -383,7 +383,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 			}
 
 			startTime = 0;
-			MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+			if(current != null) MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
 
 			break;
 		case STARTPOS:
