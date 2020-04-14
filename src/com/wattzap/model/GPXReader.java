@@ -187,6 +187,10 @@ public class GPXReader extends RouteReader {
 				last = wp;
 			}// for
 
+			double avgDistByPoint = distance/index;
+			int nbRollingPoint = (int)(100/avgDistByPoint);
+			if(nbRollingPoint<1) nbRollingPoint=1;
+
 			if (currentTime > 0) {
 				lastSegTime = last.getTime().getTime();
 			}
@@ -199,7 +203,7 @@ public class GPXReader extends RouteReader {
 			 */
 			int i = 0;
 			int j = 0;
-			Rolling gradient = new Rolling(10);
+			Rolling gradient = new Rolling(nbRollingPoint);
 			for (Point p : segment) {
 				while (p.getDistanceFromStart() > segment[i]
 						.getDistanceFromStart() + gradientDistance) {
