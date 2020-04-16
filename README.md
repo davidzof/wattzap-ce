@@ -22,7 +22,7 @@ Latest Release
 Version 2.8.0 April 10th 2020
 
   * Windows 32 bit Download : https://drive.google.com/open?id=1x4wEG70LWf1sQiXIfRp9APIfxOXPvijE
-  * Windows 64 bit download: coming soon
+  * Windows 64 bit download: https://drive.google.com/open?id=1Dgg5WYAcJojyOxtSgnurchD8yU-z_hBB (use this on 64 bit Windows)
   * Linux Download :
   * OSX Download :
   * User Manual : https://drive.google.com/open?id=1R_3j5_DBuqHOqQYc5LY4cxTJihBQHh0E
