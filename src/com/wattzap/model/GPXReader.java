@@ -202,37 +202,39 @@ public class GPXReader extends RouteReader {
 			 * using a moving average of 10 values.
 			 */
 			int i = 0;
-			int j = 0;
 			Rolling gradient = new Rolling(nbRollingPoint);
-			for (Point p : segment) {
-				while (p.getDistanceFromStart() > segment[i]
-						.getDistanceFromStart() + gradientDistance) {
-					double slope = 100
-							* (p.getElevation() - segment[i].getElevation())
-							/ (p.getDistanceFromStart() - segment[i]
-									.getDistanceFromStart());
-					gradient.add(slope);
-					if (slope > maxSlope) {
-						maxSlope = slope;
+			//for (Point p : segment) {
+			int b = 0;
+			int a = 0;
+			while(i < segment.length){
+				b = i-1;
+				if(b<0) b=0;
+				a = i+1;
+				if(a>segment.length-1) a = segment.length-1;
+				while(segment[a].getDistanceFromStart() - segment[b].getDistanceFromStart() < gradientDistance){ //distance < 100m
+					if(segment[a].getDistanceFromStart() - segment[i].getDistanceFromStart() > segment[i].getDistanceFromStart() - segment[b].getDistanceFromStart() && b > 0){ //after is bigger
+						b--;
+					} else { //before is bigger
+						if(a < segment.length-1){
+							a++;
+						} else {
+							b--;
+						}
 					}
-					if (slope < minSlope) {
-						minSlope = slope;
-					}
-					segment[i++].setGradient(gradient.getAverage());
 				}
-				j++;
-			}
-
-			while (i < j - 1) {
 				double slope = 100
-						* (segment[j - 1].getElevation() - segment[i]
-								.getElevation())
-						/ (segment[j - 1].getDistanceFromStart() - segment[i]
+						* (segment[a].getElevation() - segment[b].getElevation())
+						/ (segment[a].getDistanceFromStart() - segment[b]
 								.getDistanceFromStart());
 				gradient.add(slope);
+				if (slope > maxSlope) {
+					maxSlope = slope;
+				}
+				if (slope < minSlope) {
+					minSlope = slope;
+				}
 				segment[i++].setGradient(gradient.getAverage());
 			}
-			segment[i++].setGradient(gradient.getAverage());
 			// gradient done
 
 			// resistance levels - use blocks of 500 meters
