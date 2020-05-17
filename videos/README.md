@@ -4,10 +4,10 @@
   * [Macedon Hill Climb](Australia/AU_Macedon/README.md)
   
 ## Iceland
-  * [Thingvellir](videos/Iceland/IS_Thingvellir/README.md)
+  * [Thingvellir](Iceland/IS_Thingvellir/README.md)
   
 ## Japan
-  * [Aso San](videos/Japan/JP_Aso_San/README.md)
+  * [Aso San](Japan/JP_Aso_San/README.md)
 
 ## Spain
 
