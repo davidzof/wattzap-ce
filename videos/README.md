@@ -1,7 +1,18 @@
-Collection of Training Videos for WattzAp and other RLV players
-===============================================================
+# Collection of Training Videos for WattzAp and other RLV players
 
-Spain
------
+## Australia
+  * [Macedon Hill Climb](Australia/AU_Macedon/README.md)
+  
+## Iceland
+  * [Thingvellir](videos/Iceland/IS_Thingvellir/README.md)
+  
+## Japan
+  * [Aso San](videos/Japan/JP_Aso_San/README.md)
+
+## Spain
 
   * [Lagos de Covadrongra](Spain/Lagos_de_Covadronga/README.md)
+  
+ 
+  
+ 
