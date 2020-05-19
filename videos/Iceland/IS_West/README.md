@@ -1,4 +1,8 @@
-# ReadMe  IS_West
+# Iceland / IS_West
+
+  * Author: Adam Elbourne
+  * [Control File with Video Download](IS_West_Control.zip)
+  * Route Information: https://ridewithgps.com/routes/2037901
 
 Creating new courses
 
