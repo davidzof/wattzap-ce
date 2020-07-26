@@ -183,7 +183,7 @@ public class Main implements Runnable {
 			logger.error("ANT+ " + e.getMessage());
 			new DummySpeedCadenceListener();
 			userPrefs.setAntEnabled(false);
-			odo = new Odometer();
+			odo = new AntOdometer();
 		}
 
 		// Performs an isregister check, be careful if we move below AboutPanel
