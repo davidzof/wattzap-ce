@@ -24,7 +24,6 @@ The following videos are hosted on my Torrent server. I don't have much bandwidt
   * [Tau](Norway/NO_Tau/README.md)
   * [Tytlandsvik](Norway/NO_Tytlandsvik2/README.md)
 
-
 ## Spain
 
   * [Lagos de Covadrongra](Spain/Lagos_de_Covadronga/README.md)
