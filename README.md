@@ -19,10 +19,10 @@ This is the community edition of the Wattzap Turbo Trainer Software. It is provi
 Latest Release
 ==============
 
-Version 2.8.0 April 10th 2020
+Version 2.9.0 September 24th 2020
 
-  * Windows 32 bit Download : https://drive.google.com/open?id=1x4wEG70LWf1sQiXIfRp9APIfxOXPvijE
-  * Windows 64 bit download: https://drive.google.com/open?id=1Dgg5WYAcJojyOxtSgnurchD8yU-z_hBB (use this on 64 bit Windows)
+  * Windows 32 bit Download : 
+  * Windows 64 bit download:  (use this on 64 bit Windows)
   * Linux Download :
   * OSX Download :
   * User Manual : https://drive.google.com/open?id=1R_3j5_DBuqHOqQYc5LY4cxTJihBQHh0E
@@ -30,8 +30,8 @@ Version 2.8.0 April 10th 2020
   
 Release Notes
 -------------
-  * Iprove exception handling
-  * Improve sparse GPX track performance
+  * Adds Lifeline TT02 Fluid Trainer Support
+  * Corrects FIT file import for latest FIT versions
 
 Cycling Videos
 ==============
@@ -57,7 +57,7 @@ Mac OSX IMPORTANT
 -----------------
 
 Due to an issue with VLC and Java the 1.6r45 JVM is used on Mac OSX. Please make sure your changes are compatible with this version
-of the compiler/libraries.
+of the compiler/libraries. Note the latest FIT binary is Java 1.7 only.
 
 Building
 --------
@@ -65,8 +65,6 @@ Building
 Install Apache Ant and use the build.xml file
 
 $ ant -f build.xml
-
-
 
 Working on the Project
 ----------------------
