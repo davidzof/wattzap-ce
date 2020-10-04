@@ -16,15 +16,17 @@ WattzAp is an open platform, you can create your own videos and workouts and sha
 
 This is the community edition of the Wattzap Turbo Trainer Software. It is provided "as is" and without support.
 
+Some videos demoing Wattzap. https://www.youtube.com/watch?v=P5DpvG62SyI&list=PL6uvToCKj8yeJb1BikDlXhL75O01Obb6m
+
 Latest Release
 ==============
 
 Version 2.9.0 September 24th 2020
 
-  * Windows 32 bit Download : 
-  * Windows 64 bit download:  (use this on 64 bit Windows)
-  * Linux Download :
-  * OSX Download :
+In order to fix the FIT file import bug I have had to upgrade to the latest Garmin FIT library. This is only supported on Java >= 1.8. If you are running a lower version of Java FIT file imports won't work. I've not found a Windows 32bit JVM (the one Oracle supply is compiled 64 bit !!!). However the 64 bit version is supplied here.
+
+  * Windows 64 bit download: https://drive.google.com/file/d/1Dgg5WYAcJojyOxtSgnurchD8yU-z_hBB/view?usp=sharing  - How to install video: https://youtu.be/62beIV3c604
+  * Linux Download : https://drive.google.com/file/d/1pi_coa0G8Ew34fCLBjmoEP-gVK03yZ0L/view?usp=sharing
   * User Manual : https://drive.google.com/open?id=1R_3j5_DBuqHOqQYc5LY4cxTJihBQHh0E
   * Training Programmes : https://drive.google.com/open?id=1Fm1BL2769SinFiN12xRxDsO5fJB53FES
   
@@ -41,8 +43,7 @@ Cycling Videos
 Video Playback
 --------------
 
-To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. On Windows download VLC.
-Copy plugins, libvcl.dll and libvlccore.dll to the Wattzap home directory or use the installer above.
+To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. VLC and a JVM is bundled in the Windows version but you will need to install an ANT USB driver (the windows version doesn't work). See the manual for details or watch this video.
 
 
 Development
@@ -57,7 +58,9 @@ Mac OSX IMPORTANT
 -----------------
 
 Due to an issue with VLC and Java the 1.6r45 JVM is used on Mac OSX. Please make sure your changes are compatible with this version
-of the compiler/libraries. Note the latest FIT binary is Java 1.7 only.
+of the compiler/libraries. Note the latest FIT binary is Java 1.8 only.
+
+In order to support OSX on newer JVMs the video display will need to move to JavaFX in a later release. Otherwise run on JVM 1.6 but with no FIT import.
 
 Building
 --------
