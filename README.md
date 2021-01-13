@@ -25,9 +25,12 @@ Version 2.9.0 September 24th 2020
 
 In order to fix the FIT file import bug I have had to upgrade to the latest Garmin FIT library. This is only supported on Java >= 1.8. If you are running a lower version of Java FIT file imports won't work. I've not found a Windows 32bit JVM (the one Oracle supply is compiled 64 bit !!!). However the 64 bit version is supplied here.
 
+[![Watch the video](https://img.youtube.com/vi/CsnG21Dx9cU/maxresdefault.jpg)](https://youtu.be/CsnG21Dx9cU)
+
   * Windows 64 bit download: https://drive.google.com/file/d/1Dgg5WYAcJojyOxtSgnurchD8yU-z_hBB/view?usp=sharing  - How to install video: https://youtu.be/62beIV3c604
   * Linux Download : https://drive.google.com/file/d/1pi_coa0G8Ew34fCLBjmoEP-gVK03yZ0L/view?usp=sharing
-  * Raspbien Buster (32bit) : Wattzap will run on an Raspberry Pi 4 (lower models don't have a powerful enough graphics chip). You will need to install [jna.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/jna.jar), [jna-platform.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/jna-platform.jar) and [android-aarch64.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/android-aarch64.jar) from the JNA website into the wattzap/lib directory. You will also need a JRE v8 on your machine
+  * Raspbien Buster (32bit) : Wattzap will run on an Raspberry Pi 4 (lower models don't have a powerful enough graphics chip). https://drive.google.com/file/d/1lKHp0Ufzh0UYBMtmizYwFCEH9JmebpDq/view?usp=sharing You will also need a JRE v8 (java) on your machine, edit the startup script wattzap.sh to point to your JRE.
+    If you are building yourself you will need to install [jna.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/jna.jar), [jna-platform.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/jna-platform.jar) and [android-aarch64.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/android-aarch64.jar) from the JNA website into the wattzap/lib directory. 
   * User Manual : https://drive.google.com/open?id=1R_3j5_DBuqHOqQYc5LY4cxTJihBQHh0E
   * Training Programmes : https://drive.google.com/open?id=1Fm1BL2769SinFiN12xRxDsO5fJB53FES
   
