@@ -18,6 +18,17 @@ This is the community edition of the Wattzap Turbo Trainer Software. It is provi
 
 Some videos demoing Wattzap. https://www.youtube.com/watch?v=P5DpvG62SyI&list=PL6uvToCKj8yeJb1BikDlXhL75O01Obb6m
 
+Road Map
+========
+
+  1. Seperate out logic dealing with hardware (ANT+) and make
+Wattzap just listen for telemetry data. That way people can
+add support for ble, ftms or whatever. This also
+decouples the data hardware support available in Java.
+  2. Update to Java 17
+  3. Move Graphics to JavaFX
+
+
 Latest Release
 ==============
 

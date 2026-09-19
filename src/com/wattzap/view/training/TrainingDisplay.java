@@ -82,7 +82,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		setPreferredSize(new Dimension(screenSize.width / 2, 400));
 		setLayout(new BorderLayout());
 
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
 		MessageBus.INSTANCE.register(Messages.CADENCE, this);
 		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
@@ -216,7 +216,9 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 		}
 
 		// use telemetry time
-		support.addValues(time, values);
+		if (support != null) {
+			support.addValues(time, values);
+		}
 
 		add(telemetry);
 	}
@@ -321,7 +323,7 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
 	public void callback(Messages message, Object o) {
 		
 		switch (message) {
-		case SPEED:
+		case TELEMETRY:
 			if (numElements > 0) {
 				// TODO: this is a race hazard, this method can be called before
 				// setup, hence this test.

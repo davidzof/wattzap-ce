@@ -49,8 +49,6 @@ public class SpeedListener extends AntListener implements MessageCallback {
 	private boolean initializing = false;
 	private Rolling powerRatio;
 	private boolean simulSpeed;
-	//private static long elapsedTime;
-	//private static long elapsedTimestamp = 0;
 	private double distance = 0.0;
 
 	RouteReader routeData;
@@ -79,7 +77,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 
 		Telemetry t = getTelemetry(time, count);
 		if (t != null) {
-			MessageBus.INSTANCE.send(Messages.SPEED, t);
+			MessageBus.INSTANCE.send(Messages.TELEMETRY, t);
 		}
 	}
 

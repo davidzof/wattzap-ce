@@ -100,7 +100,7 @@ public class AdvancedSpeedCadenceListener extends AntListener {
 		if (speedListener != null) {
 			Telemetry t = speedListener.getTelemetry(tS, sR);
 			if (t != null) {
-				MessageBus.INSTANCE.send(Messages.SPEED, t);
+				MessageBus.INSTANCE.send(Messages.TELEMETRY, t);
 			}
 		}
 

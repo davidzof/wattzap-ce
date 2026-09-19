@@ -151,7 +151,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 			t.setTime(currentTime);
 			distance += distanceKM;
 
-			MessageBus.INSTANCE.send(Messages.SPEED, t);
+			MessageBus.INSTANCE.send(Messages.TELEMETRY, t);
 			if (cadenceSensor == false && rpm != -1) {
 				MessageBus.INSTANCE.send(Messages.CADENCE, rpm);
 			}

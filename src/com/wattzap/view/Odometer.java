@@ -211,7 +211,7 @@ public class Odometer extends JPanel implements MessageCallback {
 		
 		doText();
 
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
@@ -220,7 +220,7 @@ public class Odometer extends JPanel implements MessageCallback {
 	@Override
 	public void callback(Messages message, Object o) {
 		switch (message) {
-		case SPEED:
+		case TELEMETRY:
 			Telemetry t = (Telemetry) o;
 
 			if (startTime == 0) {

@@ -184,7 +184,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 
 		initLabels(userPrefs.isMetric());
 		MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
 		MessageBus.INSTANCE.register(Messages.CADENCE, this);
 		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
@@ -206,7 +206,7 @@ public class AntOdometer extends JPanel implements MessageCallback {
 	public void callback(Messages message, Object o) {
 
 		switch (message) {
-		case SPEED:
+		case TELEMETRY:
 			Telemetry t = (Telemetry) o;
 
 			if (startTime == 0) {

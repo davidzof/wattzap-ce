@@ -29,6 +29,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.WindowConstants;
 
+import com.wattzap.model.trainer.TrainerListener;
 import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.FileAppender;
@@ -58,192 +59,198 @@ import com.wattzap.view.VideoPlayer;
 
 /**
  * Main entry point
- * 
+ * <p>
  * (c) 2013-2016 David George / Wattzap.com
- * 
+ *
  * @author David George
  * @date 11 June 2013
  */
 public class Main implements Runnable {
-	private static Logger logger = LogManager.getLogger("Main");
-	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
-
-	public static void main(String[] args) {
-		// Debug
-		Level level = setLogLevel();
-		// hard coded for debugging, not important, normally libvlc is found on
-		// lib path
-		NativeLibrary.addSearchPath("libvlc", ".");
-		// configure the appender
-		String PATTERN = "%r [%t] %p %c %x %m%n";
-		String logFile = userPrefs.getWD() + "/logfile.txt";
-		FileAppender fileAppender;
-		try {
-			fileAppender = new FileAppender(new PatternLayout(PATTERN), logFile);
-			fileAppender.setThreshold(level);
-			fileAppender.activateOptions();
-			// add appender to any Logger (here is root)
-			Logger.getRootLogger().addAppender(fileAppender);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} // create appender
-		
-
-		if (args.length > 0) {
-			for (String s: args) {
-				if ("-R".equals(s)) {
-					UserPreferences.INSTANCE.factoryReset();
-				}
-	        }
-		}
+    private static Logger logger = LogManager.getLogger("Main");
+    private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 
-		// Turn on Debug window
-		if (userPrefs.isDebug()) {
-			SwingAppender appender = new SwingAppender(); // create appender
-			// configure the appender
+    public static void main(String[] args) {
+        // Debug
+        Level level = setLogLevel();
+        // hard coded for debugging, not important, normally libvlc is found on
+        // lib path
+        NativeLibrary.addSearchPath("libvlc", ".");
+        // configure the appender
+        String PATTERN = "%r [%t] %p %c %x %m%n";
+        String logFile = userPrefs.getWD() + "/logfile.txt";
+        FileAppender fileAppender;
+        try {
+            fileAppender = new FileAppender(new PatternLayout(PATTERN), logFile);
+            fileAppender.setThreshold(level);
+            fileAppender.activateOptions();
+            // add appender to any Logger (here is root)
+            Logger.getRootLogger().addAppender(fileAppender);
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } // create appender
 
-			appender.setLayout(new PatternLayout(PATTERN));
-			appender.setThreshold(level);
-			appender.activateOptions();
-			// add appender to any Logger (here is root)
-			Logger.getRootLogger().addAppender(appender);
-		}
 
-		logger.info("Setting log level => " + level.toString());
+        if (args.length > 0) {
+            for (String s : args) {
+                if ("-R".equals(s)) {
+                    UserPreferences.INSTANCE.factoryReset();
+                }
+            }
+        }
 
-		logger.info("Database Version " + userPrefs.getDBVersion());
-		try {
-			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-				if ("Nimbus".equals(info.getName())) {
-					UIManager.setLookAndFeel(info.getClassName());
-					break;
-				}
-			}
-			//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-			EventQueue.invokeLater(new Main());
-		} catch (Exception e) {
-			// catch everything and log
-			logger.error(e.getLocalizedMessage());
-			userPrefs.shutDown();
-		}
-	}
+        // Turn on Debug window
+        if (userPrefs.isDebug()) {
+            SwingAppender appender = new SwingAppender(); // create appender
+            // configure the appender
 
-	@Override
-	public void run() {
-		MainFrame frame = new MainFrame();
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            appender.setLayout(new PatternLayout(PATTERN));
+            appender.setThreshold(level);
+            appender.activateOptions();
+            // add appender to any Logger (here is root)
+            Logger.getRootLogger().addAppender(appender);
+        }
 
-		// frame.setSize(screenSize.width, screenSize.height-100);
-		frame.setBounds(userPrefs.getMainBounds());
+        logger.info("Setting log level => " + level.toString());
 
-		// Must be declared above Odometer
-		// AdvancedSpeedCadenceListener scListener = null;
-		JPanel odo = null;
-		try {
-			HashMap<String, AntListener> antListeners = new HashMap<String, AntListener>();
-			int id = userPrefs.getSCId();
-			if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
-				AntListener listener = new AdvancedSpeedCadenceListener();
-				antListeners.put(listener.getName(), listener);
-			}
+        logger.info("Database Version " + userPrefs.getDBVersion());
+        try {
+            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-			id = userPrefs.getSpeedId();
-			if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
+            EventQueue.invokeLater(new Main());
+        } catch (Exception e) {
+            // catch everything and log
+            logger.error(e.getLocalizedMessage());
+            userPrefs.shutDown();
+        }
+    }
 
-				AntListener listener = new SpeedListener();
-				antListeners.put(listener.getName(), listener);
-			}
+    @Override
+    public void run() {
+        TrainerListener trainerListener;
+        MainFrame frame = new MainFrame();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-			id = userPrefs.getCadenceId();
-			if (id > 0) {
-				AntListener listener = new CadenceListener();
-				antListeners.put(listener.getName(), listener);
-			}
+        // frame.setSize(screenSize.width, screenSize.height-100);
+        frame.setBounds(userPrefs.getMainBounds());
 
-			id = userPrefs.getHRMId();
-			if (id > 0) {
-				AntListener listener = new HeartRateListener();
-				antListeners.put(listener.getName(), listener);
-			}
+        trainerListener = new TrainerListener(28773);
+        trainerListener.start();
 
-			id = userPrefs.getPowerId();
-			if (id > 0) {
-				AntListener listener = new PowerListener();
-				antListeners.put(listener.getName(), listener);
-			}
-			new Ant(antListeners).register();
-			odo = new AntOdometer();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
-					userPrefs.getString("warning"),
-					JOptionPane.WARNING_MESSAGE);
-			logger.error("ANT+ " + e.getMessage());
-			new DummySpeedCadenceListener();
-			userPrefs.setAntEnabled(false);
-			odo = new Odometer();
-		}
+        // Must be declared above Odometer
+        // AdvancedSpeedCadenceListener scListener = null;
+        JPanel odo = new AntOdometer();
+        /*try {
+            HashMap<String, AntListener> antListeners = new HashMap<String, AntListener>();
+            int id = userPrefs.getSCId();
+            if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
+                AntListener listener = new AdvancedSpeedCadenceListener();
+                antListeners.put(listener.getName(), listener);
+            }
 
-		// Performs an isregister check, be careful if we move below AboutPanel
-		VideoPlayer videoPlayer = new VideoPlayer(frame, odo);
-		try {
-			videoPlayer.init();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(frame, e.getMessage(),
-					userPrefs.getString("warning"),
-					JOptionPane.INFORMATION_MESSAGE);
-			logger.info(e.getMessage());
+            id = userPrefs.getSpeedId();
+            if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
 
-			videoPlayer = null;
-		}
+                AntListener listener = new SpeedListener();
+                antListeners.put(listener.getName(), listener);
+            }
 
-		MigLayout layout = new MigLayout("center", "[]10px[]", "");
-		Container contentPane = frame.getContentPane();
-		contentPane.setBackground(Color.BLACK);
-		contentPane.setLayout(layout);
+            id = userPrefs.getCadenceId();
+            if (id > 0) {
+                AntListener listener = new CadenceListener();
+                antListeners.put(listener.getName(), listener);
+            }
 
-		// create view
-		new Map(frame);
-		Profile profile = new Profile(screenSize);
-		profile.setVisible(false);
+            id = userPrefs.getHRMId();
+            if (id > 0) {
+                AntListener listener = new HeartRateListener();
+                antListeners.put(listener.getName(), listener);
+            }
 
-		// Menu Bar
-		new MenuBar(frame);
+            id = userPrefs.getPowerId();
+            if (id > 0) {
+                AntListener listener = new PowerListener();
+                antListeners.put(listener.getName(), listener);
+            }
+            new Ant(antListeners).register();
+            odo = new AntOdometer();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
+                    userPrefs.getString("warning"),
+                    JOptionPane.WARNING_MESSAGE);
+            logger.error("ANT+ " + e.getMessage());
+            //new DummySpeedCadenceListener();
+            userPrefs.setAntEnabled(false);
+            //odo = new Odometer();
+            odo = new AntOdometer();
+        }*/
 
-		frame.add(profile, "cell 0 1, grow");
-		// by default add to telemetry frame
-		frame.add(odo, "cell 0 2, grow");
+        // Performs an isregister check, be careful if we move below AboutPanel
+        VideoPlayer videoPlayer = new VideoPlayer(frame, odo);
+        try {
+            videoPlayer.init();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(frame, e.getMessage(),
+                    userPrefs.getString("warning"),
+                    JOptionPane.INFORMATION_MESSAGE);
+            logger.info(e.getMessage());
 
-		ControlPanel cp = new ControlPanel();
-		frame.add(cp, "cell 0 3");
+            videoPlayer = null;
+        }
 
-		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		frame.setVisible(true);
-	}
+        MigLayout layout = new MigLayout("center", "[]10px[]", "");
+        Container contentPane = frame.getContentPane();
+        contentPane.setBackground(Color.BLACK);
+        contentPane.setLayout(layout);
 
-	private static Level setLogLevel() {
-		final String LOGGER_PREFIX = "log4j.logger.";
+        // create view
+        new Map(frame);
+        Profile profile = new Profile(screenSize);
+        profile.setVisible(false);
 
-		for (String propertyName : System.getProperties().stringPropertyNames()) {
-			if (propertyName.startsWith(LOGGER_PREFIX)) {
-				String loggerName = propertyName.substring(LOGGER_PREFIX
-						.length());
-				String levelName = System.getProperty(propertyName, "");
-				Level level = Level.toLevel(levelName); // defaults to DEBUG
-				if (!"".equals(levelName)
-						&& !levelName.toUpperCase().equals(level.toString())) {
-					logger.error("Skipping unrecognized log4j log level "
-							+ levelName + ": -D" + propertyName + "="
-							+ levelName);
-					continue;
-				}
-				return level;
+        // Menu Bar
+        new MenuBar(frame);
 
-			}
-		}
-		return Level.ERROR;
-	}
+        frame.add(profile, "cell 0 1, grow");
+        // by default add to telemetry frame
+        frame.add(odo, "cell 0 2, grow");
+
+        ControlPanel cp = new ControlPanel();
+        frame.add(cp, "cell 0 3");
+
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        // frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setVisible(true);
+    }
+
+    private static Level setLogLevel() {
+        final String LOGGER_PREFIX = "log4j.logger.";
+
+        for (String propertyName : System.getProperties().stringPropertyNames()) {
+            if (propertyName.startsWith(LOGGER_PREFIX)) {
+                String loggerName = propertyName.substring(LOGGER_PREFIX
+                        .length());
+                String levelName = System.getProperty(propertyName, "");
+                Level level = Level.toLevel(levelName); // defaults to DEBUG
+                if (!"".equals(levelName)
+                        && !levelName.toUpperCase().equals(level.toString())) {
+                    logger.error("Skipping unrecognized log4j log level "
+                            + levelName + ": -D" + propertyName + "="
+                            + levelName);
+                    continue;
+                }
+                return level;
+
+            }
+        }
+        return Level.ERROR;
+    }
 }

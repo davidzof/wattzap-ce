@@ -97,7 +97,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 		this.odo = odo;
 		this.mainFrame = main;
 
-		setTitle("Video - www.WattzAp.com");
+		setTitle("Video - WattzAp Virtual Training");
 		// setUndecorated(true);
 		ImageIcon img = new ImageIcon("icons/video.jpg");
 		setIconImage(img.getImage());
@@ -268,7 +268,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 	public void callback(Messages message, Object o) {
 
 		switch (message) {
-		case SPEED:
+		case TELEMETRY:
 			if (grabber == null && UserPreferences.INSTANCE.isScreenshot()) {
 				(grabber = new ScreenGrabber(this, 300)).start();
 			}
@@ -322,7 +322,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 			revalidate(this);
 			revalidate(mainFrame);
 			setVisible(false);
-			MessageBus.INSTANCE.unregister(Messages.SPEED, this);
+			MessageBus.INSTANCE.unregister(Messages.TELEMETRY, this);
 			mapStartTime = 0;
 			if (routeData != null) {
 				routeData.close();
@@ -364,7 +364,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 					// revalidate(); Java 1.7 code
 					revalidate(this);
 					setVisible(true);
-					MessageBus.INSTANCE.register(Messages.SPEED, this);
+					MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
 
 					fps = mPlayer.getFps();
 					len = mPlayer.getLength();
@@ -386,7 +386,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 				revalidate(mainFrame);
 				// mPlayer = null;
 				setVisible(false);
-				MessageBus.INSTANCE.unregister(Messages.SPEED, this);
+				MessageBus.INSTANCE.unregister(Messages.TELEMETRY, this);
 			}
 
 			break;
