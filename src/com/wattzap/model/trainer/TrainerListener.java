@@ -232,7 +232,7 @@ public class TrainerListener implements MessageCallback {
     }
 
     /**
-     * Send the effective trainer gradient back to the connected bridge.
+     * Send the effective trainer gradient or target power back to the connected bridge.
      * The route/physics calculations continue to use the real GPX gradient.
      * Only the trainer-control value is scaled.
      */
@@ -256,7 +256,7 @@ public class TrainerListener implements MessageCallback {
             writer.newLine();
             writer.flush();
         } catch (IOException e) {
-            logger.error("Unable to send trainer gradient", e);
+            logger.error("Unable to send trainer", e);
         }
     }
 
@@ -276,7 +276,7 @@ public class TrainerListener implements MessageCallback {
         double speed;
         double distanceKM;
         if (routeData != null) {
-            System.out.println("distance " + distance);
+
             Point point = routeData.getPoint(distance);
             if (point == null) {
                 // end of the road
@@ -302,7 +302,7 @@ public class TrainerListener implements MessageCallback {
             }
         } else {
             telemetry = new Telemetry();
-            speed = Power.getRealSpeed(mass, 0, watts);
+            speed = Power.getRealSpeed(mass, 0, watts) * 3.6;
         }
         distanceKM = speed * elapsedMs / 3_600_000.0;
         distance += distanceKM;
