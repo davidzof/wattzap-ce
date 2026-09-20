@@ -47,390 +47,386 @@ import com.wattzap.model.dto.TrainingData;
 import com.wattzap.model.dto.TrainingItem;
 
 /**
- * (c) 2013 David George / TrainingLoops.com
- * 
+ * (c) 2013-2026 David George
+ * <p>
  * Displays training data. Shows target power/hr/cadence based on training
  * programme with real time data coming from sensors.
- * 
+ *
  * @author David George
  * @date 1 September 2013
  */
 public class TrainingDisplay extends JPanel implements MessageCallback {
-	private static final long serialVersionUID = 1L;
-	private SimpleXYChartSupport support = null;
-	int cadence;
-	int heartRate = 0;
-	long aggregateTime = 0;
-	long startTime;
-	long time;
-	Iterator<TrainingItem> training;
-	TrainingData tData;
-	TrainingItem current;
-	private ArrayList<Telemetry> data;
-	int numElements;
-	JComponent chart = null;
-	ObjectOutputStream oos = null;
-	boolean antEnabled = true;
+    private static final long serialVersionUID = 1L;
+    private SimpleXYChartSupport support = null;
+    int cadence;
+    int heartRate = 0;
+    long aggregateTime = 0;
+    long startTime;
+    long time;
+    Iterator<TrainingItem> training;
+    TrainingData tData;
+    TrainingItem current;
+    private ArrayList<Telemetry> data;
+    int numElements;
+    JComponent chart = null;
+    ObjectOutputStream oos = null;
 
-	private static final long MILLISECSMINUTE = 60000;
+    private static final long MILLISECSMINUTE = 60000;
 
-	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+    private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-	private static Logger logger = LogManager.getLogger("Training Display");
+    private static Logger logger = LogManager.getLogger("Training Display");
 
-	public TrainingDisplay(Dimension screenSize) {
-		setPreferredSize(new Dimension(screenSize.width / 2, 400));
-		setLayout(new BorderLayout());
+    public TrainingDisplay(Dimension screenSize) {
+        setPreferredSize(new Dimension(screenSize.width / 2, 400));
+        setLayout(new BorderLayout());
 
-		MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
-		MessageBus.INSTANCE.register(Messages.CADENCE, this);
-		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
-		MessageBus.INSTANCE.register(Messages.START, this);
-		MessageBus.INSTANCE.register(Messages.STARTPOS, this);
-		MessageBus.INSTANCE.register(Messages.STOP, this);
-		MessageBus.INSTANCE.register(Messages.TRAINING, this);
-		MessageBus.INSTANCE.register(Messages.CLOSE, this);
-		antEnabled = userPrefs.isAntEnabled();
-	}
+        MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
+        MessageBus.INSTANCE.register(Messages.CADENCE, this);
+        MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+        MessageBus.INSTANCE.register(Messages.START, this);
+        MessageBus.INSTANCE.register(Messages.STARTPOS, this);
+        MessageBus.INSTANCE.register(Messages.STOP, this);
+        MessageBus.INSTANCE.register(Messages.TRAINING, this);
+        MessageBus.INSTANCE.register(Messages.CLOSE, this);
+    }
 
-	private void createModels(TrainingData tData) {
-		if (chart != null) {
-			remove(chart);
-			chart = null;
-		}
+    private void createModels(TrainingData tData) {
+        if (chart != null) {
+            remove(chart);
+            chart = null;
+        }
 
-		SimpleXYChartDescriptor descriptor = SimpleXYChartDescriptor.decimal(0,
-				200, 300, 1d, true, 600);
+        SimpleXYChartDescriptor descriptor = SimpleXYChartDescriptor.decimal(0,
+                200, 300, 1d, true, 600);
 
-		Color darkOrange = new Color(246, 46, 00);
-		descriptor.addItem(userPrefs.getString("power"), darkOrange,
-				1.0f, Color.red, null, null);
-		numElements = 1;
+        Color darkOrange = new Color(246, 46, 0);
+        descriptor.addItem(userPrefs.getString("power"), darkOrange,
+                1.0f, Color.red, null, null);
+        numElements = 1;
 
-		if (antEnabled) {
-			Color green = new Color(28, 237, 00);
-			descriptor.addItem(userPrefs.getString("heartrate"),
-					green, 1.0f, Color.green, null, null);
-			descriptor.addItem(userPrefs.getString("cadence"),
-					Color.blue, 1.0f, Color.blue, null, null);
-			numElements += 2;
-		}
 
-		if (tData != null) {
-			if (tData.isPwr()) {
-				Color lightOrange = new Color(255, 47, 19);
-				descriptor.addItem("Target Power", lightOrange, 2.5f,
-						lightOrange, null, null);
-				numElements++;
-			}
+        Color green = new Color(28, 237, 0);
+        descriptor.addItem(userPrefs.getString("heartrate"),
+                green, 1.0f, Color.green, null, null);
+        descriptor.addItem(userPrefs.getString("cadence"),
+                Color.blue, 1.0f, Color.blue, null, null);
+        numElements += 2;
 
-			if (antEnabled) {
-				if (tData.isHr()) {
-					Color darkGreen = new Color(0, 110, 8);
-					descriptor.addItem("Target Heartrate", darkGreen, 2.5f,
-							darkGreen, null, null);
-					numElements++;
-				}
+        if (tData != null) {
+            if (tData.isPwr()) {
+                Color lightOrange = new Color(255, 47, 19);
+                descriptor.addItem("Target Power", lightOrange, 2.5f,
+                        lightOrange, null, null);
+                numElements++;
+            }
 
-				if (tData.isCdc()) {
-					Color lightBlue = new Color(64, 96, 255);
-					descriptor.addItem("Target Cadence", lightBlue, 2.5f,
-							lightBlue, null, null);
-					numElements++;
-				}
-			}
-			descriptor
-					.setDetailsItems(new String[] { "<html><font size='+2'><b>Info" });
-		}
 
-		support = ChartFactory.createSimpleXYChart(descriptor);
-		
-		chart = support.getChart();
-		add(chart, BorderLayout.CENTER);
-		chart.setVisible(true);
-		chart.revalidate();
-	}
+            if (tData.isHr()) {
+                Color darkGreen = new Color(0, 110, 8);
+                descriptor.addItem("Target Heartrate", darkGreen, 2.5f,
+                        darkGreen, null, null);
+                numElements++;
+            }
 
-	private void update(Telemetry telemetry) {
-		if (time == telemetry.getTime()) {
-			// no change
-			return;
-		}
-		time = telemetry.getTime();
+            if (tData.isCdc()) {
+                Color lightBlue = new Color(64, 96, 255);
+                descriptor.addItem("Target Cadence", lightBlue, 2.5f,
+                        lightBlue, null, null);
+                numElements++;
+            }
 
-		if (startTime == 0) {
-			startTime = time; // start time
-		}
+            descriptor
+                    .setDetailsItems(new String[]{"<html><font size='+2'><b>Info"});
+        }
 
-		long[] values = new long[numElements];
-		values[0] = telemetry.getPower();
-		if (antEnabled) {
-			values[1] = telemetry.getHeartRate();
-			values[2] = telemetry.getCadence();
-		}
+        support = ChartFactory.createSimpleXYChart(descriptor);
 
-		// training
-		if (current != null && antEnabled) {
-			long ct = current.getTime();
-			if (ct > 0) {
-				// time based training
-				if (aggregateTime + (time - startTime) > current.getTime()) {
-					if (training.hasNext()) {
-						current = training.next();
+        chart = support.getChart();
+        add(chart, BorderLayout.CENTER);
+        chart.setVisible(true);
+        chart.revalidate();
+    }
 
-						MessageBus.INSTANCE
-								.send(Messages.TRAININGITEM, current);
-						// Sound beep on training change
-						Toolkit.getDefaultToolkit().beep();
-					}
-				}
-			} else {
-				// distance based training
-				if (tData.isNext(telemetry.getDistanceMeters())) {
-					
-					current = tData.getNext(telemetry.getDistanceMeters());
-					MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
-					// Sound beep on training change
-					Toolkit.getDefaultToolkit().beep();
+    private void update(Telemetry telemetry) {
+        if (time == telemetry.getTime()) {
+            // no change
+            return;
+        }
+        time = telemetry.getTime();
 
-				}
-			}
+        if (startTime == 0) {
+            startTime = time; // start time
+        }
 
-			if (tData != null) {
-				int index = 3;
-				if (tData.isPwr()) {
-					values[index++] = current.getPower();
-				}
-				if (tData.isHr()) {
-					values[index++] = current.getHr();
-				}
-				if (tData.isCdc()) {
-					values[index] = current.getCadence();
-				}
+        long[] values = new long[numElements];
+        values[0] = telemetry.getPower();
+        values[1] = telemetry.getHeartRate();
+        values[2] = telemetry.getCadence();
 
-				String[] details = { current.getDescription()
-						+ current.getPowerMsg() + current.getHRMsg()
-						+ current.getCadenceMsg() + "</b></font></html>" };
-				support.updateDetails(details);
-			}
-		}
 
-		// use telemetry time
-		if (support != null) {
-			support.addValues(time, values);
-		}
+        // training
+        if (current != null) {
+            long ct = current.getTime();
+            if (ct > 0) {
+                // time based training
+                if (aggregateTime + (time - startTime) > current.getTime()) {
+                    if (training.hasNext()) {
+                        current = training.next();
 
-		add(telemetry);
-	}
+                        MessageBus.INSTANCE
+                                .send(Messages.TRAININGITEM, current);
+                        // Sound beep on training change
+                        Toolkit.getDefaultToolkit().beep();
+                    }
+                }
+            } else {
+                // distance based training
+                if (tData.isNext(telemetry.getDistanceMeters())) {
 
-	/*
-	 * Save every one point for every second TODO: move this to data acquisition
-	 * so we don't even send these points
-	 * 
-	 * @param t
-	 */
-	private void add(Telemetry t) {
-		if (data == null) {
-			// not yet initialized
-			return;
-		}
-		int index = data.size();
-		if (index == 0) {
-			// empty, first time through
-			data.add(t);
-		} else {
-			Telemetry tn = data.get(index - 1);
-			if (t.getTime() > tn.getTime() + 1000) {
-				data.add(t);
-				try {
-					oos.writeObject(t);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					logger.error("Can't write telemetry data to journal "
-							+ e.getLocalizedMessage());
-				}
-			}
-		}
-	}
+                    current = tData.getNext(telemetry.getDistanceMeters());
+                    MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+                    // Sound beep on training change
+                    Toolkit.getDefaultToolkit().beep();
 
-	public ArrayList<Telemetry> getData() {
-		return data;
-	}
+                }
+            }
 
-	public void loadJournal() {
-		ObjectInputStream objectInputStream = null;
-		data = new ArrayList<Telemetry>();
-		Telemetry t = null;
-		try {
-			FileInputStream streamIn = new FileInputStream(userPrefs.getWD()
-					+ "/journal.ser");
-			objectInputStream = new ObjectInputStream(streamIn);
+            if (tData != null) {
+                int index = 3;
+                if (tData.isPwr()) {
+                    values[index++] = current.getPower();
+                }
+                if (tData.isHr()) {
+                    values[index++] = current.getHr();
+                }
+                if (tData.isCdc()) {
+                    values[index] = current.getCadence();
+                }
 
-			while ((t = (Telemetry) objectInputStream.readObject()) != null) {
-				data.add(t);
-			}// while
+                String[] details = {current.getDescription()
+                        + current.getPowerMsg() + current.getHRMsg()
+                        + current.getCadenceMsg() + "</b></font></html>"};
+                support.updateDetails(details);
+            }
+        }
 
-		} catch (EOFException ex) {
-			logger.info("Journal file read " + data.size() + " records");
-		} catch (Exception e) {
-			// data = null;
-			logger.error("Cannot read journal file " + e.getLocalizedMessage()
-					+ " at position " + data.size());
-		} finally {
-			JOptionPane.showMessageDialog(this, "Recovered " + data.size()
-					+ " records", "Info", JOptionPane.INFORMATION_MESSAGE);
-			if (t != null) {
-				MessageBus.INSTANCE.send(Messages.STARTPOS, t.getDistanceKM());
-			}
-			if (objectInputStream != null) {
-				try {
-					objectInputStream.close();
-				} catch (IOException e) {
-					logger.error("Cannot close journal file "
-							+ e.getLocalizedMessage());
-				}
-			}
-		}
+        // use telemetry time
+        if (support != null) {
+            support.addValues(time, values);
+        }
 
-		// Now rewrite journal file (end might be corrupt)
-		ObjectOutputStream objectOutputStream = null;
-		// existing data, append to journal file
-		try {
-			FileOutputStream fout = new FileOutputStream(userPrefs.getWD()
-					+ "/journal.ser", true);
+        add(telemetry);
+    }
 
-			objectOutputStream = new ObjectOutputStream(fout);
-			for (Telemetry telemetry : data) {
-				oos.writeObject(telemetry);
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			logger.error("Can't write telemetry data to journal "
-					+ e.getLocalizedMessage());
-		} finally {
-			try {
-				if (objectOutputStream != null) {
-					objectOutputStream.close();
-				}
-			} catch (IOException e) {
-				logger.error("Cannot close journal file "
-						+ e.getLocalizedMessage());
-			}
-		}
-	}
+    /*
+     * Save every one point for every second TODO: move this to data acquisition
+     * so we don't even send these points
+     *
+     * @param t
+     */
+    private void add(Telemetry t) {
+        if (data == null) {
+            // not yet initialized
+            return;
+        }
+        int index = data.size();
+        if (index == 0) {
+            // empty, first time through
+            data.add(t);
+        } else {
+            Telemetry tn = data.get(index - 1);
+            if (t.getTime() > tn.getTime() + 1000) {
+                data.add(t);
+                try {
+                    oos.writeObject(t);
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    logger.error("Can't write telemetry data to journal "
+                            + e.getLocalizedMessage());
+                }
+            }
+        }
+    }
 
-	@Override
-	public void callback(Messages message, Object o) {
-		
-		switch (message) {
-		case TELEMETRY:
-			if (numElements > 0) {
-				// TODO: this is a race hazard, this method can be called before
-				// setup, hence this test.
+    public ArrayList<Telemetry> getData() {
+        return data;
+    }
 
-				// get a clone
-				Telemetry t = new Telemetry((Telemetry) o);
-				// recover last heart rate data
-				t.setHeartRate(heartRate);
-				t.setCadence(cadence);
-				
-				update(t);
-			}
-			break;
-			
-		case CADENCE:
-			cadence = (Integer) o;
-			break;
+    public void loadJournal() {
+        ObjectInputStream objectInputStream = null;
+        data = new ArrayList<Telemetry>();
+        Telemetry t = null;
+        try {
+            FileInputStream streamIn = new FileInputStream(userPrefs.getWD()
+                    + "/journal.ser");
+            objectInputStream = new ObjectInputStream(streamIn);
 
-		case HEARTRATE:
-			heartRate = (Integer) o;
-			break;
-			
-		case STOP:
-			if (data != null && !data.isEmpty()) {
-				Telemetry lastPoint = data.get(data.size() - 1);
-				long split = lastPoint.getTime() - startTime;
-				int minutes = userPrefs.getEvalTime();
-				minutes -= (split / MILLISECSMINUTE);
-				userPrefs.setEvalTime(minutes);
-				aggregateTime += split;
-			}
-			break;
-			
-		case START:
-			if (chart == null) {
-				createModels(null);
-			}
-			try {
-				if (oos == null) {
-					// oos is closed
-					if (data == null) {
-						// new training, truncate the journal file
-						data = new ArrayList<Telemetry>();
-						FileOutputStream fout = new FileOutputStream(
-								userPrefs.getWD() + "/journal.ser", false);
+            while ((t = (Telemetry) objectInputStream.readObject()) != null) {
+                data.add(t);
+            }// while
 
-						oos = new ObjectOutputStream(fout);
-					} else {
-						// existing data, append to journal file
-						FileOutputStream fout = new FileOutputStream(
-								userPrefs.getWD() + "/journal.ser", true);
+        } catch (EOFException ex) {
+            logger.info("Journal file read " + data.size() + " records");
+        } catch (Exception e) {
+            // data = null;
+            logger.error("Cannot read journal file " + e.getLocalizedMessage()
+                    + " at position " + data.size());
+        } finally {
+            JOptionPane.showMessageDialog(this, "Recovered " + data.size()
+                    + " records", "Info", JOptionPane.INFORMATION_MESSAGE);
+            if (t != null) {
+                MessageBus.INSTANCE.send(Messages.STARTPOS, t.getDistanceKM());
+            }
+            if (objectInputStream != null) {
+                try {
+                    objectInputStream.close();
+                } catch (IOException e) {
+                    logger.error("Cannot close journal file "
+                            + e.getLocalizedMessage());
+                }
+            }
+        }
 
-						oos = new ObjectOutputStream(fout);
-					}
-				}
-			} catch (Exception e) {
-				logger.error("Can't create journal file "
-						+ e.getLocalizedMessage());
-			}
+        // Now rewrite journal file (end might be corrupt)
+        ObjectOutputStream objectOutputStream = null;
+        // existing data, append to journal file
+        try {
+            FileOutputStream fout = new FileOutputStream(userPrefs.getWD()
+                    + "/journal.ser", true);
 
-			startTime = 0;
-			MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+            objectOutputStream = new ObjectOutputStream(fout);
+            for (Telemetry telemetry : data) {
+                oos.writeObject(telemetry);
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            logger.error("Can't write telemetry data to journal "
+                    + e.getLocalizedMessage());
+        } finally {
+            try {
+                if (objectOutputStream != null) {
+                    objectOutputStream.close();
+                }
+            } catch (IOException e) {
+                logger.error("Cannot close journal file "
+                        + e.getLocalizedMessage());
+            }
+        }
+    }
 
-			break;
-		case STARTPOS:
-			double distance = (Double) o;
-			if (current != null && current.getTime() == 0 && tData != null) {
-				current = tData.getNext(distance*1000);
-				// MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
-				String[] details = { current.getDescription()
-						+ current.getPowerMsg() + current.getHRMsg()
-						+ current.getCadenceMsg() + "</b></font></html>" };
-				support.updateDetails(details);
-			}
+    @Override
+    public void callback(Messages message, Object o) {
 
-			break;
-		case TRAINING:
-			tData = (TrainingData) o;
+        switch (message) {
+            case TELEMETRY:
+                if (numElements > 0) {
+                    // TODO: this is a race hazard, this method can be called before
+                    // setup, hence this test.
 
-			training = tData.getTraining().iterator();
-			if (training.hasNext()) {
-				current = training.next();
+                    // get a clone
+                    Telemetry t = new Telemetry((Telemetry) o);
+                    // recover last heart rate data
+                    t.setHeartRate(heartRate);
+                    t.setCadence(cadence);
 
-				MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
-			}
+                    update(t);
+                }
+                break;
 
-			createModels(tData);
-			aggregateTime = 0;
-			break;
-		case CLOSE:
-			current = null;
-			if (chart != null) {
-				remove(chart);
-				chart = null;
-			}
-			tData = null;
-			if (oos != null) {
-				try {
-					oos.close();
-					oos = null;
-				} catch (IOException e) {
-					logger.error("Can't close journal file "
-							+ e.getLocalizedMessage());
-				}
-			}
-			data = null;
-			break;
-		}
-	}
+            case CADENCE:
+                cadence = (Integer) o;
+                break;
+
+            case HEARTRATE:
+                heartRate = (Integer) o;
+                break;
+
+            case STOP:
+                if (data != null && !data.isEmpty()) {
+                    Telemetry lastPoint = data.get(data.size() - 1);
+                    long split = lastPoint.getTime() - startTime;
+                    int minutes = userPrefs.getEvalTime();
+                    minutes -= (split / MILLISECSMINUTE);
+                    userPrefs.setEvalTime(minutes);
+                    aggregateTime += split;
+                }
+                break;
+
+            case START:
+                if (chart == null) {
+                    createModels(null);
+                }
+                try {
+                    if (oos == null) {
+                        // oos is closed
+                        if (data == null) {
+                            // new training, truncate the journal file
+                            data = new ArrayList<Telemetry>();
+                            FileOutputStream fout = new FileOutputStream(
+                                    userPrefs.getWD() + "/journal.ser", false);
+
+                            oos = new ObjectOutputStream(fout);
+                        } else {
+                            // existing data, append to journal file
+                            FileOutputStream fout = new FileOutputStream(
+                                    userPrefs.getWD() + "/journal.ser", true);
+
+                            oos = new ObjectOutputStream(fout);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("Can't create journal file "
+                            + e.getLocalizedMessage());
+                }
+
+                startTime = 0;
+                MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+
+                break;
+            case STARTPOS:
+                double distance = (Double) o;
+                if (current != null && current.getTime() == 0 && tData != null) {
+                    current = tData.getNext(distance * 1000);
+                    // MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+                    String[] details = {current.getDescription()
+                            + current.getPowerMsg() + current.getHRMsg()
+                            + current.getCadenceMsg() + "</b></font></html>"};
+                    support.updateDetails(details);
+                }
+
+                break;
+            case TRAINING:
+                tData = (TrainingData) o;
+
+                training = tData.getTraining().iterator();
+                if (training.hasNext()) {
+                    current = training.next();
+
+                    MessageBus.INSTANCE.send(Messages.TRAININGITEM, current);
+                }
+
+                createModels(tData);
+                aggregateTime = 0;
+                break;
+            case CLOSE:
+                current = null;
+                if (chart != null) {
+                    remove(chart);
+                    chart = null;
+                }
+                tData = null;
+                if (oos != null) {
+                    try {
+                        oos.close();
+                        oos = null;
+                    } catch (IOException e) {
+                        logger.error("Can't close journal file "
+                                + e.getLocalizedMessage());
+                    }
+                }
+                data = null;
+                break;
+        }
+    }
 }

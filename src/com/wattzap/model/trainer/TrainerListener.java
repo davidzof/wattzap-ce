@@ -2,12 +2,13 @@
  * WattzAp external trainer input.
  *
  * Receives one JSON object per line over a localhost TCP connection,
- * converts it to a Telemetry object and publishes it on the WattzAp
- * MessageBus.
+ * converts trainer data into WattzAp events and sends trainer-control
+ * messages back over the same connection.
  */
 package com.wattzap.model.trainer;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
@@ -17,41 +18,48 @@ import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.power.Power;
+import com.wattzap.utils.Rolling;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Process messages from external sources and dispatches the onto the Event Bus
+ */
 public class TrainerListener implements MessageCallback {
-    private final static Logger logger = LogManager.getLogger("SpeedListener");
+    private static final Logger logger = LogManager.getLogger("TrainerListener");
+
+    private static final double GRADIENT_SCALE = 0.5;
+
     private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+    private final int port;
+    private final Gson gson = new Gson();
 
     private double distance = 0.0;
     private double mass;
     private double wheelSize = userPrefs.getWheelSizeCM();
     private int resistance = userPrefs.getResistance();
     private Power power = userPrefs.getPowerProfile();
-    RouteReader routeData;
-    private boolean simulSpeed;
+    private RouteReader routeData;
+    private Rolling powerRatio;
     private boolean isStarted;
-    private long lastTime = 0;
-
-    private final int port;
-    private final Gson gson = new Gson();
+    private long lastTime;
 
     private volatile boolean running;
     private ServerSocket serverSocket;
 
     public TrainerListener(int port) {
         this.port = port;
-        isStarted = false;
 
         MessageBus.INSTANCE.register(Messages.START, this);
         MessageBus.INSTANCE.register(Messages.STOP, this);
@@ -66,15 +74,14 @@ public class TrainerListener implements MessageCallback {
 
         running = true;
 
-        Thread listenerThread = new Thread(this::listen, "WattzAp-TrainerListener");
-
+        Thread listenerThread =
+                new Thread(this::listen, "WattzAp-TrainerListener");
         listenerThread.setDaemon(true);
         listenerThread.start();
     }
 
     public synchronized void stop() {
         running = false;
-        System.out.println("stop");
 
         if (serverSocket != null) {
             try {
@@ -91,73 +98,75 @@ public class TrainerListener implements MessageCallback {
             InetAddress localhost = InetAddress.getByName("127.0.0.1");
             serverSocket.bind(new InetSocketAddress(localhost, port));
 
-            System.out.println("Trainer listener waiting on 127.0.0.1:" + port);
+            logger.info("Trainer listener waiting on 127.0.0.1:" + port);
 
             while (running) {
-
                 try (Socket socket = serverSocket.accept()) {
-                    System.out.println("Trainer source connected: "
+                    logger.info("Trainer source connected: "
                             + socket.getRemoteSocketAddress());
 
                     readMessages(socket);
-
                 } catch (IOException e) {
                     if (running) {
-                        System.err.println("Trainer listener error: "
-                                + e.getMessage());
+                        logger.error("Trainer listener error", e);
                     }
                 }
             }
-
         } catch (IOException e) {
             if (running) {
-                System.err.println("Unable to start trainer listener: "
-                        + e.getMessage());
+                logger.error("Unable to start trainer listener", e);
             }
         } finally {
             running = false;
+            closeServerSocket();
+        }
+    }
 
-            if (serverSocket != null) {
-                try {
-                    serverSocket.close();
-                } catch (IOException ignored) {
-                }
+    private void closeServerSocket() {
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException ignored) {
             }
         }
     }
 
     private void readMessages(Socket socket) throws IOException {
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
+                     new InputStreamReader(
+                             socket.getInputStream(),
+                             StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(
+                     new OutputStreamWriter(
+                             socket.getOutputStream(),
+                             StandardCharsets.UTF_8))) {
 
             String line;
 
             while (running && (line = reader.readLine()) != null) {
                 line = line.trim();
 
-                System.out.println(line);
                 if (!line.isEmpty()) {
-                    processMessage(line);
+                    processMessage(line, writer);
                 }
             }
         }
 
-        System.out.println("Trainer source disconnected");
+        logger.info("Trainer source disconnected");
     }
 
-    private void processMessage(String json) {
+    private void processMessage(String json, BufferedWriter writer) {
         final TrainerData data;
 
         try {
             data = gson.fromJson(json, TrainerData.class);
         } catch (JsonSyntaxException e) {
-            System.err.println("Invalid trainer JSON: " + json);
+            logger.error("Invalid trainer JSON: " + json);
             return;
         }
 
         if (data == null || data.isEmpty()) {
-            System.err.println("Trainer message contains no recognised data: "
-                    + json);
+            logger.error("Trainer message contains no recognised data: " + json);
             return;
         }
 
@@ -166,41 +175,45 @@ public class TrainerListener implements MessageCallback {
         }
 
         /*
-         * Speed remains special. The external source provides raw rotations
-         * and elapsed time; WattzAp should continue to apply its own wheel
-         * circumference / trainer calculations.
+         * Measured power takes precedence over wheel speed. This is especially
+         * useful for direct-drive smart trainers and power meters.
          */
-        if (data.hasSpeedData()) {
-            if (data.getRotations() >= 0
-                    && data.getElapsedMs() > 0) {
+        Telemetry telemetry = null;
 
-                Telemetry telemetry = calculateSpeed(
+        if (data.hasPower()) {
+            int watts = data.getPower();
+
+            if (watts >= 0) {
+                telemetry = calculateFromPower(watts);
+            } else {
+                logger.error("Invalid power value: " + watts);
+            }
+
+        } else if (data.hasSpeedData()) {
+            if (data.getRotations() >= 0 && data.getElapsedMs() > 0) {
+                telemetry = calculateFromWheelSpeed(
                         data.getRotations(),
                         data.getElapsedMs());
-
-                MessageBus.INSTANCE.send(Messages.TELEMETRY, telemetry);
             } else {
                 logger.error("Invalid trainer speed data: " + data);
             }
-        } else if (data.hasPower()) {
-            int power = data.getPower();
 
-            if (power >= 0) {
-                Telemetry t = calculateSpeed(power);
-                MessageBus.INSTANCE.send(Messages.TELEMETRY, t);
-            } else {
-                System.err.println("Invalid power value: " + power);
-            }
-        } else if (data.getRotations() != null || data.getElapsedMs() != null) {
+        } else if (data.getRotations() != null
+                || data.getElapsedMs() != null) {
             logger.error(
-                    "Incomplete trainer speed data (need rotations and elapsedMs): "
-                            + data);
+                    "Incomplete trainer speed data "
+                    + "(need rotations and elapsedMs): " + data);
+        }
+
+        if (telemetry != null) {
+            MessageBus.INSTANCE.send(Messages.TELEMETRY, telemetry);
+            sendToBridge(writer, telemetry);
         }
 
         if (data.hasCadence()) {
             int cadence = data.getCadence();
 
-            if (cadence >= 0 && cadence <= 250) {
+            if (cadence >= 0 && cadence < 250) {
                 MessageBus.INSTANCE.send(Messages.CADENCE, cadence);
             } else {
                 logger.error("Invalid cadence value: " + cadence);
@@ -210,134 +223,208 @@ public class TrainerListener implements MessageCallback {
         if (data.hasHeartRate()) {
             int heartRate = data.getHeartRate();
 
-            if (heartRate >= 0 && heartRate <= 255) {
+            if (heartRate > 25 && heartRate < 255) {
                 MessageBus.INSTANCE.send(Messages.HEARTRATE, heartRate);
             } else {
                 logger.error("Invalid heart-rate value: " + heartRate);
             }
         }
-
-    }
-
-    protected Telemetry calculateSpeed(int power) {
-        long currentTime = System.currentTimeMillis();
-        long tDiff = currentTime - lastTime;
-        System.out.println("current " + currentTime + " lastTime " + lastTime + " tdiff " + tDiff);
-        lastTime = currentTime;
-        double distanceKM = 0.0;
-
-        Telemetry t = new Telemetry();
-        t.setPower(power);
-        if (routeData != null) {
-            Point p = routeData.getPoint(distance);
-            if (p == null) {
-                // end of the road
-                distance = 0.0;
-                return null;
-            }
-            double speed = (Power.getRealSpeed(mass,
-                    p.getGradient() / 100, power)) * 3.6;
-            distanceKM = (speed * tDiff) / 3600000;
-            t.setElevation(p.getElevation());
-            t.setGradient(p.getGradient());
-            t.setLatitude(p.getLatitude());
-            t.setLongitude(p.getLongitude());
-            t.setSpeed(speed);
-        }
-
-        t.setTime(currentTime);
-        distance += distanceKM;
-        t.setDistanceMeters(distance * 1000);
-
-
-        return t;
     }
 
     /**
-     * Hook your extracted WattzAp speed calculation in here.
-     * Return null if no speed value should be published yet.
+     * Send the effective trainer gradient back to the connected bridge.
+     * The route/physics calculations continue to use the real GPX gradient.
+     * Only the trainer-control value is scaled.
      */
-    protected Telemetry calculateSpeed(int rotations, long elapsedMs) {
-        System.out.println("Trainer speed sample: rotations=" + rotations
-                + ", elapsedMs=" + elapsedMs);
+    private void sendToBridge(BufferedWriter writer, Telemetry telemetry) {
+        if (routeData == null) {
+            return;
+        }
 
-        Telemetry t = new Telemetry();
+        JsonObject control = new JsonObject();
+        if (routeData.routeType() == RouteReader.SLOPE) {
 
-        double distanceKM = (rotations * wheelSize) / 100000.0;
-        double speed = distanceKM * 3_600_000.0 / elapsedMs;
-        System.out.println("speed " + speed);
-        int powerWatts = power.getPower(speed, resistance);
-        t.setPower(powerWatts);
+            control.addProperty("type", "control");
+            control.addProperty("gradient", telemetry.getGradient() * GRADIENT_SCALE);
+        } else {
+            control.addProperty("type", "control");
+            control.addProperty("targetPower", telemetry.getTargetPower());
 
-        t.setDistanceMeters(distance * 1000);
+        }
+        try {
+            writer.write(gson.toJson(control));
+            writer.newLine();
+            writer.flush();
+        } catch (IOException e) {
+            logger.error("Unable to send trainer gradient", e);
+        }
+    }
+
+    /*
+     * Power sensor, for example a Smart Trainer
+     */
+    protected Telemetry calculateFromPower(int watts) {
+        long currentTime = System.currentTimeMillis();
+        long elapsedMs = currentTime - lastTime;
+        lastTime = currentTime;
+        Telemetry telemetry;
+
+        if (elapsedMs <= 0) {
+            return null;
+        }
+
+        double speed;
+        double distanceKM;
         if (routeData != null) {
-            Point p = routeData.getPoint(distance);
-            if (p == null) {
+            System.out.println("distance " + distance);
+            Point point = routeData.getPoint(distance);
+            if (point == null) {
                 // end of the road
                 distance = 0.0;
                 return null;
             }
-            if (powerWatts > 0) {
-                // only works when power is positive, this is most of
-                // the time on a turbo
-                double realSpeed = (power.getRealSpeed(mass,
-                        p.getGradient() / 100, powerWatts)) * 3.6;
+            telemetry = createRouteTelemetry(point);
 
-                if (distanceKM > 0) {
-                    distanceKM = (realSpeed / speed) * distanceKM;
-                } else {
-                    distanceKM = (realSpeed / 3600) * rotations;
+            if (routeData.routeType() == RouteReader.SLOPE) {
+                speed = Power.getRealSpeed(
+                        mass,
+                        point.getGradient() / 100.0,
+                        watts) * 3.6;
+            } else {
+                // power profile, speed is the ratio of our trainer power to
+                // the expected power
+                // TODO: in erg mode we need to send target power to bridge, what about training mode?
+                // check this
+                telemetry.setTargetPower(point.getPower());
+                double ratio = ((double) watts / point.getPower());
+                // speed is video speed * power ratio
+                speed = point.getSpeed() * ratio;
+            }
+        } else {
+            telemetry = new Telemetry();
+            speed = Power.getRealSpeed(mass, 0, watts);
+        }
+        distanceKM = speed * elapsedMs / 3_600_000.0;
+        distance += distanceKM;
+
+        telemetry.setSpeed(speed);
+        telemetry.setPower(watts);
+        telemetry.setTime(currentTime);
+        telemetry.setDistanceMeters(distance * 1000.0);
+
+        logger.debug("sending " + telemetry);
+
+        return telemetry;
+    }
+
+    /*
+     * External speed or speed+cadence sensor
+     */
+    protected Telemetry calculateFromWheelSpeed(int rotations, long elapsedMs) {
+        if (elapsedMs <= 0) {
+            return null;
+        }
+
+        double distanceKM = rotations * wheelSize / 100000.0;
+        double speed = distanceKM * 3_600_000.0 / elapsedMs;
+
+        int powerWatts = power.getPower(speed, resistance);
+
+        Telemetry telemetry = new Telemetry();
+        telemetry.setPower(powerWatts);
+
+
+        if (routeData != null) {
+            // we are cycling a gps route, so calculate speed based on gradient
+            Point point = routeData.getPoint(distance);
+
+            if (routeData.routeType() == RouteReader.SLOPE) {
+                if (point == null) {
+                    distance = 0.0;
+                    return null;
                 }
-                speed = realSpeed;
+
+                if (powerWatts > 0) {
+                    double realSpeed = Power.getRealSpeed(
+                            mass,
+                            point.getGradient() / 100.0,
+                            powerWatts) * 3.6;
+
+                    if (distanceKM > 0) {
+                        distanceKM = (realSpeed / speed) * distanceKM;
+                    } else {
+                        double timeSeconds = elapsedMs / 1000.0;
+                        distanceKM = realSpeed * timeSeconds / 3600.0;
+                    }
+
+                    speed = realSpeed;
+                }
             } else {
                 /*
                  * Power Profile: speed is the ratio of our trainer power to
                  * the expected power, we also apply a bit of smoothing
                  */
-                double ratio = powerWatts / (double) p.getPower();
+                telemetry.setTargetPower(point.getPower());
+                double ratio = powerRatio.add(powerWatts / (double)point.getPower());
 
-
+                double timeSeconds = elapsedMs / 1000.0;
+                // speed is video speed * power ratio
+                speed = point.getSpeed() * ratio;
+                distanceKM = (speed / 3600) * timeSeconds;
             }
 
-
-            t.setElevation(p.getElevation());
-            t.setGradient(p.getGradient());
-            t.setLatitude(p.getLatitude());
-            t.setLongitude(p.getLongitude());
+            populateRouteTelemetry(telemetry, point);
         }
-        t.setSpeed(speed);
-
-        t.setTime(System.currentTimeMillis()); // use realtime
 
         distance += distanceKM;
+        telemetry.setSpeed(speed);
+        telemetry.setTime(System.currentTimeMillis());
+        telemetry.setDistanceMeters(distance * 1000.0);
 
-        logger.debug("sending " + t);
-
-        return t;
+        logger.debug("sending " + telemetry);
+        return telemetry;
     }
 
-    public void callback(Messages message, Object o) {
+    private Telemetry createRouteTelemetry(Point point) {
+        Telemetry telemetry = new Telemetry();
+        populateRouteTelemetry(telemetry, point);
+        return telemetry;
+    }
+
+    private void populateRouteTelemetry(Telemetry telemetry, Point point) {
+        telemetry.setElevation(point.getElevation());
+        telemetry.setGradient(point.getGradient());
+        telemetry.setLatitude(point.getLatitude());
+        telemetry.setLongitude(point.getLongitude());
+    }
+
+    @Override
+    public void callback(Messages message, Object value) {
         switch (message) {
             case START:
-                // get up to date values
                 mass = userPrefs.getTotalWeight();
                 wheelSize = userPrefs.getWheelSizeCM();
                 resistance = userPrefs.getResistance();
                 power = userPrefs.getPowerProfile();
-                simulSpeed = userPrefs.isVirtualPower();
                 lastTime = System.currentTimeMillis();
+                powerRatio = new Rolling(10);
                 isStarted = true;
-
                 break;
+
             case STOP:
                 isStarted = false;
                 break;
+
             case STARTPOS:
-                distance = (Double) o;
+                distance = (Double) value;
                 break;
+
             case GPXLOAD:
-                this.routeData = (RouteReader) o;
+                routeData = (RouteReader) value;
                 distance = 0.0;
+                break;
+
+            default:
                 break;
         }
     }

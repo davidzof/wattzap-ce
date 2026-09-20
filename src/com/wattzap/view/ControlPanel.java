@@ -40,7 +40,7 @@ import com.wattzap.model.UserPreferences;
 /**
  * Control button panel at bottom of main screen to start/stop routes
  * 
- * (c) 2014-2016 David George / Wattzap.com
+ * (c) 2014-2026 David George / Wattzap.com
  * 
  * @author David George
  * @date 1 January 2014
@@ -97,8 +97,8 @@ public class ControlPanel extends JPanel implements ActionListener,
 			startStopButton.setText("Start");
 			started = false;
 		} else {
-			if (!userPrefs.isAntEnabled() && userPrefs.getMaxPower() == 0) {
-				// warn if FTP is not set and running in stand alone mode
+			if (userPrefs.getMaxPower() == 0) {
+				// warn if FTP is not set
 				JOptionPane.showMessageDialog(this,
 						UserPreferences.INSTANCE.getString("ftpWarning"),
 						UserPreferences.INSTANCE.getString("warning"),

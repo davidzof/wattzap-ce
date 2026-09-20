@@ -257,7 +257,7 @@ public class SpeedListener extends AntListener implements MessageCallback {
 			wheelSize = userPrefs.getWheelSizeCM();
 			resistance = userPrefs.getResistance();
 			power = userPrefs.getPowerProfile();
-			simulSpeed = userPrefs.isVirtualPower();
+			simulSpeed = true;
 			initializing = true;
 			lastCount = -1;
 			powerRatio = new Rolling(10);

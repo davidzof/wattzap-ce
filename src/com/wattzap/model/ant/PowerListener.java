@@ -167,7 +167,7 @@ public class PowerListener extends AntListener implements MessageCallback {
 			mass = userPrefs.getTotalWeight();
 			wheelSize = userPrefs.getWheelSizeCM();
 			power = userPrefs.getPowerProfile();
-			simulSpeed = userPrefs.isVirtualPower();
+			simulSpeed = true;
 			lastTime = -1;
 			averagePower = new Rolling(userPrefs.getPowerSmoothing());
 			break;

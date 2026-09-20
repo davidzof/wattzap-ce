@@ -87,7 +87,7 @@ public class DummySpeedCadenceListener extends Thread implements
 
 				double speed = 0;
 				// if ant disabled always use this calculation
-				if ((virtualPower || !userPrefs.isAntEnabled())
+				if ((virtualPower)
 						&& routeData != null) {
 
 					if (routeData.routeType() == RouteReader.SLOPE) {
@@ -207,7 +207,7 @@ public class DummySpeedCadenceListener extends Thread implements
 			wheelSize = userPrefs.getWheelSizeCM();
 			resistance = userPrefs.getResistance();
 			power = userPrefs.getPowerProfile();
-			virtualPower = userPrefs.isVirtualPower();
+			virtualPower = true;
 			if (this.getState() == Thread.State.NEW) {
 				start();
 			}

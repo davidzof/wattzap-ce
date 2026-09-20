@@ -16,11 +16,11 @@
 package com.wattzap.controller;
 
 /**
- * (c) 2013 David George / Wattzap.com
+ * (c) 2013-2026 David George
  * 
  * @author David George
  * @date 12 November 2013
  */
 public enum Messages {
-	TELEMETRY, HEARTRATE, CADENCE, TRAININGITEM, START, STOP, STARTPOS, TRAINING, CLOSE, GPXLOAD, PREFERENCES, LOCALE;
+	TELEMETRY, HEARTRATE, CADENCE, GEAR, TRAININGITEM, START, STOP, STARTPOS, TRAINING, CLOSE, GPXLOAD, PREFERENCES, LOCALE;
 }

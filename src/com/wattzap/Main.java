@@ -21,7 +21,6 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 import java.io.IOException;
-import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -41,32 +40,25 @@ import org.apache.log4j.PatternLayout;
 import com.omniscient.log4jcontrib.swingappender.SwingAppender;
 import com.sun.jna.NativeLibrary;
 import com.wattzap.model.UserPreferences;
-import com.wattzap.model.ant.AdvancedSpeedCadenceListener;
-import com.wattzap.model.ant.Ant;
-import com.wattzap.model.ant.AntListener;
-import com.wattzap.model.ant.CadenceListener;
-import com.wattzap.model.ant.DummySpeedCadenceListener;
-import com.wattzap.model.ant.HeartRateListener;
-import com.wattzap.model.ant.PowerListener;
-import com.wattzap.model.ant.SpeedListener;
+
 import com.wattzap.view.AntOdometer;
 import com.wattzap.view.ControlPanel;
 import com.wattzap.view.MainFrame;
 import com.wattzap.view.Map;
-import com.wattzap.view.Odometer;
+
 import com.wattzap.view.Profile;
 import com.wattzap.view.VideoPlayer;
 
 /**
  * Main entry point
  * <p>
- * (c) 2013-2016 David George / Wattzap.com
+ * (c) 2013-2026 David George
  *
  * @author David George
  * @date 11 June 2013
  */
 public class Main implements Runnable {
-    private static Logger logger = LogManager.getLogger("Main");
+    private static final Logger logger = LogManager.getLogger("Main");
     private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 
 
@@ -87,19 +79,15 @@ public class Main implements Runnable {
             // add appender to any Logger (here is root)
             Logger.getRootLogger().addAppender(fileAppender);
         } catch (IOException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         } // create appender
 
 
-        if (args.length > 0) {
-            for (String s : args) {
-                if ("-R".equals(s)) {
-                    UserPreferences.INSTANCE.factoryReset();
-                }
+        for (String s : args) {
+            if ("-R".equals(s)) {
+                UserPreferences.INSTANCE.factoryReset();
             }
         }
-
 
         // Turn on Debug window
         if (userPrefs.isDebug()) {
@@ -123,7 +111,6 @@ public class Main implements Runnable {
                     break;
                 }
             }
-            //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
             EventQueue.invokeLater(new Main());
         } catch (Exception e) {
@@ -142,56 +129,11 @@ public class Main implements Runnable {
         // frame.setSize(screenSize.width, screenSize.height-100);
         frame.setBounds(userPrefs.getMainBounds());
 
+        // we should make port a parameter
         trainerListener = new TrainerListener(28773);
         trainerListener.start();
 
-        // Must be declared above Odometer
-        // AdvancedSpeedCadenceListener scListener = null;
         JPanel odo = new AntOdometer();
-        /*try {
-            HashMap<String, AntListener> antListeners = new HashMap<String, AntListener>();
-            int id = userPrefs.getSCId();
-            if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
-                AntListener listener = new AdvancedSpeedCadenceListener();
-                antListeners.put(listener.getName(), listener);
-            }
-
-            id = userPrefs.getSpeedId();
-            if (id > 0 && userPrefs.getPowerId() <= 0) { //when having power sensor don't use speed sensor (avoid speed sensor send bad estimated power)
-
-                AntListener listener = new SpeedListener();
-                antListeners.put(listener.getName(), listener);
-            }
-
-            id = userPrefs.getCadenceId();
-            if (id > 0) {
-                AntListener listener = new CadenceListener();
-                antListeners.put(listener.getName(), listener);
-            }
-
-            id = userPrefs.getHRMId();
-            if (id > 0) {
-                AntListener listener = new HeartRateListener();
-                antListeners.put(listener.getName(), listener);
-            }
-
-            id = userPrefs.getPowerId();
-            if (id > 0) {
-                AntListener listener = new PowerListener();
-                antListeners.put(listener.getName(), listener);
-            }
-            new Ant(antListeners).register();
-            odo = new AntOdometer();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "ANT+ " + e.getMessage(),
-                    userPrefs.getString("warning"),
-                    JOptionPane.WARNING_MESSAGE);
-            logger.error("ANT+ " + e.getMessage());
-            //new DummySpeedCadenceListener();
-            userPrefs.setAntEnabled(false);
-            //odo = new Odometer();
-            odo = new AntOdometer();
-        }*/
 
         // Performs an isregister check, be careful if we move below AboutPanel
         VideoPlayer videoPlayer = new VideoPlayer(frame, odo);

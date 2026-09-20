@@ -28,10 +28,19 @@ public class Telemetry extends Point implements Serializable {
 	private static final double KMTOMILES = 1.609344;
 
 	private int cadence;
-	//private double distance;
 	private int heartRate;
 	private long time;
 	private int resistance;
+
+	public int getTargetPower() {
+		return targetPower;
+	}
+
+	public void setTargetPower(int targetPower) {
+		this.targetPower = targetPower;
+	}
+
+	private int targetPower;
 
 	public Telemetry() {
 		setSpeed(-1);
@@ -44,7 +53,6 @@ public class Telemetry extends Point implements Serializable {
 	public Telemetry(Telemetry t) {
 		setSpeed(t.getSpeed());
 		cadence = t.cadence;
-		//distance = t.distance;
 		setDistanceFromStart(t.getDistanceFromStart());
 		setPower(t.getPower());
 		setElevation(t.getElevation());
@@ -109,7 +117,6 @@ public class Telemetry extends Point implements Serializable {
 	// for player only mode
 	public void setVirtualSpeed(double v) {
 		cadence = (int) v;
-
 	}
 
 	public double getTrainerSpeed() {
