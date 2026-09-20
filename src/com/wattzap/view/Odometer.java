@@ -101,14 +101,13 @@ public class Odometer extends JPanel implements MessageCallback {
 		speedText.setForeground(textColor);
 		add(speedText);
 
-		if (userPrefs.isVirtualPower()) {
+
 			// Virtual Speed #1
 			JLabel vspeedText = new JLabel();
 			vspeedText.setFont(font1);
 			vspeedText.setForeground(textColor);
 			vspeedText.setText(userPrefs.getString("trainer_speed"));
 			add(vspeedText);
-		}
 
 		// Distance #2
 		distText = new JLabel();
@@ -158,14 +157,13 @@ public class Odometer extends JPanel implements MessageCallback {
 		speedLabel.setForeground(Color.LIGHT_GRAY);
 		add(speedLabel);
 
-		if (userPrefs.isVirtualPower()) {
+
 			// #2
 			vspeedLabel = new JLabel();
 			vspeedLabel.setFont(font);
 			vspeedLabel.setText("0");
 			vspeedLabel.setForeground(Color.LIGHT_GRAY);
 			add(vspeedLabel);
-		}
 
 		// #3
 		distanceLabel = new JLabel();
@@ -211,7 +209,7 @@ public class Odometer extends JPanel implements MessageCallback {
 		
 		doText();
 
-		MessageBus.INSTANCE.register(Messages.SPEED, this);
+		MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
 		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
 		MessageBus.INSTANCE.register(Messages.START, this);
 		MessageBus.INSTANCE.register(Messages.LOCALE, this);
@@ -220,7 +218,7 @@ public class Odometer extends JPanel implements MessageCallback {
 	@Override
 	public void callback(Messages message, Object o) {
 		switch (message) {
-		case SPEED:
+		case TELEMETRY:
 			Telemetry t = (Telemetry) o;
 
 			if (startTime == 0) {
@@ -236,20 +234,20 @@ public class Odometer extends JPanel implements MessageCallback {
 			// Speed & Distance
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
-				if (userPrefs.isVirtualPower()) {
+
 					vspeedLabel.setText(String.format("%.1f",
 							t.getTrainerSpeed()));
-				}
+
 				distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
 			} else {
 				speedLabel.setText(String.format("%.1f", t.getSpeedMPH()));
 				distanceLabel.setText(String.format("%.3f",
 						t.getDistanceMiles()));
 				// need to round up or down
-				if (userPrefs.isVirtualPower()) {
+
 					vspeedLabel.setText(String.format("%.1f",
 							(t.getTrainerSpeed() / KMTOMILES)));
-				}
+
 			}
 
 			chronoLabel.setText(timeFormat.format(new Date(t.getTime()

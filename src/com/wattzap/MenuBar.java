@@ -15,20 +15,8 @@
  */
 package com.wattzap;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
-
+import com.wattzap.controller.*;
 import com.wattzap.controller.MenuItem;
-import com.wattzap.controller.MessageBus;
-import com.wattzap.controller.MessageCallback;
-import com.wattzap.controller.Messages;
-import com.wattzap.controller.SocialSharingController;
-import com.wattzap.controller.TrainingController;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.view.AboutPanel;
 import com.wattzap.view.MainFrame;
@@ -37,200 +25,203 @@ import com.wattzap.view.prefs.Preferences;
 import com.wattzap.view.training.TrainingDisplay;
 import com.wattzap.view.training.TrainingPicker;
 
+import javax.swing.*;
+import java.awt.*;
+
 /**
  * Main menu bar
- * 
+ * <p>
  * Externalize menu setup to this class. Registers for Locale change messages so
  * we can reinitialize text when language changes.
- * 
+ * <p>
  * (c) 2014-2016 David George / Wattzap.com
- * 
+ *
  * @author David George
  * @date 25 November 2014
  */
 public class MenuBar implements MessageCallback {
-	private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
-	
-	public final static String SAVEROUTE = "save";
+    private final static UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-	private final JMenu fileMenu;
-	private final JMenu trainingMenu;
-	private final JMenu socialMenu;
-	private final JMenu appMenu;
-	// Application Menu Items
-	private JMenuItem prefMenuItem;
-	private JMenuItem aboutMenuItem;
-	private final JMenuItem quitMenuItem;
-	// File Menu Items
-	private final JMenuItem openMenuItem;
-	private final JMenuItem saveRouteMenuItem;
-	private MenuItem closeMenuItem;
-	// Training
-	private final JMenuItem trainMenuItem;
-	private final JMenuItem analizeMenuItem;
-	private final JMenuItem viewMenuItem;
-	private final JMenuItem recoverMenuItem;
-	private final JMenuItem saveMenuItem;
-	// Social Menu Items
-	public JMenuItem selfLoopsUploadItem;
+    public final static String SAVEROUTE = "save";
 
-	public MenuBar(MainFrame frame) {
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    private final JMenu fileMenu;
+    private final JMenu trainingMenu;
+    private final JMenu socialMenu;
+    private final JMenu appMenu;
+    // Application Menu Items
+    private JMenuItem prefMenuItem;
+    private JMenuItem aboutMenuItem;
+    private final JMenuItem quitMenuItem;
+    // File Menu Items
+    private final JMenuItem openMenuItem;
+    private final JMenuItem saveRouteMenuItem;
+    private MenuItem closeMenuItem;
+    // Training
+    private final JMenuItem trainMenuItem;
+    private final JMenuItem analizeMenuItem;
+    private final JMenuItem viewMenuItem;
+    private final JMenuItem recoverMenuItem;
+    private final JMenuItem saveMenuItem;
+    // Social Menu Items
+    public JMenuItem selfLoopsUploadItem;
 
-		// Application Menu
-		appMenu = new JMenu();
-		// Preferences
-		Preferences preferences = new Preferences();
-		prefMenuItem = new JMenuItem();
-		prefMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-		prefMenuItem.addActionListener(preferences);
+    public MenuBar(MainFrame frame) {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-		// About Dialog
-		aboutMenuItem = new JMenuItem();
-		// NOTE: Sets up timer for unregistered users.
-		// TODO - choose between OS and non OS edtion
-		AboutPanel about = new AboutPanel();
-		aboutMenuItem.addActionListener(about);
-		
-		quitMenuItem = new JMenuItem();
-		quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-		quitMenuItem.addActionListener(frame);
+        // Application Menu
+        appMenu = new JMenu();
+        // Preferences
+        Preferences preferences = new Preferences();
+        prefMenuItem = new JMenuItem();
+        prefMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        prefMenuItem.addActionListener(preferences);
 
-		appMenu.add(prefMenuItem);
-		appMenu.add(aboutMenuItem);
-		appMenu.add(quitMenuItem);
+        // About Dialog
+        aboutMenuItem = new JMenuItem();
+        // NOTE: Sets up timer for unregistered users.
+        // TODO - choose between OS and non OS edtion
+        AboutPanel about = new AboutPanel();
+        aboutMenuItem.addActionListener(about);
 
-		// Routes
-		fileMenu = new JMenu();
-		openMenuItem = new JMenuItem();
-		fileMenu.add(openMenuItem);
-		openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        quitMenuItem = new JMenuItem();
+        quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        quitMenuItem.addActionListener(frame);
 
-		RouteFilePicker picker = new RouteFilePicker(frame);
-		openMenuItem.addActionListener(picker);
-		
-		saveRouteMenuItem = new JMenuItem();
-		saveRouteMenuItem.setActionCommand(SAVEROUTE);
+        appMenu.add(prefMenuItem);
+        appMenu.add(aboutMenuItem);
+        appMenu.add(quitMenuItem);
 
-		saveRouteMenuItem.addActionListener(picker);
-		fileMenu.add(saveRouteMenuItem);
+        // Routes
+        fileMenu = new JMenu();
+        openMenuItem = new JMenuItem();
+        fileMenu.add(openMenuItem);
+        openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
 
-		closeMenuItem = new MenuItem(Messages.CLOSE);
-		fileMenu.add(closeMenuItem);
+        RouteFilePicker picker = new RouteFilePicker(frame);
+        openMenuItem.addActionListener(picker);
 
-		closeMenuItem.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        saveRouteMenuItem = new JMenuItem();
+        saveRouteMenuItem.setActionCommand(SAVEROUTE);
 
-		// Submenu: Training
-		trainingMenu = new JMenu();
-		// menuBar.add(trainingMenu);
-		TrainingDisplay trainingDisplay = new TrainingDisplay(screenSize);
-		TrainingController trainingController = new TrainingController(
-				trainingDisplay, frame);
+        saveRouteMenuItem.addActionListener(picker);
+        fileMenu.add(saveRouteMenuItem);
 
-		trainMenuItem = new JMenuItem();
-		if (userPrefs.isAntEnabled()) {
-			trainMenuItem.setActionCommand(TrainingController.open);
-			trainingMenu.add(trainMenuItem);
+        closeMenuItem = new MenuItem(Messages.CLOSE);
+        fileMenu.add(closeMenuItem);
 
-			TrainingPicker tPicker = new TrainingPicker(frame);
-			trainMenuItem.addActionListener(tPicker);
-		}
-		analizeMenuItem = new JMenuItem();
-		analizeMenuItem.setAccelerator(KeyStroke.getKeyStroke('A', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-		trainingMenu.add(analizeMenuItem);
-		analizeMenuItem.setActionCommand(TrainingController.analyze);
+        closeMenuItem.setAccelerator(KeyStroke.getKeyStroke('C', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
 
-		saveMenuItem = new JMenuItem();
-		saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-		saveMenuItem.setActionCommand(TrainingController.save);
-		trainingMenu.add(saveMenuItem);
+        // Submenu: Training
+        trainingMenu = new JMenu();
+        // menuBar.add(trainingMenu);
+        TrainingDisplay trainingDisplay = new TrainingDisplay(screenSize);
+        TrainingController trainingController = new TrainingController(
+                trainingDisplay, frame);
 
-		viewMenuItem = new JMenuItem();
-		viewMenuItem.setAccelerator(KeyStroke.getKeyStroke('V', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-		viewMenuItem.setActionCommand(TrainingController.view);
-		trainingMenu.add(viewMenuItem);
+        trainMenuItem = new JMenuItem();
 
-		recoverMenuItem = new JMenuItem();
-		recoverMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', Toolkit
-				.getDefaultToolkit().getMenuShortcutKeyMask(), false));
-		recoverMenuItem.setActionCommand(TrainingController.recover);
-		trainingMenu.add(recoverMenuItem);
+        trainMenuItem.setActionCommand(TrainingController.open);
+        trainingMenu.add(trainMenuItem);
 
-		analizeMenuItem.addActionListener(trainingController);
-		saveMenuItem.addActionListener(trainingController);
-		recoverMenuItem.addActionListener(trainingController);
-		viewMenuItem.addActionListener(trainingController);
+        TrainingPicker tPicker = new TrainingPicker(frame);
+        trainMenuItem.addActionListener(tPicker);
 
-		frame.add(trainingDisplay, "cell 0 0");
+        analizeMenuItem = new JMenuItem();
+        analizeMenuItem.setAccelerator(KeyStroke.getKeyStroke('A', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        trainingMenu.add(analizeMenuItem);
+        analizeMenuItem.setActionCommand(TrainingController.analyze);
 
-		// Social
-		socialMenu = new JMenu();
-		selfLoopsUploadItem = new JMenuItem();
-		socialMenu.add(selfLoopsUploadItem);
+        saveMenuItem = new JMenuItem();
+        saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        saveMenuItem.setActionCommand(TrainingController.save);
+        trainingMenu.add(saveMenuItem);
 
-		SocialSharingController socialSharing = new SocialSharingController(
-				trainingDisplay, frame);
-		selfLoopsUploadItem.setActionCommand(SocialSharingController.selfLoopsUpload);
-		selfLoopsUploadItem.addActionListener(socialSharing);
+        viewMenuItem = new JMenuItem();
+        viewMenuItem.setAccelerator(KeyStroke.getKeyStroke('V', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        viewMenuItem.setActionCommand(TrainingController.view);
+        trainingMenu.add(viewMenuItem);
 
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(appMenu);
-		menuBar.add(fileMenu);
-		menuBar.add(trainingMenu);
-		menuBar.add(socialMenu);
+        recoverMenuItem = new JMenuItem();
+        recoverMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', Toolkit
+                .getDefaultToolkit().getMenuShortcutKeyMask(), false));
+        recoverMenuItem.setActionCommand(TrainingController.recover);
+        trainingMenu.add(recoverMenuItem);
 
-		frame.setJMenuBar(menuBar);
+        analizeMenuItem.addActionListener(trainingController);
+        saveMenuItem.addActionListener(trainingController);
+        recoverMenuItem.addActionListener(trainingController);
+        viewMenuItem.addActionListener(trainingController);
 
-		doText();
-		MessageBus.INSTANCE.register(Messages.LOCALE, this);
-	}
+        frame.add(trainingDisplay, "cell 0 0");
 
-	/*
-	 * Setup menubar text, makes it easy to update menu if locale is changed
-	 */
-	private void doText() {
-		appMenu.setText(userPrefs.getString("application"));
-		prefMenuItem.setText(userPrefs.getString("preferences"));
-		aboutMenuItem.setText(userPrefs.getString("about"));
-		quitMenuItem.setText(userPrefs.getString("quit"));
-		fileMenu.setText(userPrefs.getString("route"));
-		openMenuItem.setText(userPrefs.getString("open"));
-		closeMenuItem.setText(userPrefs.getString("close"));
-		saveRouteMenuItem.setText(userPrefs.getString("saveroute"));
-		
-		trainingMenu.setText(userPrefs.getString("training"));
-		analizeMenuItem.setText(
-				userPrefs.getString("analyze"));
-		viewMenuItem.setText(
-				userPrefs.getString("view"));
-		recoverMenuItem.setText(
-				userPrefs.getString("recover"));
-		saveMenuItem.setText(
-				userPrefs.getString("save"));
-		//
-		socialMenu.setText("Social");
-		selfLoopsUploadItem.setText("SelfLoops Upload");
-		
-		trainMenuItem.setText(
-					userPrefs.getString("open"));
-	}
+        // Social
+        socialMenu = new JMenu();
+        selfLoopsUploadItem = new JMenuItem();
+        socialMenu.add(selfLoopsUploadItem);
 
-	/**
-	 * Change text of menu bar if we get a LOCALE message
-	 */
-	@Override
-	public void callback(Messages message, Object o) {
-		switch (message) {
-		case LOCALE:
-			doText();
-			break;
-		}
-	}
+        SocialSharingController socialSharing = new SocialSharingController(
+                trainingDisplay, frame);
+        selfLoopsUploadItem.setActionCommand(SocialSharingController.selfLoopsUpload);
+        selfLoopsUploadItem.addActionListener(socialSharing);
+
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(appMenu);
+        menuBar.add(fileMenu);
+        menuBar.add(trainingMenu);
+        menuBar.add(socialMenu);
+
+        frame.setJMenuBar(menuBar);
+
+        doText();
+        MessageBus.INSTANCE.register(Messages.LOCALE, this);
+    }
+
+    /*
+     * Setup menubar text, makes it easy to update menu if locale is changed
+     */
+    private void doText() {
+        appMenu.setText(userPrefs.getString("application"));
+        prefMenuItem.setText(userPrefs.getString("preferences"));
+        aboutMenuItem.setText(userPrefs.getString("about"));
+        quitMenuItem.setText(userPrefs.getString("quit"));
+        fileMenu.setText(userPrefs.getString("route"));
+        openMenuItem.setText(userPrefs.getString("open"));
+        closeMenuItem.setText(userPrefs.getString("close"));
+        saveRouteMenuItem.setText(userPrefs.getString("saveroute"));
+
+        trainingMenu.setText(userPrefs.getString("training"));
+        analizeMenuItem.setText(
+                userPrefs.getString("analyze"));
+        viewMenuItem.setText(
+                userPrefs.getString("view"));
+        recoverMenuItem.setText(
+                userPrefs.getString("recover"));
+        saveMenuItem.setText(
+                userPrefs.getString("save"));
+        //
+        socialMenu.setText("Social");
+        selfLoopsUploadItem.setText("SelfLoops Upload");
+
+        trainMenuItem.setText(
+                userPrefs.getString("open"));
+    }
+
+    /**
+     * Change text of menu bar if we get a LOCALE message
+     */
+    @Override
+    public void callback(Messages message, Object o) {
+        switch (message) {
+            case LOCALE:
+                doText();
+                break;
+        }
+    }
 }

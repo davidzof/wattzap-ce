@@ -113,7 +113,7 @@ public abstract class Power implements Comparable<Power> {
 	 * 
 	 * g = gravitational constant
 	 */
-	public double getRealSpeed(double mass, double slope, double power) {
+	public static double getRealSpeed(double mass, double slope, double power) {
 		double kr = 0.005;
 		double ka = 0.5;
 		double A = 0.6;

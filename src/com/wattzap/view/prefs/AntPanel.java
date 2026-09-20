@@ -257,7 +257,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 				hrm.setText(Integer.toString(hr) + " bpm");
 			}
 			break;
-		case SPEED:
+		case TELEMETRY:
 			Telemetry t = (Telemetry) o;
 			if (userPrefs.isMetric()) {
 				speedLabel.setText(String.format("%.1f", t.getSpeedKMH())
@@ -334,7 +334,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 			sandcField.setText(": 0");
 			hrmIdField.setText(": 0");
 			
-			MessageBus.INSTANCE.register(Messages.SPEED, this);
+			MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
 			MessageBus.INSTANCE.register(Messages.CADENCE, this);
 			MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
 			
@@ -343,7 +343,7 @@ public class AntPanel extends JPanel implements ActionListener, ItemListener,
 
 		} else {
 			status.setText("Pairing complete...");
-			MessageBus.INSTANCE.unregister(Messages.SPEED, this);
+			MessageBus.INSTANCE.unregister(Messages.TELEMETRY, this);
 			MessageBus.INSTANCE.unregister(Messages.CADENCE, this);
 			MessageBus.INSTANCE.unregister(Messages.HEARTRATE, this);
 			hrmID = antDevice.getChannelId(HeartRateListener.name);

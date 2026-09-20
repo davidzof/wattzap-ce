@@ -1,29 +1,5 @@
 package com.wattzap.model;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import lt.overdrive.trackparser.domain.Track;
-import lt.overdrive.trackparser.domain.TrackPoint;
-import lt.overdrive.trackparser.domain.Trail;
-import lt.overdrive.trackparser.parsing.ParserException;
-import lt.overdrive.trackparser.parsing.tcx.TcxParser;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.jfree.data.xy.XYSeries;
-
 import com.gpxcreator.gpxpanel.GPXFile;
 import com.gpxcreator.gpxpanel.Route;
 import com.gpxcreator.gpxpanel.Waypoint;
@@ -33,12 +9,28 @@ import com.wattzap.controller.Messages;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.TrainingData;
 import com.wattzap.model.dto.TrainingItem;
+import lt.overdrive.trackparser.domain.Track;
+import lt.overdrive.trackparser.domain.TrackPoint;
+import lt.overdrive.trackparser.domain.Trail;
+import lt.overdrive.trackparser.parsing.ParserException;
+import lt.overdrive.trackparser.parsing.tcx.TcxParser;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.jfree.data.xy.XYSeries;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /*
  * Wrapper class for Tacx Real Life Video Routes
- * 
- * @author David George (c) Copyright 2013-2015
+ *
  * @author PiR43
+ * @author David George (c) Copyright 2013-2026
  * @date 19 November 2013
  */
 @RouteAnnotation
@@ -89,19 +81,16 @@ public class RLVReader extends RouteReader {
 
 	@Override
 	public String getFilename() {
-		// TODO Auto-generated method stub
 		return fileName;
 	}
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
 		return courseName;
 	}
 
 	@Override
 	public GPXFile getGpxFile() {
-		// TODO Auto-generated method stub
 		return gpxFile;
 	}
 
@@ -199,12 +188,12 @@ public class RLVReader extends RouteReader {
 			startTime += framesInRecord * 1000 / frameRate;
 
 			double normPower = 1;
-			if (UserPreferences.INSTANCE.isVirtualPower()) {
-				// set max power level to top of Level 5, VO2Max
-				normPower = 1.2 * (UserPreferences.INSTANCE.getMaxPower() / maxPower);
-			}
-			// 40% of FTP
-			int recoveryPower = (int) (UserPreferences.INSTANCE.getMaxPower() / 0.4);
+
+			// set max power level to top of our Level 5, VO2Max
+			normPower = 1.2 * (UserPreferences.INSTANCE.getMaxPower() / maxPower);
+
+			// set min power to 40% of FTP with a floor of 75 watts
+			int recoveryPower = (int) (UserPreferences.INSTANCE.getMaxPower() * 0.4);
 			if (recoveryPower == 0) {
 				recoveryPower = 75;
 			}
@@ -228,8 +217,6 @@ public class RLVReader extends RouteReader {
 						}
 
 						rlvP.setSpeed(speed);
-						// interDistance = (speed * (startTime - interTime)) /
-						// (3600);
 						rlvP.setDistanceFromStart(runningDistance);
 						rlvP.setTime(startTime);
 						interTime = startTime;
@@ -248,8 +235,12 @@ public class RLVReader extends RouteReader {
 						continue;
 					}
 				}
-				// Normalize power
-				p.setPower((int) (p.getPower() * normPower));
+				// Normalize power, sometimes power is stored as a gradient
+				if (p.getPower() == 0) {
+					p.setPower((int) (p.getGradient() * normPower));
+				} else {
+					p.setPower((int) (p.getPower() * normPower));
+				}
 				if (p.getPower() < recoveryPower) {
 					// put a floor on minimum power
 					p.setPower(recoveryPower);
@@ -274,21 +265,16 @@ public class RLVReader extends RouteReader {
 			TrainingItem item = new TrainingItem();
 			item.setPower(-1);
 			for (Point p : points) {
-				if (item.getPower() != ((int) p.getGradient())) {
+				if (item.getPower() != ((int) p.getPower())) {
 					if (item.getPower() == -1) {
-						item.setPower(p.getGradient());
+						item.setPower(p.getPower());
 					} else {
-						// item.setDescription("To "
-						// + String.format("%.2f",
-						// p.getDistanceFromStart() / 1000)
-						// + " km");
 						item.setDistanceMeters(p.getDistanceFromStart());
 						tData.addItem(item);
 						item = new TrainingItem();
-						item.setPower(p.getGradient());
+						item.setPower(p.getPower());
 					}
 				}
-
 			}
 			if (tData.getTraining().size() > 0) {
 				MessageBus.INSTANCE.send(Messages.TRAINING, tData);

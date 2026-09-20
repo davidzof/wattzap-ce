@@ -39,9 +39,7 @@ import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 
 /**
- * (c) 2013 David George / Wattzap.com
- * 
- * Speed and Cadence ANT+ processor.
+ * (c) 2013 David George
  * 
  * @author David George
  * @date 11 June 2013

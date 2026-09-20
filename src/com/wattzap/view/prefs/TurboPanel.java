@@ -44,15 +44,9 @@ public class TurboPanel extends JPanel implements ActionListener {
 	private final static Font font1 = new Font("Arial", Font.CENTER_BASELINE,
 			12);
 	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
-	private JCheckBox virtualPower;
 	private JComboBox resistanceLevels;
 	private JComboBox trainerList = new JComboBox();
 	private final JLabel resistanceLabel = new JLabel();
-
-	public boolean isVirtualPower() {
-		return virtualPower.isSelected();
-	}
-
 	public int getResistanceLevel() {
 		return resistanceLevels.getSelectedIndex();
 	}
@@ -87,10 +81,6 @@ public class TurboPanel extends JPanel implements ActionListener {
 		}
 		trainerList.addActionListener(this);
 		add(trainerList, "wrap");
-
-		virtualPower = new JCheckBox("SimulSpeed");
-		virtualPower.setSelected(userPrefs.isVirtualPower());
-		add(virtualPower, "wrap");
 
 		resistanceLabel.setText(userPrefs.getString("resistance"));
 		resistanceLabel.setFont(font1);
@@ -128,14 +118,10 @@ public class TurboPanel extends JPanel implements ActionListener {
 			resistanceLabel.setVisible(true);
 			resistanceLevels = new JComboBox();
 
-
 			for (int i = 1; i <= p.getResitanceLevels(); i++) {
 				resistanceLevels.addItem("" + i);
 			}
-			if (!userPrefs.isAntEnabled()) {
-				// special variable resistance level when no ANT device
-				resistanceLevels.addItem("Auto");
-			}
+
 			if (p.equals(
 					userPrefs.getPowerProfile())) {
 				// previously selected trainer, set selected resistance level

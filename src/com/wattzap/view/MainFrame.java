@@ -34,7 +34,7 @@ import com.wattzap.model.UserPreferences;
 /**
  * Main Window, displays telemetry data and responds to close events
  * 
- * (c) 2013-2015
+ * (c) 2013-2026
  * 
  * @author David George
  * @date 31 July 2013
@@ -42,7 +42,7 @@ import com.wattzap.model.UserPreferences;
 public class MainFrame extends JFrame implements ActionListener,
 		MessageCallback {
 	private static final long serialVersionUID = -4597500546349817204L;
-	private static final String appName = "WattzAp v2.8.0 (10 April 2020)";
+	private static final String appName = "WattzAp v3.0.0 (20 September 2026)";
 
 	private Logger logger = LogManager.getLogger("Main Frame");
 

@@ -17,7 +17,7 @@ package com.wattzap.model;
 
 import java.awt.Rectangle;
 import java.io.File;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -37,20 +37,19 @@ import com.wattzap.view.Workouts;
  * Singleton helper to read/write user preferences to a backing store
  * 
  * @author David George / 15 September 2013
- * (C) Copyright 2013-2015
+ * (C) Copyright 2013-2026
  */
 public enum UserPreferences {
 	INSTANCE;
 	private Power powerProfile;
 	String user;
 	private final DataStore ds;
-	private static int evalTime = 240;
+	private static final int evalTime = 240;
 	private static String workingDirectory = null;
 	private static String userDataDirectory = null;
 	private static final String cryptKey = "afghanistanbananastan";
 	private static final double LBSTOKG = 0.45359237;
 	private ResourceBundle messages;
-	private boolean antEnabled = true;
 
 	private UserPreferences() {
 		user = System.getProperty("user.name");
@@ -73,14 +72,6 @@ public enum UserPreferences {
 			f.mkdirs();
 			Logger.info("created " + udDir);
 		}
-	}
-
-	public void setAntEnabled(boolean v) {
-		antEnabled = v;
-	}
-
-	public boolean isAntEnabled() {
-		return antEnabled;
 	}
 
 	public void addWorkout(WorkoutData data) {
@@ -117,8 +108,7 @@ public enum UserPreferences {
 		int x = getInt("", "mainX", 0);
 		int y = getInt("", "mainY", 0);
 
-		Rectangle r = new Rectangle(x, y, width, height);
-		return r;
+        return new Rectangle(x, y, width, height);
 	}
 
 	public void setMainBounds(Rectangle r) {
@@ -135,8 +125,7 @@ public enum UserPreferences {
 		int x = getInt("", "videoX", 0);
 		int y = getInt("", "videoY", 650);
 
-		Rectangle r = new Rectangle(x, y, width, height);
-		return r;
+        return new Rectangle(x, y, width, height);
 	}
 
 	public void setVideoBounds(Rectangle r) {
@@ -255,29 +244,12 @@ public enum UserPreferences {
 		set(user, "sl_pass", slPass);
 	}
 
-	// ANT
-	public boolean isANTUSB() {
-		return getBoolean("antusbm", false);
-	}
-
-	public void setAntUSBM(boolean value) {
-		setBoolean("antusbm", value);
-	}
-
 	public boolean isDebug() {
 		return getBoolean("debug", false);
 	}
 
 	public void setDebug(boolean value) {
 		setBoolean("debug", value);
-	}
-
-	public boolean isVirtualPower() {
-		return getBoolean("virtualPower", false);
-	}
-
-	public void setVirtualPower(boolean value) {
-		setBoolean("virtualPower", value);
 	}
 
 	public void setLocale(String value) {
@@ -576,16 +548,9 @@ public enum UserPreferences {
 	
 	// Hack For UTF resources
 	public String getString(String key) {
-		String val = messages.getString(key); 
-		try {
-			return new String(val.getBytes("ISO-8859-1"), "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
+		String val = messages.getString(key);
+        return new String(val.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+    }
 	
 	/*
 	 * Reset certain properties to their defaults.
