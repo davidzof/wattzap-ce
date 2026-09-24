@@ -55,7 +55,6 @@ public class ObserverDemo extends Object {
 		/** For now, we just print the fact that we got notified. */
 		public void update(Observable obs, Object x) {
 			MyModel m = (MyModel) x;
-			System.out.println("updated(" + obs + "," + m.getSpeed() + ");");
 		}
 	}
 

@@ -60,7 +60,15 @@ public abstract class RouteReader {
 		if (currentPoint == points.length) {
 			return null;
 		} else if (currentPoint > 0) {
-			return Point.middlePoint(points[currentPoint - 1], points[currentPoint], (float)((distance * 1000 - points[currentPoint - 1].getDistanceFromStart())/( points[currentPoint].getDistanceFromStart() -  points[currentPoint - 1].getDistanceFromStart())));
+			Point p =  Point.middlePoint(points[currentPoint - 1], points[currentPoint], (float)((distance * 1000 - points[currentPoint - 1].getDistanceFromStart())/( points[currentPoint].getDistanceFromStart() -  points[currentPoint - 1].getDistanceFromStart())));
+			if (routeType() == POWER) {
+				// middlePoint calculates intermediate points where data is sparse but power and speed
+				// should be the last points values until we reach the next pont for ERG mode
+				p.setPower(points[currentPoint - 1].getPower());
+				p.setSpeed(points[currentPoint - 1].getSpeed());
+			}
+
+			return p;
 		} else {
 			return points[0];
 		}

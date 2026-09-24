@@ -39,8 +39,6 @@ import java.nio.charset.StandardCharsets;
 public class TrainerListener implements MessageCallback {
     private static final Logger logger = LogManager.getLogger("TrainerListener");
 
-    private static final double GRADIENT_SCALE = 0.5;
-
     private final UserPreferences userPrefs = UserPreferences.INSTANCE;
     private final int port;
     private final Gson gson = new Gson();
@@ -174,6 +172,8 @@ public class TrainerListener implements MessageCallback {
             return;
         }
 
+        System.out.println(data);
+
         /*
          * Measured power takes precedence over wheel speed. This is especially
          * useful for direct-drive smart trainers and power meters.
@@ -229,6 +229,17 @@ public class TrainerListener implements MessageCallback {
                 logger.error("Invalid heart-rate value: " + heartRate);
             }
         }
+
+        if (data.hasGear() && data.hasGearCount()) {
+            int gear = data.getGear();
+            int gearCount = data.getGearCount();
+
+            if (gear >=0 && gear <= gearCount) {
+                MessageBus.INSTANCE.send(Messages.GEAR, gear);
+            } else {
+                logger.error("Invalid gear value: " + gear);
+            }
+        }
     }
 
     /**
@@ -245,7 +256,7 @@ public class TrainerListener implements MessageCallback {
         if (routeData.routeType() == RouteReader.SLOPE) {
 
             control.addProperty("type", "control");
-            control.addProperty("gradient", telemetry.getGradient() * GRADIENT_SCALE);
+            control.addProperty("gradient", telemetry.getGradient());
         } else {
             control.addProperty("type", "control");
             control.addProperty("targetPower", telemetry.getTargetPower());
@@ -283,6 +294,7 @@ public class TrainerListener implements MessageCallback {
                 distance = 0.0;
                 return null;
             }
+            System.out.println(point);
             telemetry = createRouteTelemetry(point);
 
             if (routeData.routeType() == RouteReader.SLOPE) {
@@ -295,6 +307,7 @@ public class TrainerListener implements MessageCallback {
                 // the expected power
                 // TODO: in erg mode we need to send target power to bridge, what about training mode?
                 // check this
+                System.out.println("distance " + point.getDistanceFromStart() + " power " + point.getPower());
                 telemetry.setTargetPower(point.getPower());
                 double ratio = ((double) watts / point.getPower());
                 // speed is video speed * power ratio

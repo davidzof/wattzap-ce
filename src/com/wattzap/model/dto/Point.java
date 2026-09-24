@@ -20,6 +20,8 @@ package com.wattzap.model.dto;
  * Represents a data point from a route or power file (gpx, rlv, pwr etc)
  * 
  * @author David George (c) Copyright 2013-2016
+ * @author Pierre Engels
+ *
  * @date 19 June 2013
  */
 public class Point {
@@ -118,6 +120,7 @@ public class Point {
 		p.power = (int)(ratio * p2.power + (1-ratio) * p1.power);
 		p.speed = ratio * p2.speed + (1-ratio) * p1.speed;
 		p.time = (long)(ratio * p2.time + (1-ratio) * p1.time);
+
 		return p;
 	}
 }

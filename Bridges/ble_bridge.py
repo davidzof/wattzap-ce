@@ -9,6 +9,13 @@ except ImportError:
     print("Install Bleak with: pip install bleak", file=sys.stderr)
     raise SystemExit(2)
 
+try:
+    from evdev import InputDevice, list_devices, ecodes
+except ImportError:
+    InputDevice=None
+    list_devices=None
+    ecodes=None
+
 HOST="127.0.0.1"; PORT=28773
 CONFIG=Path.home()/".wattzap-ble-bridge.json"
 
@@ -20,9 +27,13 @@ CSC_CHAR="00002a5b-0000-1000-8000-00805f9b34fb"
 FTMS_DATA="00002ad2-0000-1000-8000-00805f9b34fb"
 FTMS_FEATURE="00002acc-0000-1000-8000-00805f9b34fb"
 FTMS_CONTROL="00002ad9-0000-1000-8000-00805f9b34fb"
+FTMS_RESISTANCE_RANGE="00002ad6-0000-1000-8000-00805f9b34fb"
+HID_SVC="00001812-0000-1000-8000-00805f9b34fb"
+HID_REPORT="00002a4d-0000-1000-8000-00805f9b34fb"
 
 FTMS_REQUEST_CONTROL=0x00
 FTMS_START_RESUME=0x07
+FTMS_SET_TARGET_RESISTANCE=0x04
 FTMS_SET_TARGET_POWER=0x05
 FTMS_SET_SIMULATION=0x11
 FTMS_RESPONSE_CODE=0x80
@@ -32,6 +43,22 @@ FTMS_SUCCESS=0x01
 SIM_WIND_SPEED_MS=0.0
 SIM_CRR=0.004
 SIM_WIND_RESISTANCE=0.51
+
+# Virtual gears driven by a BLE HID/media controller.
+MIN_VIRTUAL_GEAR=1
+MAX_VIRTUAL_GEAR=24
+DEFAULT_VIRTUAL_GEAR=12
+
+# At 0% gradient, the 24 gears occupy the middle 60% of the trainer's
+# advertised resistance range. This deliberately leaves headroom for hills
+# and descents. Each 1% gradient shifts resistance by 2% of the full range.
+GEAR_RESISTANCE_LOW=0.20
+GEAR_RESISTANCE_HIGH=0.80
+GRADIENT_RESISTANCE_PER_PERCENT=0.02
+
+# BlueZ may reject overlapping Device1.Connect calls with
+# org.bluez.Error.InProgress. Serialise only connection setup.
+BLE_CONNECT_LOCK=None
 
 
 # Fitness Machine Feature characteristic: Target Setting Features bits.
@@ -81,6 +108,36 @@ def print_ftms_features(data):
           + ("yes" if target_features & (1<<3) else "no"))
     print("  simulation params (0x11): "
           + ("yes" if target_features & (1<<13) else "no"))
+
+async def connect_ble(addr):
+    """
+    Resolve the configured BLE address explicitly before connecting.
+
+    On Linux/BlueZ, constructing BleakClient directly from a string address can
+    trigger an implicit discovery.  That can intermittently fail with
+    "Device with address ... was not found", especially when several BLE
+    devices are being managed at the same time.
+
+    Serialising discovery + connection also avoids overlapping BlueZ
+    Device1.Connect operations.
+    """
+    global BLE_CONNECT_LOCK
+    if BLE_CONNECT_LOCK is None:
+        BLE_CONNECT_LOCK=asyncio.Lock()
+
+    async with BLE_CONNECT_LOCK:
+        device=await BleakScanner.find_device_by_address(
+            addr,
+            timeout=5.0)
+
+        if device is None:
+            raise RuntimeError(
+                f"BLE device {addr} not found during discovery")
+
+        client=BleakClient(device)
+        await client.connect()
+        return client
+
 
 class WattzAp:
     def __init__(self, host, port):
@@ -152,6 +209,7 @@ def roles_for(uuids):
     if FTMS_SVC in u: r.append("trainer")
     if CSC_SVC in u: r.append("cadence")
     if HR_SVC in u: r.append("heartRate")
+    if HID_SVC in u: r.append("mediaController")
     return tuple(r)
 
 async def scan(seconds):
@@ -167,7 +225,7 @@ async def scan(seconds):
     return out
 
 def load(path):
-    cfg={"trainer":None,"cadence":None,"heartRate":None}
+    cfg={"trainer":None,"cadence":None,"heartRate":None,"mediaController":None}
     if path.exists():
         try: cfg.update(json.loads(path.read_text()))
         except Exception: pass
@@ -247,6 +305,121 @@ def parse_ftms(b):
     if f&(1<<9) and len(b)>=o+1:
         out["heartRate"]=b[o]
     return out
+
+class VirtualGears:
+    """
+    Small, deliberately trainer-independent virtual gear state.
+
+    For the first implementation the BLE media controller only changes this
+    value and prints it. Once the button mapping is verified on real hardware,
+    the gear can be used by the trainer-control layer without changing the
+    input handling.
+    """
+    def __init__(self, initial=DEFAULT_VIRTUAL_GEAR):
+        self.gear=max(MIN_VIRTUAL_GEAR,min(MAX_VIRTUAL_GEAR,int(initial)))
+        self.changed=asyncio.Event()
+
+    def show(self):
+        print(f"[GEAR] {self.gear}/{MAX_VIRTUAL_GEAR}")
+
+    def up(self):
+        old=self.gear
+        self.gear=min(MAX_VIRTUAL_GEAR,self.gear+1)
+        if self.gear!=old:
+            self.show()
+            self.changed.set()
+
+    def down(self):
+        old=self.gear
+        self.gear=max(MIN_VIRTUAL_GEAR,self.gear-1)
+        if self.gear!=old:
+            self.show()
+            self.changed.set()
+
+    async def wait_changed(self):
+        await self.changed.wait()
+        self.changed.clear()
+
+
+def media_button_from_report(data):
+    """
+    Decode the most common HID consumer-control reports used by inexpensive
+    BLE media remotes.
+
+    Consumer usages:
+      0x00b5 next track
+      0x00b6 previous track
+      0x00e9 volume up
+      0x00ea volume down
+
+    Some remotes send the usage as a little-endian 16-bit value, others as
+    a one-byte low usage value. Release packets (all zeroes) are ignored.
+
+    Returns "up", "down" or None. Unknown non-zero reports are printed by the
+    caller so a controller with a different report layout can easily be mapped.
+    """
+    b=bytes(data)
+    if not b or not any(b):
+        return None
+
+    usages=set()
+    for i in range(len(b)-1):
+        usages.add(b[i] | (b[i+1] << 8))
+    usages.update(b)
+
+    if 0x00b5 in usages or 0x00e9 in usages:
+        return "up"
+    if 0x00b6 in usages or 0x00ea in usages:
+        return "down"
+    return None
+
+
+def parse_resistance_range(data):
+    """
+    FTMS Supported Resistance Level Range is three little-endian SINT16
+    values: minimum, maximum and minimum increment. Keep the values in the
+    trainer's native FTMS units so the same raw value can be sent back to the
+    Set Target Resistance Level procedure.
+    """
+    b=bytes(data)
+    if len(b)<6:
+        raise ValueError(f"invalid resistance range: {b.hex()}")
+    minimum,maximum,increment=struct.unpack_from("<hhh",b,0)
+    if maximum<=minimum:
+        raise ValueError(
+            f"invalid resistance range {minimum}..{maximum}")
+    if increment<=0:
+        increment=1
+    return minimum,maximum,increment
+
+
+def resistance_for(gradient,gear,resistance_range):
+    minimum,maximum,increment=resistance_range
+    span=maximum-minimum
+
+    if MAX_VIRTUAL_GEAR==MIN_VIRTUAL_GEAR:
+        gear_fraction=0.5
+    else:
+        gear_fraction=(gear-MIN_VIRTUAL_GEAR)/(
+            MAX_VIRTUAL_GEAR-MIN_VIRTUAL_GEAR)
+
+    flat_fraction=(
+        GEAR_RESISTANCE_LOW
+        + gear_fraction*(GEAR_RESISTANCE_HIGH-GEAR_RESISTANCE_LOW)
+    )
+    target_fraction=(
+        flat_fraction
+        + float(gradient)*GRADIENT_RESISTANCE_PER_PERCENT
+    )
+    target_fraction=max(0.0,min(1.0,target_fraction))
+
+    raw=minimum+target_fraction*span
+
+    # Quantise to the trainer's advertised minimum increment.
+    steps=round((raw-minimum)/increment)
+    raw=minimum+steps*increment
+    return int(max(minimum,min(maximum,raw)))
+
 
 class ControlState:
     """
@@ -340,6 +513,17 @@ class FTMSController:
         await self.command(payload,f"set gradient {gradient:.2f}%")
         print(f"[FTMS] simulation gradient {gradient:.2f}%")
 
+    async def set_resistance(self, resistance):
+        resistance=max(-32768,min(32767,int(resistance)))
+        payload=struct.pack(
+            "<Bh",
+            FTMS_SET_TARGET_RESISTANCE,
+            resistance)
+        await self.command(
+            payload,
+            f"set resistance {resistance}")
+        print(f"[FTMS] resistance target {resistance}")
+
     async def set_target_power(self, watts):
         # FTMS Set Target Power uses a signed 16-bit value in watts.
         watts=max(-32768,min(32767,int(watts)))
@@ -384,87 +568,290 @@ async def receive_controls(w,state):
             await asyncio.sleep(1)
 
 
-async def apply_controls(controller,state):
-    # Re-apply the last known control after a BLE reconnect.
+async def apply_controls(
+        controller,state,gears,resistance_range,use_virtual_gears):
+    async def apply(mode,value):
+        if mode=="targetPower":
+            # ERG remains exactly as before. Virtual gears deliberately do
+            # nothing while WattzAp is prescribing target power.
+            await controller.set_target_power(value)
+
+        elif mode=="gradient":
+            if use_virtual_gears and resistance_range is not None:
+                resistance=resistance_for(
+                    value,
+                    gears.gear,
+                    resistance_range)
+                await controller.set_resistance(resistance)
+                print(
+                    f"[GEAR] {gears.gear}/{MAX_VIRTUAL_GEAR} "
+                    f"gradient {value:.2f}% -> resistance {resistance}")
+            else:
+                # Preserve existing simulation behaviour if virtual gears are
+                # not configured or the trainer did not expose a usable range.
+                await controller.set_gradient(value)
+
+    # Re-apply the last known WattzAp control after a BLE reconnect.
     if state.mode is not None:
         state.changed.clear()
-        if state.mode=="targetPower":
-            await controller.set_target_power(state.value)
-        elif state.mode=="gradient":
-            await controller.set_gradient(state.value)
+        await apply(state.mode,state.value)
 
     while True:
-        mode,value=await state.next_control()
+        control_wait=asyncio.create_task(state.changed.wait())
+        gear_wait=asyncio.create_task(gears.changed.wait())
 
-        if mode=="targetPower":
-            await controller.set_target_power(value)
-        elif mode=="gradient":
-            await controller.set_gradient(value)
+        done,pending=await asyncio.wait(
+            (control_wait,gear_wait),
+            return_when=asyncio.FIRST_COMPLETED)
+
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending,return_exceptions=True)
+
+        if control_wait in done:
+            state.changed.clear()
+            if state.mode is not None:
+                await apply(state.mode,state.value)
+
+        if gear_wait in done:
+            gears.changed.clear()
+            # A gear shift only changes trainer load in slope mode.
+            if state.mode=="gradient":
+                await apply(state.mode,state.value)
+
+
+async def keep_media_controller(addr,gears,name=None):
+    """
+    Read media buttons from Linux evdev.
+
+    BLE HID remotes are normally claimed by BlueZ's HID-over-GATT support and
+    exposed as kernel input devices.  Reading /dev/input/event* is therefore
+    more reliable than trying to subscribe to the HID GATT reports with Bleak.
+
+    Common media mappings:
+      KEY_NEXTSONG / KEY_VOLUMEUP   -> gear up
+      KEY_PREVIOUSSONG / KEY_VOLUMEDOWN -> gear down
+    """
+    if InputDevice is None:
+        print("[GEAR] python-evdev is required for BLE media controllers")
+        print("[GEAR] install with: pip install evdev")
+        return
+
+    wanted=(name or "SmartRemote").lower()
+    current_path=None
+    device=None
+
+    while True:
+        try:
+            # Re-discover the input node because /dev/input/eventN can change
+            # whenever the remote reconnects.
+            matches=[]
+            for path in list_devices():
+                try:
+                    d=InputDevice(path)
+                    if wanted in (d.name or "").lower():
+                        matches.append(d)
+                    else:
+                        d.close()
+                except Exception:
+                    pass
+
+            if not matches:
+                if current_path is not None:
+                    print(f"[GEAR] media controller disconnected: {name or 'SmartRemote'}")
+                    current_path=None
+                await asyncio.sleep(2)
+                continue
+
+            device=matches[0]
+            for extra in matches[1:]:
+                extra.close()
+
+            if device.path!=current_path:
+                current_path=device.path
+                print(f"[GEAR] media controller ready: {device.name} ({device.path})")
+                gears.show()
+
+            async for event in device.async_read_loop():
+                if event.type!=ecodes.EV_KEY:
+                    continue
+
+                # value 1 = key down, 2 = autorepeat, 0 = release.
+                # Only act on the initial key press.
+                if event.value!=1:
+                    continue
+
+                code=event.code
+
+                if code in (
+                        ecodes.KEY_NEXTSONG,
+                        ecodes.KEY_VOLUMEUP,
+                        getattr(ecodes, "KEY_FASTFORWARD", -1)):
+                    gears.up()
+
+                elif code in (
+                        ecodes.KEY_PREVIOUSSONG,
+                        ecodes.KEY_VOLUMEDOWN,
+                        getattr(ecodes, "KEY_REWIND", -1)):
+                    gears.down()
+
+                else:
+                    keyname=ecodes.KEY.get(code, str(code))
+                    print(f"[GEAR] unmapped key {keyname}")
+
+        except asyncio.CancelledError:
+            raise
+        except PermissionError as e:
+            print("[GEAR] cannot read input device:",e)
+            print("[GEAR] add the user to the 'input' group or run with suitable permissions")
+            await asyncio.sleep(5)
+        except OSError:
+            # Typical when a wireless input device disconnects.
+            current_path=None
+            await asyncio.sleep(2)
+        except Exception as e:
+            print("[GEAR] media controller error",e)
+            await asyncio.sleep(2)
+        finally:
+            if device is not None:
+                try:
+                    device.close()
+                except Exception:
+                    pass
+                device=None
 
 
 async def keep_hr(addr,w):
     while True:
+        c=None
         try:
             print("[BLE] HR",addr)
-            async with BleakClient(addr) as c:
-                await c.start_notify(HR_CHAR,lambda _,b: w.send({"heartRate":parse_hr(bytes(b))}))
-                while c.is_connected: await asyncio.sleep(1)
-        except asyncio.CancelledError: raise
+            c=await connect_ble(addr)
+            await c.start_notify(
+                HR_CHAR,
+                lambda _,b: w.send({"heartRate":parse_hr(bytes(b))}))
+            while c.is_connected:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
-            print("[BLE] HR error",e); await asyncio.sleep(2)
+            print("[BLE] HR error",e)
+            await asyncio.sleep(3)
+        finally:
+            if c is not None:
+                try:
+                    if c.is_connected:
+                        await c.disconnect()
+                except Exception:
+                    pass
+
 
 async def keep_csc(addr,w):
     parser=CSC()
     while True:
+        c=None
         try:
             print("[BLE] CSC",addr)
-            async with BleakClient(addr) as c:
-                await c.start_notify(CSC_CHAR,lambda _,b: w.send(parser.parse(bytes(b))))
-                while c.is_connected: await asyncio.sleep(1)
-        except asyncio.CancelledError: raise
+            c=await connect_ble(addr)
+            await c.start_notify(
+                CSC_CHAR,
+                lambda _,b: w.send(parser.parse(bytes(b))))
+            while c.is_connected:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
-            print("[BLE] CSC error",e); await asyncio.sleep(2)
+            print("[BLE] CSC error",e)
+            await asyncio.sleep(3)
+        finally:
+            if c is not None:
+                try:
+                    if c.is_connected:
+                        await c.disconnect()
+                except Exception:
+                    pass
 
-async def keep_ftms(addr,w,cfg,control_state):
+
+async def keep_ftms(addr,w,cfg,control_state,gears):
     while True:
+        c=None
         control_task=None
         try:
             print("[BLE] FTMS",addr)
-            async with BleakClient(addr) as c:
-                def cb(_,b):
-                    x=parse_ftms(bytes(b))
-                    if cfg.get("cadence"): x.pop("cadence",None)
-                    if cfg.get("heartRate"): x.pop("heartRate",None)
-                    if x: w.send(x)
+            c=await connect_ble(addr)
 
-                # Read the mandatory Fitness Machine Feature characteristic
-                # before taking control. It contains two little-endian UINT32
-                # bitfields: Fitness Machine Features and Target Setting Features.
+            def cb(_,b):
+                x=parse_ftms(bytes(b))
+                if cfg.get("cadence"):
+                    x.pop("cadence",None)
+                if cfg.get("heartRate"):
+                    x.pop("heartRate",None)
+
+                # Include the current virtual gear with trainer telemetry so
+                # WattzAp can display it (for example "12/24").
+                if cfg.get("mediaController"):
+                    x["gear"]=gears.gear
+                    x["gearCount"]=MAX_VIRTUAL_GEAR
+
+                if x:
+                    w.send(x)
+
+            resistance_range=None
+            try:
+                features=await c.read_gatt_char(FTMS_FEATURE)
+                print_ftms_features(features)
+            except Exception as e:
+                print("[FTMS] unable to read feature flags",e)
+
+            if cfg.get("mediaController"):
                 try:
-                    features=await c.read_gatt_char(FTMS_FEATURE)
-                    print_ftms_features(features)
+                    raw_range=await c.read_gatt_char(
+                        FTMS_RESISTANCE_RANGE)
+                    resistance_range=parse_resistance_range(raw_range)
+                    rmin,rmax,rinc=resistance_range
+                    print(
+                        f"[FTMS] resistance range "
+                        f"{rmin}..{rmax}, increment {rinc}")
                 except Exception as e:
-                    print("[FTMS] unable to read feature flags",e)
+                    print(
+                        "[FTMS] unable to read resistance range; "
+                        "virtual gears will fall back to simulation mode:",
+                        e)
 
-                await c.start_notify(FTMS_DATA,cb)
+            await c.start_notify(FTMS_DATA,cb)
 
-                controller=FTMSController(c)
-                await controller.start()
-                print("[FTMS] control acquired")
-                control_task=asyncio.create_task(
-                    apply_controls(controller,control_state))
+            controller=FTMSController(c)
+            await controller.start()
+            print("[FTMS] control acquired")
+            control_task=asyncio.create_task(
+                apply_controls(
+                    controller,
+                    control_state,
+                    gears,
+                    resistance_range,
+                    bool(cfg.get("mediaController"))))
 
-                while c.is_connected:
-                    await asyncio.sleep(1)
+            while c.is_connected:
+                await asyncio.sleep(1)
+
         except asyncio.CancelledError:
             raise
         except Exception as e:
             print("[BLE] FTMS error",e)
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
         finally:
             if control_task:
                 control_task.cancel()
-                await asyncio.gather(control_task,return_exceptions=True)
+                await asyncio.gather(
+                    control_task,
+                    return_exceptions=True)
+            if c is not None:
+                try:
+                    if c.is_connected:
+                        await c.disconnect()
+                except Exception:
+                    pass
+
 
 async def main():
     ap=argparse.ArgumentParser()
@@ -473,6 +860,7 @@ async def main():
     ap.add_argument("--scan-seconds",type=float,default=10)
     ap.add_argument("--config",type=Path,default=CONFIG)
     ap.add_argument("--trainer"); ap.add_argument("--cadence"); ap.add_argument("--hr")
+    ap.add_argument("--media-controller")
     ap.add_argument("--save",action="store_true")
     ap.add_argument("--show-config",action="store_true")
     ap.add_argument("--host",default=HOST); ap.add_argument("--port",type=int,default=PORT)
@@ -485,21 +873,48 @@ async def main():
         cfg["trainer"]=choose("FTMS smart trainer",ds,"trainer",cfg.get("trainer"))
         cfg["cadence"]=choose("CSC cadence/speed sensor",ds,"cadence",cfg.get("cadence"))
         cfg["heartRate"]=choose("Heart-rate sensor",ds,"heartRate",cfg.get("heartRate"))
+        cfg["mediaController"]=choose("BLE media controller",ds,"mediaController",cfg.get("mediaController"))
+        if cfg.get("mediaController"):
+            selected=next(
+                (d for d in ds if d.address==cfg["mediaController"]),
+                None)
+            if selected:
+                cfg["mediaControllerName"]=selected.name
+        else:
+            cfg["mediaControllerName"]=None
         save(a.config,cfg)
     if a.trainer: cfg["trainer"]=a.trainer
     if a.cadence: cfg["cadence"]=a.cadence
     if a.hr: cfg["heartRate"]=a.hr
+    if a.media_controller: cfg["mediaController"]=a.media_controller
     if a.save: save(a.config,cfg)
     if a.show_config:
         print(json.dumps(cfg,indent=2)); return
 
     w=WattzAp(a.host,a.port); tasks=[]
     control_state=ControlState()
+    gears=VirtualGears()
     tasks.append(asyncio.create_task(receive_controls(w,control_state)))
-    if cfg.get("trainer"): tasks.append(asyncio.create_task(keep_ftms(cfg["trainer"],w,cfg,control_state)))
-    if cfg.get("cadence"): tasks.append(asyncio.create_task(keep_csc(cfg["cadence"],w)))
-    if cfg.get("heartRate"): tasks.append(asyncio.create_task(keep_hr(cfg["heartRate"],w)))
-    if not any(cfg.get(k) for k in ("trainer","cadence","heartRate")):
+    if cfg.get("trainer"):
+        tasks.append(asyncio.create_task(
+            keep_ftms(
+                cfg["trainer"],w,cfg,control_state,gears)))
+        await asyncio.sleep(0.5)
+    if cfg.get("cadence"):
+        tasks.append(asyncio.create_task(
+            keep_csc(cfg["cadence"],w)))
+        await asyncio.sleep(0.5)
+    if cfg.get("heartRate"):
+        tasks.append(asyncio.create_task(
+            keep_hr(cfg["heartRate"],w)))
+        await asyncio.sleep(0.5)
+    if cfg.get("mediaController"):
+        tasks.append(asyncio.create_task(
+            keep_media_controller(
+                cfg["mediaController"],
+                gears,
+                cfg.get("mediaControllerName"))))
+    if not any(cfg.get(k) for k in ("trainer","cadence","heartRate","mediaController")):
         print("No BLE devices configured.",file=sys.stderr)
         for t in tasks: t.cancel()
         await asyncio.gather(*tasks,return_exceptions=True)
@@ -515,3 +930,104 @@ async def main():
 if __name__=="__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: print("\nStopped.")
+
+
+async def keep_media_controller(addr,gears,name=None):
+    """
+    Read media buttons from Linux evdev.
+
+    BLE HID remotes are normally claimed by BlueZ's HID-over-GATT support and
+    exposed as kernel input devices.  Reading /dev/input/event* is therefore
+    more reliable than trying to subscribe to the HID GATT reports with Bleak.
+
+    Common media mappings:
+      KEY_NEXTSONG / KEY_VOLUMEUP   -> gear up
+      KEY_PREVIOUSSONG / KEY_VOLUMEDOWN -> gear down
+    """
+    if InputDevice is None:
+        print("[GEAR] python-evdev is required for BLE media controllers")
+        print("[GEAR] install with: pip install evdev")
+        return
+
+    wanted=(name or "SmartRemote").lower()
+    current_path=None
+    device=None
+
+    while True:
+        try:
+            # Re-discover the input node because /dev/input/eventN can change
+            # whenever the remote reconnects.
+            matches=[]
+            for path in list_devices():
+                try:
+                    d=InputDevice(path)
+                    if wanted in (d.name or "").lower():
+                        matches.append(d)
+                    else:
+                        d.close()
+                except Exception:
+                    pass
+
+            if not matches:
+                if current_path is not None:
+                    print(f"[GEAR] media controller disconnected: {name or 'SmartRemote'}")
+                    current_path=None
+                await asyncio.sleep(2)
+                continue
+
+            device=matches[0]
+            for extra in matches[1:]:
+                extra.close()
+
+            if device.path!=current_path:
+                current_path=device.path
+                print(f"[GEAR] media controller ready: {device.name} ({device.path})")
+                gears.show()
+
+            async for event in device.async_read_loop():
+                if event.type!=ecodes.EV_KEY:
+                    continue
+
+                # value 1 = key down, 2 = autorepeat, 0 = release.
+                # Only act on the initial key press.
+                if event.value!=1:
+                    continue
+
+                code=event.code
+
+                if code in (
+                        ecodes.KEY_NEXTSONG,
+                        ecodes.KEY_VOLUMEUP,
+                        getattr(ecodes, "KEY_FASTFORWARD", -1)):
+                    gears.up()
+
+                elif code in (
+                        ecodes.KEY_PREVIOUSSONG,
+                        ecodes.KEY_VOLUMEDOWN,
+                        getattr(ecodes, "KEY_REWIND", -1)):
+                    gears.down()
+
+                else:
+                    keyname=ecodes.KEY.get(code, str(code))
+                    print(f"[GEAR] unmapped key {keyname}")
+
+        except asyncio.CancelledError:
+            raise
+        except PermissionError as e:
+            print("[GEAR] cannot read input device:",e)
+            print("[GEAR] add the user to the 'input' group or run with suitable permissions")
+            await asyncio.sleep(5)
+        except OSError:
+            # Typical when a wireless input device disconnects.
+            current_path=None
+            await asyncio.sleep(2)
+        except Exception as e:
+            print("[GEAR] media controller error",e)
+            await asyncio.sleep(2)
+        finally:
+            if device is not None:
+                try:
+                    device.close()
+                except Exception:
+                    pass
+                device=None

@@ -34,6 +34,24 @@ def parse_args():
             "no rotations/speed fields are sent"
         ),
     )
+    parser.add_argument(
+        "--gear-count",
+        type=int,
+        default=24,
+        help="number of virtual gears to simulate in power mode (default: 24)",
+    )
+    parser.add_argument(
+        "--start-gear",
+        type=int,
+        default=12,
+        help="starting virtual gear in power mode (default: 12)",
+    )
+    parser.add_argument(
+        "--gear-change-seconds",
+        type=float,
+        default=5.0,
+        help="seconds between simulated gear changes in power mode (default: 5)",
+    )
     return parser.parse_args()
 
 
@@ -41,6 +59,12 @@ def main():
     args = parse_args()
     power_only = args.power_only is not None
     target_power = args.power_only if power_only else TARGET_POWER
+
+    gear_count = max(1, args.gear_count)
+    gear = max(1, min(gear_count, args.start_gear))
+    gear_direction = 1
+    gear_change_seconds = max(0.5, args.gear_change_seconds)
+    next_gear_change = time.monotonic() + gear_change_seconds
 
     with socket.create_connection((HOST, PORT)) as sock:
         print(f"Connected to WattzAp at {HOST}:{PORT}")
@@ -52,17 +76,32 @@ def main():
                 heart_rate = max(0, int(round(random.gauss(TARGET_HEART_RATE, 2))))
 
                 if power_only:
+                    now = time.monotonic()
+                    if now >= next_gear_change:
+                        gear += gear_direction
+                        if gear >= gear_count:
+                            gear = gear_count
+                            gear_direction = -1
+                        elif gear <= 1:
+                            gear = 1
+                            gear_direction = 1
+
+                        next_gear_change = now + gear_change_seconds
+
                     sample = {
                         "power": power,
                         "cadence": cadence,
                         "heartRate": heart_rate,
+                        "gear": gear,
+                        "gearCount": gear_count,
                     }
 
                     message = json.dumps(sample, separators=(",", ":"))
                     print(
                         f"{power:3d} W  "
                         f"{cadence:3d} rpm  "
-                        f"{heart_rate:3d} bpm  -> {message}"
+                        f"{heart_rate:3d} bpm  "
+                        f"gear {gear}/{gear_count}  -> {message}"
                     )
 
                     sock.sendall((message + "\n").encode("utf-8"))
@@ -78,15 +117,13 @@ def main():
                     "elapsedMs": elapsed_ms,
                     "cadence": cadence,
                     "heartRate": heart_rate,
-                    "power": power,
                 }
 
                 message = json.dumps(sample, separators=(",", ":"))
                 print(
                     f"{speed:5.2f} km/h  "
                     f"{cadence:3d} rpm  "
-                    f"{heart_rate:3d} bpm  "
-                    f"{power:3d} W  -> {message}"
+                    f"{heart_rate:3d} bpm  -> {message}"
                 )
 
                 sock.sendall((message + "\n").encode("utf-8"))

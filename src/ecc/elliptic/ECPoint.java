@@ -53,7 +53,7 @@ public class ECPoint {
 	 *            the x coordinate of the point
 	 * @param y
 	 *            the y coordinate of the point
-	 * @exception Throws
+	 * @exception throws
 	 *                a NotOnMotherException if (x,y) is not on the mother
 	 *                curve.
 	 */
@@ -89,7 +89,6 @@ public class ECPoint {
 		bytes[0] = 0;
 		x = new BigInteger(bytes);
 		if (mother.getPPODBF() == null)
-			System.out.println("Fuck dig!!!");
 		y = x.multiply(x).add(mother.geta()).multiply(x).add(mother.getb())
 				.modPow(mother.getPPODBF(), mother.getp());
 		if (ymt != y.testBit(0)) {
@@ -126,7 +125,7 @@ public class ECPoint {
 	 * @param q
 	 *            The point to be added
 	 * @return the sum of this point on the argument
-	 * @exception Throws
+	 * @exception throws
 	 *                a NoCommonMotherException if the two points don't lie on
 	 *                the same elliptic curve.
 	 */
