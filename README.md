@@ -9,12 +9,12 @@ WattzAp can:
   * display heart rate, cadence, rider speed and power both graphically and as real time data
   * follow workouts that target power, cadence and heart rate
   * synchronize the playback of compatible videos (Tacx RLV, Tacx TTS, Tacx Ergo, GPX, PWR) with your speed
-  * share your results on sites such as Strava, SelfLoops etc
+  * share your results on sites such as Strava etc via GPX export
   
 WattzAp works with standard turbo trainers, rollers and Smart Trainers. You don't need a complicated VR turbo trainer.
 WattzAp is an open platform, you can create your own videos and workouts and share these with other users.
 
-This is the community edition of the Wattzap Turbo Trainer Software. It is provided "as is" and without support.
+This is the open source version of the Wattzap Turbo Trainer Software. It is provided "as is" and without support.
 
 Some videos demoing Wattzap. https://www.youtube.com/watch?v=P5DpvG62SyI&list=PL6uvToCKj8yeJb1BikDlXhL75O01Obb6m
 
@@ -25,19 +25,21 @@ Road Map
 Wattzap just listen for telemetry data. That way people can
 add support for ble, ftms or whatever. This also
 decouples the data hardware support available in Java.
-  2. Update to Java 17
-  3. Move Graphics to JavaFX
+  2. Update to Java 21
+  3. Move data analysis to separate project 
+  1. Move Graphics to JavaFX
 
 
 ## External Trainer TCP/IP Protocol
 
-WattzAp can communicate with external sensors over a simple TCP/IP interface.
+WattzAp is hardware independent. It communicates with external sensors over a simple TCP/IP interface.
+Several bridges supporting this protocol are provided in the Bridges directory.
 
-The goal is to keep WattzAp independent of the underlying hardware. ANT+, BLE, FTMS, custom sensors and test generators can all communicate with WattzAp through the same protocol.
+ANT+, BLE, FTMS, custom sensors and test generators can all communicate with WattzAp through the same protocol.
 
 ### Connection
 
-WattzAp acts as the TCP server.
+WattzAp acts as a TCP server.
 
 Default endpoint:
 
@@ -132,20 +134,24 @@ The bridge should convert any hardware-specific counters or timestamps into this
 Latest Release
 ==============
 
-Version 2.9.0 September 24th 2020
+Version 3.0.0 October 19th 2026
+
+3.0.0 Release Notes
+-------------------
+
+* Upgrade to Java 21
+* Add Smart Trainer support via a hardware bridge
+
+Java will run on Linux including on Raspberry 4 hardware.
 
 In order to fix the FIT file import bug I have had to upgrade to the latest Garmin FIT library. This is only supported on Java >= 1.8. If you are running a lower version of Java FIT file imports won't work. I've not found a Windows 32bit JVM (the one Oracle supply is compiled 64 bit !!!). However the 64 bit version is supplied here.
 
 [![Watch the video](https://img.youtube.com/vi/CsnG21Dx9cU/maxresdefault.jpg)](https://youtu.be/CsnG21Dx9cU)
 
-  * Windows 64 bit download: https://drive.google.com/file/d/1Dgg5WYAcJojyOxtSgnurchD8yU-z_hBB/view?usp=sharing  - How to install video: https://youtu.be/62beIV3c604
-  * Linux Download : https://drive.google.com/file/d/1pi_coa0G8Ew34fCLBjmoEP-gVK03yZ0L/view?usp=sharing
-  * Raspbien Buster (32bit) : Wattzap will run on an Raspberry Pi 4 (lower models don't have a powerful enough graphics chip). https://drive.google.com/file/d/1lKHp0Ufzh0UYBMtmizYwFCEH9JmebpDq/view?usp=sharing You will also need a JRE v8 (java) on your machine, edit the startup script wattzap.sh to point to your JRE.
-    If you are building yourself you will need to install [jna.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/jna.jar), [jna-platform.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/jna-platform.jar) and [android-aarch64.jar](https://github.com/java-native-access/jna/blob/4.5.X/dist/android-aarch64.jar) from the JNA website into the wattzap/lib directory. 
   * User Manual : https://drive.google.com/open?id=1R_3j5_DBuqHOqQYc5LY4cxTJihBQHh0E
   * Training Programmes : https://drive.google.com/open?id=1Fm1BL2769SinFiN12xRxDsO5fJB53FES
   
-Release Notes
+2.9.0 Release Notes
 -------------
   * Adds Lifeline TT02 Fluid Trainer Support
   * Corrects FIT file import for latest FIT versions
@@ -158,8 +164,7 @@ Cycling Videos
 Video Playback
 --------------
 
-To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. VLC and a JVM is bundled in the Windows version but you will need to install an ANT USB driver (the windows version doesn't work). See the manual for details or watch this video.
-
+To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. VLC and a JVM is bundled in the Windows version but you will need to install an ANT USB driver (the windows version doesn't work). See the manual for details or watch this video
 
 Development
 ===========
@@ -182,7 +187,10 @@ Building
 
 Install Apache Ant and use the build.xml file
 
-$ ant -f build.xml
+$ ant -f build.xml clean fatjar
+$ ./wattzap.sh
+
+You will need a Java v21 installed on your computer.
 
 Working on the Project
 ----------------------

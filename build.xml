@@ -1,93 +1,97 @@
-<project name="wattzap" default="linux" basedir=".">
-    <description>
-        Wattzap Ant Build File
-    </description>
-  <!-- set global properties for this build -->
-  <property name="src" location="src"/>
-  <property name="build" location="target/bin"/>
-  <property name="dist"  location="target"/>
+<project name="wattzap" default="fatjar" basedir=".">
+    <description>Wattzap Ant build</description>
 
+    <property name="src" location="src"/>
+    <property name="build" location="target/bin"/>
+    <property name="dist" location="target"/>
 
-  <path id="master-classpath">
-      <fileset dir="lib">
-        <include name="*.jar"/>
-      </fileset>
-      <fileset dir="lib/java1.7">
-        <include name="*.jar"/>
-      </fileset>
+    <!-- Legacy embedded ANT+ USB libraries are deliberately excluded.
+         If Java sources still reference them, compilation will identify them. -->
+    <path id="master-classpath">
+        <fileset dir="lib" includes="*.jar">
+            <exclude name="usb4java*.jar"/>
+            <exclude name="jformica*.jar"/>
+        </fileset>
+        <fileset dir="lib/java1.7" includes="*.jar">
+            <exclude name="usb4java*.jar"/>
+            <exclude name="jformica*.jar"/>
+        </fileset>
     </path>
-  <property name="classpath"  refid="master-classpath"/>
 
-  <target name="init">
-    <!-- Create the time stamp -->
-    <tstamp/>
-    <!-- Create the build directory structure used by compile -->
-    <mkdir dir="${build}"/>
-  </target>
+    <target name="init">
+        <mkdir dir="${build}"/>
+    </target>
 
-  <target name="compile" depends="init"
-        description="compile the source " >
-    <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" source="1.7" target="1.7" debug="true" debuglevel="lines,vars,source">
-        <classpath refid="master-classpath"/>
-    </javac>
-  </target>
+    <target name="compile" depends="init" description="Compile Wattzap">
+        <!-- Compile for Java 21. -->
+        <javac srcdir="${src}" destdir="${build}"
+               debug="true"
+               debuglevel="lines,vars,source" includeantruntime="false">
+            <classpath refid="master-classpath"/>
+        </javac>
+    </target>
 
-  <target name="dist" depends="compile" description="generate the distribution" >
-    <!-- Create the distribution directory -->
-    <mkdir dir="${dist}/lib"/>
+    <!-- One JAR containing Wattzap and its Java dependencies. VLC remains external.
+         Keep the properties directory alongside the JAR for existing configuration. -->
+    <target name="fatjar" depends="compile"
+            description="Build executable target/wattzap-all.jar">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/wattzap-all.jar" duplicate="preserve">
+            <!-- Local classes first, including overrides of third-party classes. -->
+            <fileset dir="${build}">
+                <exclude name="**/*Test.class"/>
+                <exclude name="META-INF/**"/>
+            </fileset>
+            <!-- These were previously found through the properties/ classpath entry.
+                 Put resource bundles and Log4j config at the JAR root. -->
+            <fileset dir="properties">
+                <include name="MessageBundle*.properties"/>
+                <include name="log4j.properties"/>
+                <include name="log4j.xml"/>
+            </fileset>
+            <zipgroupfileset dir="lib" includes="*.jar"
+                             excludes="usb4java*.jar,jformica*.jar"/>
+            <zipgroupfileset dir="lib/java1.7" includes="*.jar"
+                             excludes="usb4java*.jar,jformica*.jar"/>
+            <manifest>
+                <attribute name="Main-Class" value="com.wattzap.Main"/>
+            </manifest>
+        </jar>
+    </target>
 
-    <jar destfile="${dist}/wattzap/lib/wattzap.jar">
-      <fileset dir="${build}">
-        <exclude name="**/*Test.class" />
-        <exclude name="org/**/*.class" />
-      </fileset>
-    </jar>
+    <target name="dist" depends="compile" description="Build original layout">
+        <mkdir dir="${dist}/wattzap/lib"/>
+        <jar destfile="${dist}/wattzap/lib/wattzap.jar">
+            <fileset dir="${build}">
+                <exclude name="**/*Test.class"/>
+                <exclude name="org/**/*.class"/>
+            </fileset>
+        </jar>
+    </target>
 
-    <zip destfile="tmp.jar" > 
-      <zipfileset src="lib/java1.7/jformica_jsr80.jar" excludes="org/cowboycoders/ant/interfaces/**/*.class" />
-      <zipfileset dir="${build}" includes="org/cowboycoders/ant/interfaces/**/*.class"  />
-    </zip>
-    <move file="tmp.jar" tofile="lib/java1.7/jformica_jsr80.jar"/>
+    <target name="linux" depends="dist" description="Build original Linux distribution">
+        <copy todir="${dist}/wattzap/lib">
+            <fileset dir="lib" includes="*.jar"
+                     excludes="usb4java*.jar,jformica*.jar"/>
+            <fileset dir="lib/java1.7" includes="*.jar"
+                     excludes="usb4java*.jar,jformica*.jar"/>
+        </copy>
+        <copy todir="${dist}/wattzap/lib/org">
+            <fileset dir="lib/org"/>
+        </copy>
+        <copy todir="${dist}/wattzap/properties">
+            <fileset dir="properties"/>
+        </copy>
+        <copy todir="${dist}/wattzap/icons">
+            <fileset dir="icons"/>
+        </copy>
+        <copy file="wattzap.sh" tofile="${dist}/wattzap/wattzap.sh"/>
+        <chmod file="${dist}/wattzap/wattzap.sh" perm="755"/>
+        <tar destfile="${dist}/wattzap.tar" basedir="${dist}/wattzap"/>
+        <gzip destfile="${dist}/wattzap.tar.gz" src="${dist}/wattzap.tar"/>
+    </target>
 
-    <zip destfile="tmp.jar" > 
-      <zipfileset src="lib/usb4java-javax-1.2.0.jar" excludes="org/usb4java/javax/AbstractIrp*.class" />
-      <zipfileset dir="${build}" includes="org/usb4java/javax/AbstractIrp*.class"  />
-    </zip>
-    <move file="tmp.jar" tofile="lib/usb4java-javax-1.2.0.jar"/>
-  </target>
-
-
-  <target name="clean"
-        description="clean up" >
-    <!-- Delete the ${dist} directory trees -->
-    <delete dir="${dist}"/>
-  </target>
-
-  <target name="linux" description="make Linux release" depends="dist">
-    <copy todir="${dist}/wattzap/lib">
-      <fileset dir="lib">
-        <include name="*.jar"/>
-      </fileset>
-      <fileset dir="lib/java1.7">
-        <include name="*.jar"/>
-      </fileset>
-    </copy>
-    <copy todir="${dist}/wattzap/lib/org">
-      <fileset dir="lib/org"/>
-    </copy>
-
-    <copy todir="${dist}/wattzap/properties">
-      <fileset dir="properties"/>
-    </copy>
-    <copy todir="${dist}/wattzap/icons">
-      <fileset dir="icons"/>
-    </copy>
-
-    <copy file="wattzap.sh" tofile="${dist}/wattzap/wattzap.sh"/>
-      <chmod file="${dist}/wattzap/wattzap.sh" perm="755"/>
-
-    <tar destfile="${dist}/wattzap.tar" basedir="${dist}/wattzap"/>
-    <gzip destfile="${dist}/wattzap.tar.gz" src="${dist}/wattzap.tar"/>
-  </target>
+    <target name="clean" description="Delete generated files">
+        <delete dir="${dist}"/>
+    </target>
 </project>

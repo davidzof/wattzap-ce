@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse, asyncio, json, socket, struct, sys, threading, time
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -27,6 +28,7 @@ CSC_CHAR="00002a5b-0000-1000-8000-00805f9b34fb"
 FTMS_DATA="00002ad2-0000-1000-8000-00805f9b34fb"
 FTMS_FEATURE="00002acc-0000-1000-8000-00805f9b34fb"
 FTMS_CONTROL="00002ad9-0000-1000-8000-00805f9b34fb"
+FTMS_STATUS="00002ada-0000-1000-8000-00805f9b34fb"
 FTMS_RESISTANCE_RANGE="00002ad6-0000-1000-8000-00805f9b34fb"
 HID_SVC="00001812-0000-1000-8000-00805f9b34fb"
 HID_REPORT="00002a4d-0000-1000-8000-00805f9b34fb"
@@ -36,7 +38,14 @@ FTMS_START_RESUME=0x07
 FTMS_SET_TARGET_RESISTANCE=0x04
 FTMS_SET_TARGET_POWER=0x05
 FTMS_SET_SIMULATION=0x11
+FTMS_SPIN_DOWN_CONTROL=0x13
 FTMS_RESPONSE_CODE=0x80
+FTMS_STATUS_SPIN_DOWN=0x14
+FTMS_SPIN_DOWN_START=0x01
+FTMS_SPIN_DOWN_REQUESTED=0x01
+FTMS_SPIN_DOWN_SUCCESS=0x02
+FTMS_SPIN_DOWN_ERROR=0x03
+FTMS_SPIN_DOWN_STOP_PEDALING=0x04
 FTMS_SUCCESS=0x01
 
 # Neutral simulation values. Gradient is supplied by WattzAp.
@@ -55,6 +64,8 @@ DEFAULT_VIRTUAL_GEAR=12
 GEAR_RESISTANCE_LOW=0.20
 GEAR_RESISTANCE_HIGH=0.80
 GRADIENT_RESISTANCE_PER_PERCENT=0.02
+DEFAULT_GRADIENT_SCALE=1.0
+CALIBRATION_WARNING_DAYS=30
 
 # BlueZ may reject overlapping Device1.Connect calls with
 # org.bluez.Error.InProgress. Serialise only connection setup.
@@ -86,7 +97,7 @@ def print_ftms_features(data):
     b=bytes(data)
     if len(b)<8:
         print(f"[FTMS] invalid Fitness Machine Feature value: {b.hex()}")
-        return
+        return None,None
 
     machine_features,target_features=struct.unpack_from("<II",b,0)
     print(f"[FTMS] Fitness Machine Features: 0x{machine_features:08x}")
@@ -108,6 +119,9 @@ def print_ftms_features(data):
           + ("yes" if target_features & (1<<3) else "no"))
     print("  simulation params (0x11): "
           + ("yes" if target_features & (1<<13) else "no"))
+    print("  spin-down control  (0x13): "
+          + ("yes" if target_features & (1<<15) else "no"))
+    return machine_features,target_features
 
 async def connect_ble(addr):
     """
@@ -234,6 +248,42 @@ def load(path):
 def save(path,cfg):
     path.write_text(json.dumps(cfg,indent=2)+"\n")
     print(f"Saved {path}")
+
+
+def calibration_age_days(cfg):
+    value=cfg.get("lastCalibration")
+    if not value:
+        return None
+    try:
+        calibrated=datetime.fromisoformat(value.replace("Z","+00:00"))
+        if calibrated.tzinfo is None:
+            calibrated=calibrated.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc)-calibrated).days
+    except (TypeError,ValueError):
+        return None
+
+
+def warn_if_calibration_old(cfg):
+    if not cfg.get("trainer"):
+        return
+
+    age=calibration_age_days(cfg)
+    if age is None:
+        print(
+            "[FTMS] WARNING: trainer calibration has not been recorded. "
+            "Run ble_bridge.py --calibrate.",
+            file=sys.stderr)
+    elif age >= CALIBRATION_WARNING_DAYS:
+        print(
+            f"[FTMS] WARNING: trainer calibration is {age} days old. "
+            "Run ble_bridge.py --calibrate.",
+            file=sys.stderr)
+
+
+def record_calibration(path,cfg):
+    cfg["lastCalibration"]=datetime.now(timezone.utc).isoformat(
+        timespec="seconds").replace("+00:00","Z")
+    save(path,cfg)
 
 def choose(label,devices,role,current):
     c=[d for d in devices if role in d.roles]
@@ -393,7 +443,13 @@ def parse_resistance_range(data):
     return minimum,maximum,increment
 
 
-def resistance_for(gradient,gear,resistance_range):
+def resistance_for(
+        gradient,
+        gear,
+        resistance_range,
+        gear_resistance_low,
+        gear_resistance_high,
+        gradient_resistance_per_percent):
     minimum,maximum,increment=resistance_range
     span=maximum-minimum
 
@@ -404,12 +460,12 @@ def resistance_for(gradient,gear,resistance_range):
             MAX_VIRTUAL_GEAR-MIN_VIRTUAL_GEAR)
 
     flat_fraction=(
-        GEAR_RESISTANCE_LOW
-        + gear_fraction*(GEAR_RESISTANCE_HIGH-GEAR_RESISTANCE_LOW)
+        gear_resistance_low
+        + gear_fraction*(gear_resistance_high-gear_resistance_low)
     )
     target_fraction=(
         flat_fraction
-        + float(gradient)*GRADIENT_RESISTANCE_PER_PERCENT
+        + float(gradient)*gradient_resistance_per_percent
     )
     target_fraction=max(0.0,min(1.0,target_fraction))
 
@@ -470,14 +526,15 @@ class FTMSController:
         b=bytes(data)
         if len(b)<3 or b[0]!=FTMS_RESPONSE_CODE:
             return
-        request_opcode=b[1]; result=b[2]
+        request_opcode=b[1]; result=b[2]; response=bytes(b[3:])
         if self.pending and not self.pending.done():
-            self.pending.set_result((request_opcode,result))
+            self.pending.set_result((request_opcode,result,response))
 
-    async def start(self):
+    async def start(self,start_machine=True):
         await self.client.start_notify(FTMS_CONTROL,self._indication)
         await self.command(bytes([FTMS_REQUEST_CONTROL]),"request control")
-        await self.command(bytes([FTMS_START_RESUME]),"start/resume")
+        if start_machine:
+            await self.command(bytes([FTMS_START_RESUME]),"start/resume")
 
     async def command(self, payload, label):
         async with self.lock:
@@ -485,7 +542,7 @@ class FTMSController:
             self.pending=loop.create_future()
             try:
                 await self.client.write_gatt_char(FTMS_CONTROL,payload,response=True)
-                request,result=await asyncio.wait_for(self.pending,3.0)
+                request,result,response=await asyncio.wait_for(self.pending,3.0)
             finally:
                 self.pending=None
 
@@ -496,6 +553,7 @@ class FTMSController:
             if result!=FTMS_SUCCESS:
                 raise RuntimeError(
                     f"FTMS {label} rejected: result 0x{result:02x}")
+            return response
 
     async def set_gradient(self, gradient):
         gradient=max(-327.68,min(327.67,float(gradient)))
@@ -530,6 +588,80 @@ class FTMSController:
         payload=struct.pack("<Bh",FTMS_SET_TARGET_POWER,watts)
         await self.command(payload,f"set target power {watts} W")
         print(f"[FTMS] ERG target power {watts} W")
+
+    async def start_spin_down(self):
+        response=await self.command(
+            bytes([FTMS_SPIN_DOWN_CONTROL,FTMS_SPIN_DOWN_START]),
+            "start spin-down calibration")
+        if len(response)<4:
+            raise RuntimeError(
+                "FTMS spin-down response did not include target speeds")
+        low_raw,high_raw=struct.unpack_from("<HH",response,0)
+        return low_raw/100.0,high_raw/100.0
+
+
+async def calibrate_trainer(addr,config_path,cfg):
+    """Run the FTMS spin-down procedure without involving WattzAp."""
+    c=None
+    status_queue=asyncio.Queue()
+
+    def status_callback(_,data):
+        b=bytes(data)
+        if len(b)>=2 and b[0]==FTMS_STATUS_SPIN_DOWN:
+            status_queue.put_nowait(b[1])
+
+    try:
+        print(f"[CAL] connecting to trainer {addr}")
+        c=await connect_ble(addr)
+
+        features=await c.read_gatt_char(FTMS_FEATURE)
+        _,target_features=print_ftms_features(features)
+        if target_features is None or not (target_features & (1<<15)):
+            raise RuntimeError(
+                "trainer does not advertise FTMS spin-down control")
+
+        await c.start_notify(FTMS_STATUS,status_callback)
+
+        controller=FTMSController(c)
+        # Spin-down requires control permission, but it is not a ride:
+        # do not send Start/Resume before calibration.
+        await controller.start(start_machine=False)
+        print("[CAL] FTMS control acquired")
+
+        low_speed,high_speed=await controller.start_spin_down()
+        print(
+            f"[CAL] spin-down started; accelerate to "
+            f"{low_speed:.2f}-{high_speed:.2f} km/h")
+
+        deadline=asyncio.get_running_loop().time()+120.0
+        while True:
+            remaining=deadline-asyncio.get_running_loop().time()
+            if remaining<=0:
+                raise RuntimeError("spin-down calibration timed out")
+
+            status=await asyncio.wait_for(status_queue.get(),remaining)
+
+            if status==FTMS_SPIN_DOWN_REQUESTED:
+                print(
+                    f"[CAL] accelerate to "
+                    f"{low_speed:.2f}-{high_speed:.2f} km/h")
+            elif status==FTMS_SPIN_DOWN_STOP_PEDALING:
+                print("[CAL] target speed reached - stop pedalling and coast")
+            elif status==FTMS_SPIN_DOWN_SUCCESS:
+                print("[CAL] calibration successful")
+                record_calibration(config_path,cfg)
+                return True
+            elif status==FTMS_SPIN_DOWN_ERROR:
+                raise RuntimeError("trainer reported calibration failure")
+            else:
+                print(f"[CAL] unknown spin-down status 0x{status:02x}")
+    finally:
+        if c is not None:
+            try:
+                if c.is_connected:
+                    await c.disconnect()
+            except Exception:
+                pass
 
 
 async def receive_controls(w,state):
@@ -569,7 +701,15 @@ async def receive_controls(w,state):
 
 
 async def apply_controls(
-        controller,state,gears,resistance_range,use_virtual_gears):
+        controller,
+        state,
+        gears,
+        resistance_range,
+        use_virtual_gears,
+        gradient_scale,
+        gear_resistance_low,
+        gear_resistance_high,
+        gradient_resistance_per_percent):
     async def apply(mode,value):
         if mode=="targetPower":
             # ERG remains exactly as before. Virtual gears deliberately do
@@ -577,19 +717,27 @@ async def apply_controls(
             await controller.set_target_power(value)
 
         elif mode=="gradient":
+            effective_gradient=float(value)*gradient_scale
+
             if use_virtual_gears and resistance_range is not None:
+                gear=gears.gear
                 resistance=resistance_for(
-                    value,
-                    gears.gear,
-                    resistance_range)
+                    effective_gradient,
+                    gear,
+                    resistance_range,
+                    gear_resistance_low,
+                    gear_resistance_high,
+                    gradient_resistance_per_percent)
                 await controller.set_resistance(resistance)
                 print(
-                    f"[GEAR] {gears.gear}/{MAX_VIRTUAL_GEAR} "
-                    f"gradient {value:.2f}% -> resistance {resistance}")
+                    f"[GEAR] {gear}/{MAX_VIRTUAL_GEAR} "
+                    f"gradient {value:.2f}% "
+                    f"(scaled {effective_gradient:.2f}%) "
+                    f"-> resistance {resistance}")
             else:
                 # Preserve existing simulation behaviour if virtual gears are
                 # not configured or the trainer did not expose a usable range.
-                await controller.set_gradient(value)
+                await controller.set_gradient(effective_gradient)
 
     # Re-apply the last known WattzAp control after a BLE reconnect.
     if state.mode is not None:
@@ -772,7 +920,17 @@ async def keep_csc(addr,w):
                     pass
 
 
-async def keep_ftms(addr,w,cfg,control_state,gears):
+async def keep_ftms(
+        addr,
+        w,
+        cfg,
+        control_state,
+        gears,
+        gradient_scale,
+        virtual_gears,
+        gear_resistance_low,
+        gear_resistance_high,
+        gradient_resistance_per_percent):
     while True:
         c=None
         control_task=None
@@ -789,7 +947,7 @@ async def keep_ftms(addr,w,cfg,control_state,gears):
 
                 # Include the current virtual gear with trainer telemetry so
                 # WattzAp can display it (for example "12/24").
-                if cfg.get("mediaController"):
+                if virtual_gears:
                     x["gear"]=gears.gear
                     x["gearCount"]=MAX_VIRTUAL_GEAR
 
@@ -803,7 +961,7 @@ async def keep_ftms(addr,w,cfg,control_state,gears):
             except Exception as e:
                 print("[FTMS] unable to read feature flags",e)
 
-            if cfg.get("mediaController"):
+            if virtual_gears:
                 try:
                     raw_range=await c.read_gatt_char(
                         FTMS_RESISTANCE_RANGE)
@@ -829,7 +987,11 @@ async def keep_ftms(addr,w,cfg,control_state,gears):
                     control_state,
                     gears,
                     resistance_range,
-                    bool(cfg.get("mediaController"))))
+                    virtual_gears,
+                    gradient_scale,
+                    gear_resistance_low,
+                    gear_resistance_high,
+                    gradient_resistance_per_percent))
 
             while c.is_connected:
                 await asyncio.sleep(1)
@@ -863,8 +1025,70 @@ async def main():
     ap.add_argument("--media-controller")
     ap.add_argument("--save",action="store_true")
     ap.add_argument("--show-config",action="store_true")
+    ap.add_argument(
+        "--calibrate",action="store_true",
+        help="run FTMS spin-down calibration on the configured trainer and exit")
     ap.add_argument("--host",default=HOST); ap.add_argument("--port",type=int,default=PORT)
+    ap.add_argument(
+        "--gradient-scale",
+        type=float,
+        default=DEFAULT_GRADIENT_SCALE,
+        metavar="FACTOR",
+        help=(
+            "scale route gradient before trainer control "
+            "(default: 1.0; e.g. 0.5 gives 50%% trainer difficulty)"
+        ),
+    )
+    ap.add_argument(
+        "--virtual-gears",
+        action="store_true",
+        help=(
+            "enable virtual gearing: use the configured BLE media controller "
+            "for gear changes and map gradient + gear to FTMS resistance"
+        ),
+    )
+    ap.add_argument(
+        "--gear-resistance-min",
+        type=float,
+        default=GEAR_RESISTANCE_LOW,
+        metavar="FRACTION",
+        help=(
+            "flat-road resistance fraction for virtual gear 1 "
+            "(default: 0.20)"
+        ),
+    )
+    ap.add_argument(
+        "--gear-resistance-max",
+        type=float,
+        default=GEAR_RESISTANCE_HIGH,
+        metavar="FRACTION",
+        help=(
+            "flat-road resistance fraction for virtual gear 24 "
+            "(default: 0.80)"
+        ),
+    )
+    ap.add_argument(
+        "--gradient-resistance",
+        type=float,
+        default=GRADIENT_RESISTANCE_PER_PERCENT,
+        metavar="FRACTION_PER_PERCENT",
+        help=(
+            "fraction of trainer resistance range added per 1%% gradient "
+            "(default: 0.02)"
+        ),
+    )
     a=ap.parse_args(); cfg=load(a.config)
+
+    if a.gradient_scale < 0:
+        ap.error("--gradient-scale must be >= 0")
+    if not 0 <= a.gear_resistance_min <= 1:
+        ap.error("--gear-resistance-min must be between 0 and 1")
+    if not 0 <= a.gear_resistance_max <= 1:
+        ap.error("--gear-resistance-max must be between 0 and 1")
+    if a.gear_resistance_min > a.gear_resistance_max:
+        ap.error("--gear-resistance-min must be <= --gear-resistance-max")
+    if a.gradient_resistance < 0:
+        ap.error("--gradient-resistance must be >= 0")
 
     if a.scan:
         await scan(a.scan_seconds); return
@@ -873,7 +1097,11 @@ async def main():
         cfg["trainer"]=choose("FTMS smart trainer",ds,"trainer",cfg.get("trainer"))
         cfg["cadence"]=choose("CSC cadence/speed sensor",ds,"cadence",cfg.get("cadence"))
         cfg["heartRate"]=choose("Heart-rate sensor",ds,"heartRate",cfg.get("heartRate"))
-        cfg["mediaController"]=choose("BLE media controller",ds,"mediaController",cfg.get("mediaController"))
+        cfg["mediaController"]=choose(
+            "BLE media controller (used with --virtual-gears)",
+            ds,
+            "mediaController",
+            cfg.get("mediaController"))
         if cfg.get("mediaController"):
             selected=next(
                 (d for d in ds if d.address==cfg["mediaController"]),
@@ -891,6 +1119,32 @@ async def main():
     if a.show_config:
         print(json.dumps(cfg,indent=2)); return
 
+    if a.calibrate:
+        if not cfg.get("trainer"):
+            print(
+                "No FTMS trainer configured. Run --configure or use --trainer.",
+                file=sys.stderr)
+            return
+        try:
+            await calibrate_trainer(cfg["trainer"],a.config,cfg)
+        except Exception as e:
+            print(f"[CAL] calibration failed: {e}",file=sys.stderr)
+        return
+
+    warn_if_calibration_old(cfg)
+
+    print(
+        f"[FTMS] gradient scale {a.gradient_scale:.2f} "
+        f"({a.gradient_scale*100:.0f}% trainer difficulty)")
+    print(
+        "[GEAR] drivetrain mode "
+        + ("virtual" if a.virtual_gears else "physical"))
+    if a.virtual_gears:
+        print(
+            "[GEAR] resistance mapping "
+            f"gear1={a.gear_resistance_min:.3f}, "
+            f"gear{MAX_VIRTUAL_GEAR}={a.gear_resistance_max:.3f}, "
+            f"gradient={a.gradient_resistance:.3f}/%")
     w=WattzAp(a.host,a.port); tasks=[]
     control_state=ControlState()
     gears=VirtualGears()
@@ -898,7 +1152,16 @@ async def main():
     if cfg.get("trainer"):
         tasks.append(asyncio.create_task(
             keep_ftms(
-                cfg["trainer"],w,cfg,control_state,gears)))
+                cfg["trainer"],
+                w,
+                cfg,
+                control_state,
+                gears,
+                a.gradient_scale,
+                a.virtual_gears,
+                a.gear_resistance_min,
+                a.gear_resistance_max,
+                a.gradient_resistance)))
         await asyncio.sleep(0.5)
     if cfg.get("cadence"):
         tasks.append(asyncio.create_task(
@@ -908,13 +1171,19 @@ async def main():
         tasks.append(asyncio.create_task(
             keep_hr(cfg["heartRate"],w)))
         await asyncio.sleep(0.5)
-    if cfg.get("mediaController"):
-        tasks.append(asyncio.create_task(
-            keep_media_controller(
-                cfg["mediaController"],
-                gears,
-                cfg.get("mediaControllerName"))))
-    if not any(cfg.get(k) for k in ("trainer","cadence","heartRate","mediaController")):
+    if a.virtual_gears:
+        if cfg.get("mediaController"):
+            tasks.append(asyncio.create_task(
+                keep_media_controller(
+                    cfg["mediaController"],
+                    gears,
+                    cfg.get("mediaControllerName"))))
+        else:
+            print(
+                "[GEAR] --virtual-gears requested but no media controller "
+                "is configured",
+                file=sys.stderr)
+    if not any(cfg.get(k) for k in ("trainer","cadence","heartRate")):
         print("No BLE devices configured.",file=sys.stderr)
         for t in tasks: t.cancel()
         await asyncio.gather(*tasks,return_exceptions=True)

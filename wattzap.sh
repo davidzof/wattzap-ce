@@ -1,14 +1,12 @@
-#
-#!/bin/bash
-#
-# WattzAp Linux Startup File
-# 6th May 2015
-#
-SEP=":"
-LIBS=$(find lib -maxdepth 1 -name "*.jar" -print | tr '\n' ':')
-LIBS="lib:properties:$LIBS"
+cd "$(dirname "$0")" || exit 1
 
+# Prefer JAVA_HOME if set, otherwise use java from PATH
+if [ -n "$JAVA_HOME" ]; then
+    JAVA="$JAVA_HOME/bin/java"
+else
+    JAVA="java"
+fi
 
-echo $LIBS
-
-java -Djna.library.path=/Applications/VLC.app/Contents/MacOS/lib -cp $LIBS -Dlog4j.logger.level=INFO com.wattzap.Main
+exec "$JAVA" \
+    -Dlog4j.logger.level=INFO \
+    -jar target/wattzap-all.jar "$@"
