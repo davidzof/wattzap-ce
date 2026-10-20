@@ -9,4 +9,4 @@ fi
 
 exec "$JAVA" \
     -Dlog4j.logger.level=INFO \
-    -jar target/wattzap-all.jar "$@"
+    -jar wattzap.jar "$@"

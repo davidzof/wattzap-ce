@@ -93,10 +93,10 @@ public class TrainerListener implements MessageCallback {
         try {
             serverSocket = new ServerSocket();
 
-            InetAddress localhost = InetAddress.getByName("127.0.0.1");
+            InetAddress localhost = InetAddress.getByName("0.0.0.0");
             serverSocket.bind(new InetSocketAddress(localhost, port));
 
-            logger.info("Trainer listener waiting on 127.0.0.1:" + port);
+            logger.info("Trainer listener waiting on 0.0.0.0:" + port);
 
             while (running) {
                 try (Socket socket = serverSocket.accept()) {

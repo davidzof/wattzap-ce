@@ -15,3 +15,4 @@ jre7/
 build-mac.xml
 libvlc.dll
 libvlccore.dll
+/target/
