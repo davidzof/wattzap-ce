@@ -15,7 +15,7 @@
  */
 package com.wattzap.utils;
 
-import javax.xml.bind.DatatypeConverter;
+import java.util.Base64;
 
 /**
  * @author David George
@@ -40,18 +40,10 @@ public class StringXORer {
 	}
 
 	private static byte[] base64Decode(String s) {
-
-		// BASE64Decoder d = new BASE64Decoder();
-		return DatatypeConverter.parseBase64Binary(s);
-		// return d.decodeBuffer(s);
-
+		return Base64.getDecoder().decode(s);
 	}
 
 	private static String base64Encode(byte[] bytes) {
-		// BASE64Encoder enc = new BASE64Encoder();
-		// return enc.encode(bytes).replaceAll("\\s", "");
-
-		return DatatypeConverter.printBase64Binary(bytes).replaceAll("\\s", "");
-
+		return Base64.getEncoder().encodeToString(bytes).replaceAll("\\s", "");
 	}
 }

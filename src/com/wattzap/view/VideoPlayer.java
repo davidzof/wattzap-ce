@@ -127,14 +127,14 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 	}
 
 	private void setSpeed(Telemetry t) {
-		Point p = routeData.getPoint(t.getDistanceKM());
+		Point point = routeData.getPoint(t.getDistanceKM());
 
 		if (startTime == 0) {
 			// first time through, start video
 			startTime = System.currentTimeMillis();
 			mPlayer.start();
 			mPlayer.enableOverlay(true);
-			mPlayer.mute();
+			//mPlayer.mute();
 
 			fps = mPlayer.getFps();
 			len = mPlayer.getLength();
@@ -147,8 +147,8 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 			logger.debug("FPS " + fps + " length " + len
 					+ " milliSeconds time " + time);
 
-			rSpeed.add(p.getSpeed());
-			double rate = t.getSpeedKMH() / p.getSpeed();
+			rSpeed.add(point.getSpeed());
+			double rate = t.getSpeedKMH() / point.getSpeed();
 			if (rate > 1.0) {
 				rate = 1.0f;
 			}
@@ -174,13 +174,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 			return;
 		}
 
-		// mPlayer.setMarqueeText("hello world");
-		// mPlayer.setMarqueeOpacity(127);
-		// mPlayer.setMarqueeColour(Color.RED);
-		// mPlayer.setMarqueePosition(libvlc_marquee_position_e.centre);
-		// mPlayer.enableMarquee(true);
-
-		long mapTime = p.getTime();
+		long mapTime = point.getTime();
 		long videoTime = (int) (len * mPlayer.getPosition());
 		if (videoTime == 0) {
 			return;
@@ -188,7 +182,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 
 		if (mapTime != lastMapTime) {
 			// position has changed
-			rSpeed.add(p.getSpeed());
+			rSpeed.add(point.getSpeed());
 			float perCent = 1.0f;
 			if (mapTime > videoTime + 250) {
 				perCent = ((float) videoTime / mapTime);
@@ -235,7 +229,7 @@ public class VideoPlayer extends JFrame implements MessageCallback {
 			lastMapTime = mapTime;
 			logger.debug(String
 					.format("Map Speed  %.2f, Smoothed Map Speed %.2f, Turbo Speed %.2f MapTime %d VideoTime %d, perCent %.3f, lastCent %.3f",
-							p.getSpeed(), rSpeed.getAverage(), t.getSpeedKMH(),
+							point.getSpeed(), rSpeed.getAverage(), t.getSpeedKMH(),
 							mapTime, videoTime, perCent, lastCent));
 			lastCent = perCent;
 		}

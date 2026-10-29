@@ -15,6 +15,7 @@ Examples:
     python3 wattzap_ant_bridge.py --power 12345 --hr 54321 --save
     python3 wattzap_ant_bridge.py --speed-cadence 12345 --hr 54321 --save
     python3 wattzap_ant_bridge.py
+    python3 wattzap_ant_bridge.py --debug
 """
 
 from __future__ import annotations
@@ -73,10 +74,11 @@ class FoundDevice:
 
 
 class WattzApClient:
-    def __init__(self, host: str, port: int, retry_seconds: float = 2.0):
+    def __init__(self, host: str, port: int, retry_seconds: float = 2.0, debug: bool = False):
         self.host = host
         self.port = port
         self.retry_seconds = retry_seconds
+        self.debug = debug
         self._socket: Optional[socket.socket] = None
         self._lock = threading.Lock()
         self._last_attempt = 0.0
@@ -107,7 +109,10 @@ class WattzApClient:
     def send(self, payload: Dict[str, Any]) -> None:
         if not payload:
             return
-        encoded = (json.dumps(payload, separators=(",", ":")) + "\n").encode("utf-8")
+        json_line = json.dumps(payload, separators=(",", ":"))
+        encoded = (json_line + "\n").encode("utf-8")
+        if self.debug:
+            print(f"[DEBUG] -> WattzAp {json_line}")
         with self._lock:
             if not self._connect_locked():
                 return
@@ -363,9 +368,9 @@ def apply_cli_overrides(config: Dict[str, Optional[int]], args: argparse.Namespa
 
 
 class Bridge:
-    def __init__(self, config: Dict[str, Optional[int]], host: str, port: int):
+    def __init__(self, config: Dict[str, Optional[int]], host: str, port: int, debug: bool = False):
         self.config = config
-        self.client = WattzApClient(host, port)
+        self.client = WattzApClient(host, port, debug=debug)
         self.node = new_node()
         self.devices: List[Any] = []
         self._wheel = WheelDelta()
@@ -488,6 +493,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hr", type=int, help="ANT+ heart-rate device ID")
     parser.add_argument("--save", action="store_true", help="save command-line selections")
     parser.add_argument("--show-config", action="store_true")
+    parser.add_argument("--debug", action="store_true",
+                        help="print telemetry JSON sent to WattzAp")
     return parser
 
 
@@ -525,7 +532,7 @@ def main() -> int:
 
     try:
         validate_config(config)
-        Bridge(config, args.host, args.port).run()
+        Bridge(config, args.host, args.port, debug=args.debug).run()
         return 0
     except (ValueError, RuntimeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)

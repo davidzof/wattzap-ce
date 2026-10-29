@@ -6,13 +6,26 @@
  */
 package com.wattzap.model.trainer;
 
+/**
+ * @author David George
+ * Copyright (c) 2026
+ */
 public class TrainerData {
-
     private Integer rotations;
     private Long elapsedMs;
     private Integer cadence;
     private Integer heartRate;
     private Integer power;
+    private Integer gear;
+    private Integer gearCount;
+
+    public Integer getGear() {
+        return gear;
+    }
+
+    public Integer getGearCount() {
+        return gearCount;
+    }
 
     public Integer getRotations() {
         return rotations;
@@ -50,48 +63,35 @@ public class TrainerData {
         return power != null;
     }
 
+    public boolean hasGear() {
+        return gear != null;
+    }
+
+    public boolean hasGearCount() {
+        return gearCount != null;
+    }
+
     public boolean isEmpty() {
         return rotations == null
                 && elapsedMs == null
                 && cadence == null
                 && heartRate == null
-                && power == null;
+                && power == null
+                && gear == null
+                && gearCount == null;
     }
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("TrainerData{");
-        boolean first = true;
-
-        if (rotations != null) {
-            b.append("rotations=").append(rotations);
-            first = false;
-        }
-
-        if (elapsedMs != null) {
-            if (!first) b.append(", ");
-            b.append("elapsedMs=").append(elapsedMs);
-            first = false;
-        }
-
-        if (cadence != null) {
-            if (!first) b.append(", ");
-            b.append("cadence=").append(cadence);
-            first = false;
-        }
-
-        if (heartRate != null) {
-            if (!first) b.append(", ");
-            b.append("heartRate=").append(heartRate);
-            first = false;
-        }
-
-        if (power != null) {
-            if (!first) b.append(", ");
-            b.append("power=").append(power);
-        }
-
-        b.append('}');
-        return b.toString();
+        return "TrainerData{" +
+                "rotations=" + rotations +
+                ", elapsedMs=" + elapsedMs +
+                ", cadence=" + cadence +
+                ", heartRate=" + heartRate +
+                ", power=" + power +
+                ", gear=" + gear +
+                ", gearCount=" + gearCount +
+                '}';
     }
+
 }

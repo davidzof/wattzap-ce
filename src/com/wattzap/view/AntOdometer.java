@@ -15,22 +15,6 @@
  */
 package com.wattzap.view;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-
-import net.miginfocom.swing.MigLayout;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 import com.wattzap.controller.MessageBus;
 import com.wattzap.controller.MessageCallback;
 import com.wattzap.controller.Messages;
@@ -38,318 +22,375 @@ import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Telemetry;
 import com.wattzap.model.dto.TrainingItem;
+import net.miginfocom.swing.MigLayout;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
+import javax.swing.*;
+import java.awt.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
- * Used when ANT+ Stick is connected and configured
- * 
- * @author David George (c) Copyright 2014
+ * Basic Odometer
+ *
+ * @author David George (c) Copyright 2014-2026
  * @date 5 February 2014
  */
 public class AntOdometer extends JPanel implements MessageCallback {
-	private static final long serialVersionUID = -7939830514817673972L;
-	private JLabel speedText;
-	private JLabel distText;
-	private JLabel slopeText;
-	private JLabel levelText;
+    private static final long serialVersionUID = -7939830514817673972L;
+    private JLabel speedText;
+    private JLabel distText;
+    private JLabel slopeText;
+    private JLabel levelText;
 
-	private JLabel speedLabel;
-	private JLabel distanceLabel;
-	private JLabel elevationLabel;
-	private JLabel slopeLabel;
-	private JLabel cadenceLabel;
-	private JLabel hrLabel;
-	private JLabel powerLabel;
-	private JLabel chronoLabel;
+    private JLabel speedLabel;
+    private JLabel distanceLabel;
+    private JLabel elevationLabel;
+    private JLabel slopeLabel;
+    private JLabel cadenceLabel;
+    private JLabel hrLabel;
+    private JLabel powerLabel;
+    private JLabel chronoLabel;
 
-	private int type = RouteReader.SLOPE;
-	private TrainingItem current;
-	private static Logger logger = LogManager.getLogger("Odometer");
+    private JLabel gearText;
+    private JLabel gearLabel;
+    private JLabel cadenceText;
+    private JLabel hrText;
 
-	private final Color skyBlue = new Color(0, 154, 237);
-	private final Color textColor = new Color(240, 244, 112);
-	private DateFormat timeFormat;
-	private long startTime = 0;
-	private double totalDistance = 0;
 
-	private final UserPreferences userPrefs = UserPreferences.INSTANCE;
+    private int type = RouteReader.SLOPE;
+    private TrainingItem current;
+    private static Logger logger = LogManager.getLogger("Odometer");
 
-	public AntOdometer() {
-		super();
+    private final Color skyBlue = new Color(0, 154, 237);
+    private final Color textColor = new Color(240, 244, 112);
+    private DateFormat timeFormat;
+    private long startTime = 0;
+    private double totalDistance = 0;
 
-		timeFormat = new SimpleDateFormat("HH:mm:ss");
-		timeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-		setBackground(Color.BLACK);
+    Font font1;
+    Font font;
 
-		int style1 = Font.CENTER_BASELINE;
-		Font font1 = new Font("Arial", style1, 13);
+    private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
-		int style = Font.BOLD | Font.ITALIC;
-		Font font = new Font("Arial", style, 30);
-		MigLayout layout = new MigLayout("fillx", "[center]", "[][shrink 0]");
-		this.setLayout(layout);
+    public AntOdometer() {
+        super();
 
-		speedText = new JLabel();
-		speedText.setFont(font1);
-		speedText.setForeground(textColor);
-		add(speedText);
+        timeFormat = new SimpleDateFormat("HH:mm:ss");
+        timeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        setBackground(Color.BLACK);
 
-		distText = new JLabel();
-		distText.setFont(font1);
-		distText.setForeground(textColor);
-		add(distText);
+        int style1 = Font.CENTER_BASELINE;
+        font1 = new Font("Arial", style1, 13);
 
-		JLabel pwrText = new JLabel();
-		pwrText.setFont(font1);
-		pwrText.setText(userPrefs.getString("power"));
-		pwrText.setForeground(textColor);
-		add(pwrText);
+        int style = Font.BOLD | Font.ITALIC;
+        font = new Font("Arial", style, 30);
+        MigLayout layout = new MigLayout("fillx, hidemode 3", "[center]", "[][shrink 0]");
+        this.setLayout(layout);
 
-		JLabel hrText = new JLabel();
-		hrText.setFont(font1);
-		hrText.setText(userPrefs.getString("heartrate"));
-		hrText.setForeground(textColor);
-		add(hrText);
+        speedText = new JLabel();
+        speedText.setFont(font1);
+        speedText.setForeground(textColor);
+        add(speedText);
 
-		JLabel cadText = new JLabel();
-		cadText.setFont(font1);
-		cadText.setText(userPrefs.getString("cadence"));
-		cadText.setForeground(textColor);
-		add(cadText);
+        distText = new JLabel();
+        distText.setFont(font1);
+        distText.setForeground(textColor);
+        add(distText);
 
-		slopeText = new JLabel();
-		slopeText.setFont(font1);
-		slopeText.setText(userPrefs.getString("slope") + " %");
-		slopeText.setForeground(textColor);
-		add(slopeText);
+        JLabel pwrText = new JLabel();
+        pwrText.setFont(font1);
+        pwrText.setText(userPrefs.getString("power"));
+        pwrText.setForeground(textColor);
+        add(pwrText);
 
-		levelText = new JLabel();
-		levelText.setFont(font1);
-		levelText.setText(userPrefs.getString("altitude"));
-		levelText.setForeground(textColor);
-		add(levelText);
+        hrText = new JLabel();
+        hrText.setFont(font1);
+        hrText.setText(userPrefs.getString("heartrate"));
+        hrText.setForeground(textColor);
+        add(hrText);
 
-		JLabel resistanceText = new JLabel();
-		resistanceText.setFont(font1);
-		resistanceText.setText(userPrefs.getString("stopwatch"));
-		resistanceText.setForeground(textColor);
-		add(resistanceText, "Wrap");
+        cadenceText = new JLabel();
+        cadenceText.setFont(font1);
+        cadenceText.setText(userPrefs.getString("cadence"));
+        cadenceText.setForeground(textColor);
+        add(cadenceText);
 
-		speedLabel = new JLabel();
-		speedLabel.setFont(font);
-		speedLabel.setText("0.0");
-		speedLabel.setForeground(Color.WHITE);
-		add(speedLabel);
+        slopeText = new JLabel();
+        slopeText.setFont(font1);
+        slopeText.setText(userPrefs.getString("slope") + " %");
+        slopeText.setForeground(textColor);
+        add(slopeText);
 
-		distanceLabel = new JLabel();
-		distanceLabel.setFont(font);
-		distanceLabel.setText("0.0");
-		distanceLabel.setForeground(Color.WHITE);
-		add(distanceLabel);
+        levelText = new JLabel();
+        levelText.setFont(font1);
+        levelText.setText(userPrefs.getString("altitude"));
+        levelText.setForeground(textColor);
+        add(levelText);
 
-		powerLabel = new JLabel();
-		powerLabel.setFont(font);
-		powerLabel.setText("0");
-		powerLabel.setForeground(Color.WHITE);
-		add(powerLabel);
+        gearText = new JLabel();
+        gearText.setFont(font1);
+        gearText.setText(userPrefs.getString("gear"));
+        gearText.setForeground(textColor);
+        add(gearText);
 
-		hrLabel = new JLabel();
-		hrLabel.setFont(font);
-		hrLabel.setText("0");
-		hrLabel.setForeground(Color.WHITE);
-		add(hrLabel);
+        JLabel chronoText = new JLabel();
+        chronoText.setFont(font1);
+        chronoText.setText(userPrefs.getString("stopwatch"));
+        chronoText.setForeground(textColor);
+        add(chronoText, "Wrap");
 
-		cadenceLabel = new JLabel();
-		cadenceLabel.setFont(font);
-		cadenceLabel.setText("0");
-		cadenceLabel.setForeground(Color.WHITE);
-		add(cadenceLabel);
+        speedLabel = new JLabel();
+        speedLabel.setFont(font);
+        speedLabel.setText("0.0");
+        speedLabel.setForeground(Color.WHITE);
+        add(speedLabel);
 
-		slopeLabel = new JLabel();
-		slopeLabel.setFont(font);
-		slopeLabel.setText("0.0");
-		slopeLabel.setForeground(Color.WHITE);
-		add(slopeLabel);
+        distanceLabel = new JLabel();
+        distanceLabel.setFont(font);
+        distanceLabel.setText("0.0");
+        distanceLabel.setForeground(Color.WHITE);
+        add(distanceLabel);
 
-		elevationLabel = new JLabel();
-		elevationLabel.setFont(font);
-		elevationLabel.setForeground(Color.WHITE);
-		elevationLabel.setText("0");
-		add(elevationLabel);
+        powerLabel = new JLabel();
+        powerLabel.setFont(font);
+        powerLabel.setText("0");
+        powerLabel.setForeground(Color.WHITE);
+        add(powerLabel);
 
-		chronoLabel = new JLabel();
-		chronoLabel.setFont(font);
-		chronoLabel.setForeground(Color.WHITE);
-		add(chronoLabel);
-		chronoLabel.setText("00:00:00");
+        hrLabel = new JLabel();
+        hrLabel.setFont(font);
+        hrLabel.setText("0");
+        hrLabel.setForeground(Color.WHITE);
+        add(hrLabel);
 
-		initLabels(userPrefs.isMetric());
-		MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
-		MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
-		MessageBus.INSTANCE.register(Messages.CADENCE, this);
-		MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
-		MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
-		MessageBus.INSTANCE.register(Messages.START, this);
-	}
+        cadenceLabel = new JLabel();
+        cadenceLabel.setFont(font);
+        cadenceLabel.setText("0");
+        cadenceLabel.setForeground(Color.WHITE);
+        add(cadenceLabel);
 
-	private void initLabels(boolean metric) {
-		if (metric) {
-			speedText.setText(userPrefs.getString("speed") + " (km/h)");
-			distText.setText(userPrefs.getString("distance") + " (km)");
-		} else {
-			speedText.setText(userPrefs.getString("speed") + " (mph)");
-			distText.setText(userPrefs.getString("distance") + " (miles)");
+        slopeLabel = new JLabel();
+        slopeLabel.setFont(font);
+        slopeLabel.setText("0.0");
+        slopeLabel.setForeground(Color.WHITE);
+        add(slopeLabel);
 
-		}
-	}
+        elevationLabel = new JLabel();
+        elevationLabel.setFont(font);
+        elevationLabel.setForeground(Color.WHITE);
+        elevationLabel.setText("0");
+        add(elevationLabel);
+        gearLabel = new JLabel();
+        gearLabel.setFont(font);
+        gearLabel.setText("0");
+        gearLabel.setForeground(Color.WHITE);
+        add(gearLabel);
 
-	@Override
-	public void callback(Messages message, Object o) {
+        chronoLabel = new JLabel();
+        chronoLabel.setFont(font);
+        chronoLabel.setForeground(Color.WHITE);
+        add(chronoLabel);
+        chronoLabel.setText("00:00:00");
 
-		switch (message) {
-		case TELEMETRY:
-			Telemetry t = (Telemetry) o;
+        initLabels(userPrefs.isMetric());
+        MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
+        MessageBus.INSTANCE.register(Messages.TELEMETRY, this);
+        MessageBus.INSTANCE.register(Messages.CADENCE, this);
+        MessageBus.INSTANCE.register(Messages.HEARTRATE, this);
+        MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
+        MessageBus.INSTANCE.register(Messages.START, this);
+        MessageBus.INSTANCE.register(Messages.GEAR, this);
+    }
 
-			if (startTime == 0) {
-				startTime = t.getTime();
-			}
+    private void initLabels(boolean metric) {
+        if (metric) {
+            speedText.setText(userPrefs.getString("speed") + " (km/h)");
+            distText.setText(userPrefs.getString("distance") + " (km)");
+        } else {
+            speedText.setText(userPrefs.getString("speed") + " (mph)");
+            distText.setText(userPrefs.getString("distance") + " (miles)");
+        }
+        gearText.setVisible(false);
+        gearLabel.setVisible(false);
+        cadenceText.setVisible(false);
+        cadenceLabel.setVisible(false);
+        hrText.setVisible(false);
+        hrLabel.setVisible(false);
+    }
 
-			boolean metric = userPrefs.isMetric();
-			if (userPrefs.isMetric()) {
-				speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
-				distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
-			} else {
-				speedLabel.setText(String.format("%.1f", t.getSpeedMPH()));
-				distanceLabel.setText(String.format("%.3f",
-						t.getDistanceMiles()));
-			}
+    @Override
+    public void callback(Messages message, Object o) {
 
-			int power = t.getPower();
-			if (power != -1) {
-				if (current != null) {
-					int i = current.isPowerInRange(power);
-					if (i < 0) {
-						powerLabel.setForeground(skyBlue);
-						powerLabel.setText("" + power);
-					} else if (i > 0) {
-						powerLabel.setForeground(Color.RED);
-						powerLabel.setText("" + power);
-					} else {
-						powerLabel.setForeground(Color.WHITE);
-						powerLabel.setText("" + power);
-					}
+        switch (message) {
+            case TELEMETRY:
+                Telemetry t = (Telemetry) o;
 
-				} else {
-					powerLabel.setText("" + power);
-				}
-			}
+                if (startTime == 0) {
+                    startTime = t.getTime();
+                }
 
-			chronoLabel.setText(timeFormat.format(new Date(t.getTime()
-					- startTime)));
-			switch (type) {
-			case RouteReader.POWER:
-				if (userPrefs.isMetric()) {
-					// remaining distance
-					elevationLabel.setText(String.format("%.3f",
-							(totalDistance - t.getDistanceMeters()) / 1000));
-				} else {
-					// FIXME isn't totalDistance in meters? Check this
-					elevationLabel.setText(String.format("%.3f",
-							(totalDistance - t.getDistanceMiles()) / 1000));
+                boolean metric = userPrefs.isMetric();
+                if (userPrefs.isMetric()) {
+                    speedLabel.setText(String.format("%.1f", t.getSpeedKMH()));
+                    distanceLabel.setText(String.format("%.3f", t.getDistanceKM()));
+                } else {
+                    speedLabel.setText(String.format("%.1f", t.getSpeedMPH()));
+                    distanceLabel.setText(String.format("%.3f",
+                            t.getDistanceMiles()));
+                }
 
-				}
-				break;
-			case RouteReader.SLOPE:
-				elevationLabel.setText(String.format("%.0f", t.getElevation()));
-				slopeLabel.setText(String.format("%.1f", t.getGradient()));
-				break;
-			}
+                int power = t.getPower();
+                if (power != -1) {
+                    if (current != null) {
+                        int i = current.isPowerInRange(power);
+                        if (i < 0) {
+                            powerLabel.setForeground(skyBlue);
+                            powerLabel.setText("" + power);
+                        } else if (i > 0) {
+                            powerLabel.setForeground(Color.RED);
+                            powerLabel.setText("" + power);
+                        } else {
+                            powerLabel.setForeground(Color.WHITE);
+                            powerLabel.setText("" + power);
+                        }
 
-			break;
+                    } else {
+                        powerLabel.setText("" + power);
+                    }
+                }
 
-		case CADENCE:
-			int cadence = (Integer) o;
-			if (current != null) {
+                chronoLabel.setText(timeFormat.format(new Date(t.getTime()
+                        - startTime)));
+                switch (type) {
+                    case RouteReader.POWER:
+                        if (userPrefs.isMetric()) {
+                            // remaining distance
+                            elevationLabel.setText(String.format("%.3f",
+                                    (totalDistance - t.getDistanceMeters()) / 1000));
+                        } else {
+                            // FIXME isn't totalDistance in meters? Check this
+                            elevationLabel.setText(String.format("%.3f",
+                                    (totalDistance - t.getDistanceMiles()) / 1000));
 
-				int i = current.isCadenceInRange(cadence);
-				if (i < 0) {
-					cadenceLabel.setForeground(skyBlue);
-					cadenceLabel.setText("" + cadence);
-				} else if (i > 0) {
-					cadenceLabel.setForeground(Color.RED);
-					cadenceLabel.setText("" + cadence);
-				} else {
-					cadenceLabel.setForeground(Color.WHITE);
-					cadenceLabel.setText("" + cadence);
-				}
-			} else {
-				cadenceLabel.setText("" + cadence);
-			}
+                        }
+                        break;
+                    case RouteReader.SLOPE:
+                        elevationLabel.setText(String.format("%.0f", t.getElevation()));
+                        slopeLabel.setText(String.format("%.1f", t.getGradient()));
+                        break;
+                }
 
-			break;
+                break;
 
-		case HEARTRATE:
-			int heartRate = (Integer) o;
-			if (current != null) {
-				int i = current.isHRInRange(heartRate);
-				if (i < 0) {
-					hrLabel.setForeground(skyBlue);
-					hrLabel.setText("" + heartRate);
-				} else if (i > 0) {
-					hrLabel.setForeground(Color.RED);
-					hrLabel.setText("" + heartRate);
-				} else {
-					hrLabel.setForeground(Color.WHITE);
-					hrLabel.setText("" + heartRate);
-				}
-			} else {
-				hrLabel.setText(Integer.toString(heartRate));
-			}
-			break;
-		case TRAININGITEM:
-			current = (TrainingItem) o;
-			if (current != null) {
-				slopeLabel.setText("" + current.getPower());
-			}
-			break;
-		case GPXLOAD:
-			current = null;
-			// code to see if we are registered
-			if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
-				logger.info("Out of time " + userPrefs.getEvalTime());
-				JOptionPane.showMessageDialog(this,
-						userPrefs.getString("trial_expired"),
-						userPrefs.getString("warning"),
-						JOptionPane.WARNING_MESSAGE);
-				userPrefs.shutDown();
-				System.exit(0);
-			}
+            case CADENCE:
+                if (!cadenceText.isVisible()) {
+                    cadenceText.setVisible(true);
+                    cadenceLabel.setVisible(true);
+                }
+                int cadence = (Integer) o;
+                if (current != null) {
 
-			RouteReader routeData = (RouteReader) o;
-			type = routeData.routeType();
-			switch (type) {
-			case RouteReader.POWER:
-				slopeText.setText(userPrefs.getString("target_power"));
-				levelText.setText(userPrefs.getString("distance_left"));
-				break;
-			case RouteReader.SLOPE:
-				slopeText.setText(userPrefs.getString("slope") + " %");
-				levelText.setText(userPrefs.getString("altitude"));
+                    int i = current.isCadenceInRange(cadence);
+                    if (i < 0) {
+                        cadenceLabel.setForeground(skyBlue);
+                        cadenceLabel.setText("" + cadence);
+                    } else if (i > 0) {
+                        cadenceLabel.setForeground(Color.RED);
+                        cadenceLabel.setText("" + cadence);
+                    } else {
+                        cadenceLabel.setForeground(Color.WHITE);
+                        cadenceLabel.setText("" + cadence);
+                    }
+                } else {
+                    cadenceLabel.setText("" + cadence);
+                }
 
-				break;
-			}
+                break;
 
-			totalDistance = routeData.getDistanceMeters();
+            case HEARTRATE:
+                if (!hrText.isVisible()) {
+                    hrText.setVisible(true);
+                    hrLabel.setVisible(true);
+                }
+                int heartRate = (Integer) o;
+                if (current != null) {
+                    int i = current.isHRInRange(heartRate);
+                    if (i < 0) {
+                        hrLabel.setForeground(skyBlue);
+                        hrLabel.setText("" + heartRate);
+                    } else if (i > 0) {
+                        hrLabel.setForeground(Color.RED);
+                        hrLabel.setText("" + heartRate);
+                    } else {
+                        hrLabel.setForeground(Color.WHITE);
+                        hrLabel.setText("" + heartRate);
+                    }
+                } else {
+                    hrLabel.setText(Integer.toString(heartRate));
+                }
+                break;
+            case GEAR:
+                if (!gearText.isVisible()) {
+                    gearText.setVisible(true);
+                    gearLabel.setVisible(true);
+                    //gearText.getParent().revalidate();
+                    //gearText.getParent().repaint();
+                }
+                if (gearText != null) {
+                    int gear = (Integer) o;
+                    gearLabel.setText(Integer.toString(gear));
+                }
 
-			startTime = 0;
-			speedLabel.setText("0.0");
-			powerLabel.setText("0");
-			cadenceLabel.setText("0");
-			hrLabel.setText("0");
-			distanceLabel.setText("0.0");
-			break;
-		case START:
-			powerLabel.setForeground(Color.WHITE);
-			initLabels(userPrefs.isMetric());
-		}
-	}
+                break;
+            case TRAININGITEM:
+                current = (TrainingItem) o;
+                if (current != null) {
+                    slopeLabel.setText("" + current.getPower());
+                }
+                break;
+            case GPXLOAD:
+                current = null;
+                // code to see if we are registered
+                if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
+                    logger.info("Out of time " + userPrefs.getEvalTime());
+                    JOptionPane.showMessageDialog(this,
+                            userPrefs.getString("trial_expired"),
+                            userPrefs.getString("warning"),
+                            JOptionPane.WARNING_MESSAGE);
+                    userPrefs.shutDown();
+                    System.exit(0);
+                }
+
+                RouteReader routeData = (RouteReader) o;
+                type = routeData.routeType();
+                switch (type) {
+                    case RouteReader.POWER:
+                        slopeText.setText(userPrefs.getString("target_power"));
+                        levelText.setText(userPrefs.getString("distance_left"));
+                        break;
+                    case RouteReader.SLOPE:
+                        slopeText.setText(userPrefs.getString("slope") + " %");
+                        levelText.setText(userPrefs.getString("altitude"));
+
+                        break;
+                }
+
+                totalDistance = routeData.getDistanceMeters();
+
+                startTime = 0;
+                speedLabel.setText("0.0");
+                powerLabel.setText("0");
+                cadenceLabel.setText("0");
+                hrLabel.setText("0");
+                distanceLabel.setText("0.0");
+                break;
+            case START:
+                powerLabel.setForeground(Color.WHITE);
+                initLabels(userPrefs.isMetric());
+        }
+    }
 }

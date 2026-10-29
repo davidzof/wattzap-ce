@@ -29,12 +29,13 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import com.wattzap.model.dto.WorkoutData;
+
+import java.util.HexFormat;
 
 /**
  * Handles interactions with the database
@@ -590,11 +591,11 @@ public class DataStore {
 		}
 	}
 
-	private static String toHexString(byte[] array) {
-		return DatatypeConverter.printHexBinary(array);
+	public static String toHexString(byte[] array) {
+		return HexFormat.of().withUpperCase().formatHex(array);
 	}
 
-	private static byte[] toByteArray(String s) {
-		return DatatypeConverter.parseHexBinary(s);
+	public static byte[] toByteArray(String s) {
+		return HexFormat.of().parseHex(s);
 	}
 }

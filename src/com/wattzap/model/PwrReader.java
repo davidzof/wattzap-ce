@@ -42,7 +42,6 @@ public class PwrReader extends RouteReader {
 
 	@Override
 	public String getExtension() {
-		// TODO Auto-generated method stub
 		return "pwr";
 	}
 
@@ -143,11 +142,11 @@ public class PwrReader extends RouteReader {
 				// length of this segment
 				int segmentTime = runTime - lastTime;
 
-				// if segment is too long we insert some extra synchronization
+                // if segment is too long we insert some extra synchronization
 				// points, this also lets us vary power a bit.
 				for (int i = 60; i < (segmentTime); i += 30) {
 					Point p = new Point();
-					p.setTime((lastTime + i) * 1000);
+					p.setTime((lastTime + i) * 1000L);
 					p.setSpeed(speed);
 					p.setDistanceFromStart(distanceFromStart + (speed / 3.6)
 							* i);
@@ -259,40 +258,40 @@ public class PwrReader extends RouteReader {
 			case 2:
 				// Endurance 56 - 75%
 				powerHigh = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 0.75);
+						.getMaxPower() * 0.72);
 				powerLow = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 0.56);
+						.getMaxPower() * 0.60);
 				power = powerLow + rand.nextInt((powerHigh - powerLow));
 				break;
 			case 3:
 				// Tempo 76 - 90%
 				powerHigh = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 0.9);
-				powerLow = (int) ((UserPreferences.INSTANCE.getMaxPower()) * 0.66);
+						.getMaxPower() * 0.86);
+				powerLow = (int) ((UserPreferences.INSTANCE.getMaxPower()) * 0.80);
 				power = powerLow + rand.nextInt((powerHigh - powerLow));
 				break;
 			case 4:
 				// Lactate Threshold 91-105%
 				powerHigh = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 1.05);
+						.getMaxPower() * 1.02);
 				powerLow = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 0.91);
+						.getMaxPower() * 0.95);
 				power = powerLow + rand.nextInt((powerHigh - powerLow));
 				break;
 			case 5:
 				// VO2Max 106-120
 				powerHigh = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 1.2);
+						.getMaxPower() * 1.16);
 				powerLow = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 1.06);
+						.getMaxPower() * 1.08);
 				power = powerLow + rand.nextInt((powerHigh - powerLow));
 				break;
 			case 6:
-				// Anaerobic Capacity
+				// Anaerobic Capacity 121 - 150
 				powerHigh = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 1.50);
+						.getMaxPower() * 1.46);
 				powerLow = (int) ((double) UserPreferences.INSTANCE
-						.getMaxPower() * 1.21);
+						.getMaxPower() * 1.24);
 				power = powerLow + rand.nextInt((powerHigh - powerLow));
 				break;
 			case 7:
