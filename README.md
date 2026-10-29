@@ -1,8 +1,8 @@
 Wattzap Home Trainer Virtual Reality Software
 =============================================
 
-WattzAp connects your home trainer to your computer to record
-virtual rides and follow training programmes.
+WattzAp connects your home trainer to your computer to record virtual rides and follow training programmes. It has been tested on Linux and
+Windows 10/11.
 
 WattzAp can:
 
@@ -11,8 +11,7 @@ WattzAp can:
   * synchronize the playback of compatible videos (Tacx RLV, Tacx TTS, Tacx Ergo, GPX, PWR) with your speed
   * share your results on sites such as Strava etc via GPX export
   
-WattzAp works with standard turbo trainers, rollers and Smart Trainers. You don't need a complicated VR turbo trainer.
-WattzAp is an open platform, you can create your own videos and workouts and share these with other users.
+WattzAp works with standard turbo trainers, rollers and FTMS Smart Trainers. WattzAp is an open platform, you can create your own videos and workouts and share these with other users.
 
 This is the open source version of the Wattzap Turbo Trainer Software. It is provided "as is" and without support.
 
@@ -27,7 +26,7 @@ add support for ble, ftms or whatever. This also
 decouples the data hardware support available in Java.
   2. Update to Java 21
   3. Move data analysis to separate project 
-  1. Move Graphics to JavaFX
+  4. Move Graphics to JavaFX
 
 Latest Release
 ==============
@@ -41,10 +40,9 @@ Version 3.0.0 October 19th 2026
 * Add Smart Trainer support via a hardware bridge
 * Add virtual gearing support via a cheap Media Controller
 
-Java will run on Windows and Linux including on Raspberry 4 hardware. It requires
-Java 21 and Python 3.13 for the Bridges.
+Java will run on Windows and Linux including on Raspberry 4 hardware. It requires Java 21 and Python 3.13 for the Bridges.
 
-In order to fix a FIT file import bug I have had to upgrade to the latest Garmin FIT library. This is only supported on Java >= 1.8. If you are running a lower version of Java FIT file imports won't work. 
+In order to fix a FIT file import bug I have had to upgrade to the latest Garmin FIT library. This is only supported on Java >= 1.8. If you are running a lower version of Java, FIT file imports won't work. 
 
 [![Watch the video](https://img.youtube.com/vi/3yX-Ww8KPdg/maxresdefault.jpg)](https://youtu.be/3yX-Ww8KPdg)
 
@@ -64,28 +62,28 @@ Cycling Videos
 Video Playback
 --------------
 
-To play videos you will need VLC player. On Unix/Linux this can be installed via the application repository. VLC and a JVM is bundled in the Windows version but you will need to install an ANT USB driver (the windows version doesn't work). See the manual for details or watch this video
+To play videos you will need the VideoLAN VLC player. https://www.videolan.org/vlc/index.fr.html
 
-Development
-===========
+The following sites have some free videos to try:
 
-Basic Architecture
-------------------
+  * https://cycling.vangestel.online/indoor/videos/
+  * https://nielspn.dk/index.php/indoor-cycling/rlv-oversigt
+  * https://www.vermail.nl/RLVs/
+  * https://meisterlampe0082.ebeling-hoppe.de/
 
-Wattzap is a Java Swing based application. An "Enterprise Bus" pattern is used for internal communication.
+# Installation Guide
 
-Mac OSX IMPORTANT
------------------
+# Wattzap
 
-Due to an issue with VLC and Java the 1.6r45 JVM is used on Mac OSX. Please make sure your changes are compatible with this version
-of the compiler/libraries. Note the latest FIT binary is Java 1.8 only.
+Wattzap is supplied as a fatjar. Simply download [wattzap.jar](watzap.jar) to your computer. If you are on Linux you'll want the [startup shell script](wattzap.sh) and on Windows the [startup batch file](wattzap.bat). You'll need a Java version 21 installed on your computer. For example the Eclipe Temurin JRE
 
-In order to support OSX on newer JVMs the video display will need to move to JavaFX in a later release. Otherwise run on JVM 1.6 but with no FIT import.
+[https://adoptium.net/fr/temurin](https://adoptium.net/fr/temurin/releases?version=21&os=any&arch=any)
 
+You may need to set the JAVA_HOME environment variable if Java is not installed on your standard path.
 
-# Wattzap BLE Bridge — Windows Installation Guide
+# Bridge
 
-The Wattzap BLE bridge supports Bluetooth Low Energy (BLE) sensors and FTMS smart trainers on Windows 10 and 11.
+Wattzap received telemetry data from a Bridge programme. The supplied bridges support Bluetooth Low Energy (BLE) sensors, ANT+ Sensors and FTMS smart trainers on Windows 10 and 11 and Linux. There is also a test bridge which doesn't require external sensors. See the [Bridge Readme](Bridges/README.md): 
 
 It can connect to heart-rate monitors, cadence sensors and smart trainers, and supports virtual gear shifting using an inexpensive Bluetooth media controller.
 
@@ -128,18 +126,18 @@ Open Command Prompt in the directory containing `ble_bridge_windows.py`.
 Create a virtual environment:
 
 ```bat
-py -3.13 -m venv .venv
+py -3.13 -m venv venv
 ```
 
 Activate it:
 
 ```bat
-.venv\Scripts\activate
+venv\Scripts\activate
 ```
 
-The command prompt should now show `(.venv)`.
+The command prompt should now show `(venv)`.
 
-Install Bleak:
+Install Bleak (BLE library):
 
 ```bat
 python -m pip install --upgrade pip
@@ -184,7 +182,7 @@ The configuration is saved in:
 %USERPROFILE%\.wattzap-ble-bridge.json
 ```
 
-You normally only need to configure the devices once.
+You only need to configure the devices once.
 
 ## 5. Pair the Bluetooth media controller
 
@@ -197,7 +195,7 @@ Virtual gear shifting is supported using Bluetooth media controllers with volume
 3. Put the media controller into pairing mode.
 4. Select the controller and complete pairing.
 
-Unlike FTMS devices, the controller is handled by Windows as an input device. The bridge reads its media-key events rather than connecting to it directly using Bleak.
+Unlike the smart trainer, the controller is handled by Windows as an input device. The bridge reads its media-key events rather than connecting to it directly using Bleak.
 
 Consequently, the media controller does not need to appear in the bridge's BLE device scan.
 
@@ -255,7 +253,7 @@ python ble_bridge_windows.py
 
 This uses the trainer's normal FTMS simulation control.
 
-## 7. Run Wattzap on another computer
+## 7. Run Wattzap
 
 Wattzap and the BLE bridge do not have to run on the same computer.
 
@@ -334,6 +332,8 @@ Check the host IP address, TCP port 28773, Wattzap's listening address and firew
 
 BLE scanning, media-key detection, virtual gear changes and gradient-controlled trainer resistance have all been successfully tested in this setup.
 
+https://github.com/davidzof/wattzap-ce/blob/110-add-virtual-gears-for-smart-trainers/wattzap.jar
+
 Building
 --------
 
@@ -343,6 +343,23 @@ $ ant -f build.xml clean fatjar
 $ ./wattzap.sh
 
 You will need a Java v21 installed on your computer.
+
+Development
+===========
+
+Basic Architecture
+------------------
+
+Wattzap is a Java Swing based application. An "Enterprise Bus" pattern is used for internal communication.
+
+Mac OSX IMPORTANT
+-----------------
+
+Due to an issue with VLC and Java the 1.6r45 JVM is used on Mac OSX. Please make sure your changes are compatible with this version
+of the compiler/libraries. Note the latest FIT binary is Java 1.8 only.
+
+In order to support OSX on newer JVMs the video display will need to move to JavaFX in a later release. Otherwise run on JVM 1.6 but with no FIT import.
+
 
 Working on the Project
 ----------------------
