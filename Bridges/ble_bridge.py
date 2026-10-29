@@ -768,7 +768,7 @@ async def apply_controls(
                 await apply(state.mode,state.value)
 
 
-async def keep_media_controller(addr,gears,name=None):
+async def keep_media_controller_linux(addr,gears,name=None):
     """
     Read media buttons from Linux evdev.
 
@@ -867,6 +867,130 @@ async def keep_media_controller(addr,gears,name=None):
                 except Exception:
                     pass
                 device=None
+
+
+async def keep_media_controller_windows(gears):
+    """Read standard Windows media keys without any extra Python packages.
+
+    The remote must first be paired in Windows Bluetooth settings and must
+    appear to Windows as a keyboard/media-key HID device. The low-level
+    keyboard hook sees global media keys, including those from other devices;
+    Windows does not identify the originating device through this API.
+    """
+    import ctypes
+    from ctypes import wintypes
+
+    user32=ctypes.WinDLL("user32",use_last_error=True)
+    kernel32=ctypes.WinDLL("kernel32",use_last_error=True)
+
+    WH_KEYBOARD_LL=13
+    WM_KEYDOWN=0x0100
+    WM_KEYUP=0x0101
+    WM_SYSKEYDOWN=0x0104
+    WM_SYSKEYUP=0x0105
+    WM_QUIT=0x0012
+    PM_NOREMOVE=0x0000
+    keys={0xAF:"up",0xAE:"down",0xB0:"up",0xB1:"down"}
+    # VK_VOLUME_UP, VK_VOLUME_DOWN, VK_MEDIA_NEXT_TRACK, VK_MEDIA_PREV_TRACK.
+
+    class KBDLLHOOKSTRUCT(ctypes.Structure):
+        _fields_=[("vkCode",wintypes.DWORD),
+                  ("scanCode",wintypes.DWORD),
+                  ("flags",wintypes.DWORD),
+                  ("time",wintypes.DWORD),
+                  ("dwExtraInfo",ctypes.c_size_t)]
+
+    HOOKPROC=ctypes.WINFUNCTYPE(ctypes.c_ssize_t,ctypes.c_int,
+                                wintypes.WPARAM,wintypes.LPARAM)
+    user32.SetWindowsHookExW.argtypes=(ctypes.c_int,HOOKPROC,
+                                      wintypes.HINSTANCE,wintypes.DWORD)
+    user32.SetWindowsHookExW.restype=wintypes.HANDLE
+    user32.CallNextHookEx.argtypes=(wintypes.HANDLE,ctypes.c_int,
+                                   wintypes.WPARAM,wintypes.LPARAM)
+    user32.CallNextHookEx.restype=ctypes.c_ssize_t
+    user32.UnhookWindowsHookEx.argtypes=(wintypes.HANDLE,)
+    user32.UnhookWindowsHookEx.restype=wintypes.BOOL
+    user32.GetMessageW.argtypes=(ctypes.POINTER(wintypes.MSG),
+                                 wintypes.HWND,wintypes.UINT,wintypes.UINT)
+    user32.GetMessageW.restype=ctypes.c_int
+    user32.PeekMessageW.argtypes=(ctypes.POINTER(wintypes.MSG),
+                                 wintypes.HWND,wintypes.UINT,wintypes.UINT,
+                                 wintypes.UINT)
+    user32.PeekMessageW.restype=wintypes.BOOL
+    user32.TranslateMessage.argtypes=(ctypes.POINTER(wintypes.MSG),)
+    user32.DispatchMessageW.argtypes=(ctypes.POINTER(wintypes.MSG),)
+    user32.PostThreadMessageW.argtypes=(wintypes.DWORD,wintypes.UINT,
+                                       wintypes.WPARAM,wintypes.LPARAM)
+    user32.PostThreadMessageW.restype=wintypes.BOOL
+    kernel32.GetCurrentThreadId.restype=wintypes.DWORD
+
+    loop=asyncio.get_running_loop()
+    ready=threading.Event()
+    thread_id=[None]
+    startup_error=[None]
+
+    def worker():
+        pressed=set()
+        hook=None
+
+        @HOOKPROC
+        def callback(code,wparam,lparam):
+            if code>=0:
+                key=ctypes.cast(lparam,ctypes.POINTER(KBDLLHOOKSTRUCT)).contents.vkCode
+                if key in keys:
+                    if wparam in (WM_KEYDOWN,WM_SYSKEYDOWN):
+                        if key not in pressed:
+                            pressed.add(key)
+                            fn=gears.up if keys[key]=="up" else gears.down
+                            loop.call_soon_threadsafe(fn)
+                    elif wparam in (WM_KEYUP,WM_SYSKEYUP):
+                        pressed.discard(key)
+            # Do not swallow volume/media keys: Windows may still act on them.
+            return user32.CallNextHookEx(hook,code,wparam,lparam)
+
+        try:
+            thread_id[0]=kernel32.GetCurrentThreadId()
+            msg=wintypes.MSG()
+            # Ensure this thread has a message queue before signalling ready.
+            user32.PeekMessageW(ctypes.byref(msg),None,0,0,PM_NOREMOVE)
+            hook=user32.SetWindowsHookExW(WH_KEYBOARD_LL,callback,None,0)
+            if not hook:
+                raise ctypes.WinError(ctypes.get_last_error())
+            ready.set()
+            while user32.GetMessageW(ctypes.byref(msg),None,0,0)>0:
+                user32.TranslateMessage(ctypes.byref(msg))
+                user32.DispatchMessageW(ctypes.byref(msg))
+        except Exception as exc:
+            startup_error[0]=exc
+            ready.set()
+        finally:
+            if hook:
+                user32.UnhookWindowsHookEx(hook)
+
+    t=threading.Thread(target=worker,name="WattzApMediaKeys",daemon=True)
+    t.start()
+    await asyncio.to_thread(ready.wait)
+    if startup_error[0]:
+        raise RuntimeError("Windows media-key listener failed") from startup_error[0]
+    print("[GEAR] Windows media keys ready (volume +/- and next/previous track)")
+    print("[GEAR] Note: these are global keys; Windows volume may also change")
+    gears.show()
+    try:
+        while t.is_alive():
+            await asyncio.sleep(0.5)
+    finally:
+        if thread_id[0] is not None:
+            user32.PostThreadMessageW(thread_id[0],WM_QUIT,0,0)
+        await asyncio.to_thread(t.join,1.0)
+
+
+async def keep_media_controller(addr,gears,name=None):
+    if sys.platform=="win32":
+        await keep_media_controller_windows(gears)
+    elif sys.platform.startswith("linux"):
+        await keep_media_controller_linux(addr,gears,name)
+    else:
+        print(f"[GEAR] media keys unsupported on {sys.platform}")
 
 
 async def keep_hr(addr,w):
@@ -1023,6 +1147,8 @@ async def main():
     ap.add_argument("--config",type=Path,default=CONFIG)
     ap.add_argument("--trainer"); ap.add_argument("--cadence"); ap.add_argument("--hr")
     ap.add_argument("--media-controller")
+    ap.add_argument("--test-media-keys",action="store_true",
+                    help="test gear buttons without WattzAp or a trainer")
     ap.add_argument("--save",action="store_true")
     ap.add_argument("--show-config",action="store_true")
     ap.add_argument(
@@ -1090,6 +1216,12 @@ async def main():
     if a.gradient_resistance < 0:
         ap.error("--gradient-resistance must be >= 0")
 
+    if a.test_media_keys:
+        print("[GEAR] media-key test; press Ctrl+C to stop")
+        await keep_media_controller(cfg.get("mediaController"),VirtualGears(),
+                                    cfg.get("mediaControllerName"))
+        return
+
     if a.scan:
         await scan(a.scan_seconds); return
     if a.configure:
@@ -1097,11 +1229,15 @@ async def main():
         cfg["trainer"]=choose("FTMS smart trainer",ds,"trainer",cfg.get("trainer"))
         cfg["cadence"]=choose("CSC cadence/speed sensor",ds,"cadence",cfg.get("cadence"))
         cfg["heartRate"]=choose("Heart-rate sensor",ds,"heartRate",cfg.get("heartRate"))
-        cfg["mediaController"]=choose(
-            "BLE media controller (used with --virtual-gears)",
-            ds,
-            "mediaController",
-            cfg.get("mediaController"))
+        if sys.platform=="win32":
+            print("[GEAR] On Windows, pair the media remote in Bluetooth "
+                  "settings; no BLE address is needed")
+        else:
+            cfg["mediaController"]=choose(
+                "BLE media controller (used with --virtual-gears)",
+                ds,
+                "mediaController",
+                cfg.get("mediaController"))
         if cfg.get("mediaController"):
             selected=next(
                 (d for d in ds if d.address==cfg["mediaController"]),
@@ -1172,10 +1308,10 @@ async def main():
             keep_hr(cfg["heartRate"],w)))
         await asyncio.sleep(0.5)
     if a.virtual_gears:
-        if cfg.get("mediaController"):
+        if cfg.get("mediaController") or sys.platform=="win32":
             tasks.append(asyncio.create_task(
                 keep_media_controller(
-                    cfg["mediaController"],
+                    cfg.get("mediaController"),
                     gears,
                     cfg.get("mediaControllerName"))))
         else:
@@ -1196,107 +1332,8 @@ async def main():
         await asyncio.gather(*tasks,return_exceptions=True)
         w.close()
 
+
+
 if __name__=="__main__":
     try: asyncio.run(main())
     except KeyboardInterrupt: print("\nStopped.")
-
-
-async def keep_media_controller(addr,gears,name=None):
-    """
-    Read media buttons from Linux evdev.
-
-    BLE HID remotes are normally claimed by BlueZ's HID-over-GATT support and
-    exposed as kernel input devices.  Reading /dev/input/event* is therefore
-    more reliable than trying to subscribe to the HID GATT reports with Bleak.
-
-    Common media mappings:
-      KEY_NEXTSONG / KEY_VOLUMEUP   -> gear up
-      KEY_PREVIOUSSONG / KEY_VOLUMEDOWN -> gear down
-    """
-    if InputDevice is None:
-        print("[GEAR] python-evdev is required for BLE media controllers")
-        print("[GEAR] install with: pip install evdev")
-        return
-
-    wanted=(name or "SmartRemote").lower()
-    current_path=None
-    device=None
-
-    while True:
-        try:
-            # Re-discover the input node because /dev/input/eventN can change
-            # whenever the remote reconnects.
-            matches=[]
-            for path in list_devices():
-                try:
-                    d=InputDevice(path)
-                    if wanted in (d.name or "").lower():
-                        matches.append(d)
-                    else:
-                        d.close()
-                except Exception:
-                    pass
-
-            if not matches:
-                if current_path is not None:
-                    print(f"[GEAR] media controller disconnected: {name or 'SmartRemote'}")
-                    current_path=None
-                await asyncio.sleep(2)
-                continue
-
-            device=matches[0]
-            for extra in matches[1:]:
-                extra.close()
-
-            if device.path!=current_path:
-                current_path=device.path
-                print(f"[GEAR] media controller ready: {device.name} ({device.path})")
-                gears.show()
-
-            async for event in device.async_read_loop():
-                if event.type!=ecodes.EV_KEY:
-                    continue
-
-                # value 1 = key down, 2 = autorepeat, 0 = release.
-                # Only act on the initial key press.
-                if event.value!=1:
-                    continue
-
-                code=event.code
-
-                if code in (
-                        ecodes.KEY_NEXTSONG,
-                        ecodes.KEY_VOLUMEUP,
-                        getattr(ecodes, "KEY_FASTFORWARD", -1)):
-                    gears.up()
-
-                elif code in (
-                        ecodes.KEY_PREVIOUSSONG,
-                        ecodes.KEY_VOLUMEDOWN,
-                        getattr(ecodes, "KEY_REWIND", -1)):
-                    gears.down()
-
-                else:
-                    keyname=ecodes.KEY.get(code, str(code))
-                    print(f"[GEAR] unmapped key {keyname}")
-
-        except asyncio.CancelledError:
-            raise
-        except PermissionError as e:
-            print("[GEAR] cannot read input device:",e)
-            print("[GEAR] add the user to the 'input' group or run with suitable permissions")
-            await asyncio.sleep(5)
-        except OSError:
-            # Typical when a wireless input device disconnects.
-            current_path=None
-            await asyncio.sleep(2)
-        except Exception as e:
-            print("[GEAR] media controller error",e)
-            await asyncio.sleep(2)
-        finally:
-            if device is not None:
-                try:
-                    device.close()
-                except Exception:
-                    pass
-                device=None
