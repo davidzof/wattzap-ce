@@ -17,6 +17,7 @@ import com.wattzap.model.RouteReader;
 import com.wattzap.model.UserPreferences;
 import com.wattzap.model.dto.Point;
 import com.wattzap.model.dto.Telemetry;
+import com.wattzap.model.dto.TrainingItem;
 import com.wattzap.model.power.Power;
 import com.wattzap.utils.Rolling;
 import org.apache.log4j.LogManager;
@@ -52,6 +53,7 @@ public class TrainerListener implements MessageCallback {
     private Rolling powerRatio;
     private boolean isStarted;
     private long lastTime;
+    private TrainingItem trainingItem;
 
     private volatile boolean running;
     private ServerSocket serverSocket;
@@ -63,6 +65,8 @@ public class TrainerListener implements MessageCallback {
         MessageBus.INSTANCE.register(Messages.STOP, this);
         MessageBus.INSTANCE.register(Messages.STARTPOS, this);
         MessageBus.INSTANCE.register(Messages.GPXLOAD, this);
+        MessageBus.INSTANCE.register(Messages.TRAININGITEM, this);
+
     }
 
     public synchronized void start() {
@@ -91,6 +95,7 @@ public class TrainerListener implements MessageCallback {
 
     private void listen() {
         try {
+            isStarted = false;
             serverSocket = new ServerSocket();
 
             InetAddress localhost = InetAddress.getByName("0.0.0.0");
@@ -287,14 +292,13 @@ public class TrainerListener implements MessageCallback {
         double speed;
         double distanceKM;
         if (routeData != null) {
-
             Point point = routeData.getPoint(distance);
             if (point == null) {
                 // end of the road
                 distance = 0.0;
                 return null;
             }
-            System.out.println(point);
+
             telemetry = createRouteTelemetry(point);
 
             if (routeData.routeType() == RouteReader.SLOPE) {
@@ -307,9 +311,9 @@ public class TrainerListener implements MessageCallback {
                 // the expected power
                 // TODO: in erg mode we need to send target power to bridge, what about training mode?
                 // check this
-                System.out.println("distance " + point.getDistanceFromStart() + " power " + point.getPower());
-                telemetry.setTargetPower(point.getPower());
-                double ratio = ((double) watts / point.getPower());
+
+                telemetry.setTargetPower(trainingItem.getPower());
+                double ratio = ((double) watts / trainingItem.getPower());
                 // speed is video speed * power ratio
                 speed = point.getSpeed() * ratio;
             }
@@ -414,7 +418,13 @@ public class TrainerListener implements MessageCallback {
     @Override
     public void callback(Messages message, Object value) {
         switch (message) {
+            case TRAININGITEM:
+                trainingItem = (TrainingItem) value;
+                System.out.println(">>> training item " + trainingItem);
+                break;
+
             case START:
+                System.out.println("Started");
                 mass = userPrefs.getTotalWeight();
                 wheelSize = userPrefs.getWheelSizeCM();
                 resistance = userPrefs.getResistance();
@@ -433,6 +443,7 @@ public class TrainerListener implements MessageCallback {
                 break;
 
             case GPXLOAD:
+                trainingItem = null;
                 routeData = (RouteReader) value;
                 distance = 0.0;
                 break;

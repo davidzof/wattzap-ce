@@ -354,16 +354,6 @@ public class AntOdometer extends JPanel implements MessageCallback {
                 break;
             case GPXLOAD:
                 current = null;
-                // code to see if we are registered
-                if (!userPrefs.isRegistered() && (userPrefs.getEvalTime()) <= 0) {
-                    logger.info("Out of time " + userPrefs.getEvalTime());
-                    JOptionPane.showMessageDialog(this,
-                            userPrefs.getString("trial_expired"),
-                            userPrefs.getString("warning"),
-                            JOptionPane.WARNING_MESSAGE);
-                    userPrefs.shutDown();
-                    System.exit(0);
-                }
 
                 RouteReader routeData = (RouteReader) o;
                 type = routeData.routeType();

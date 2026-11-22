@@ -71,8 +71,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
     JComponent chart = null;
     ObjectOutputStream oos = null;
 
-    private static final long MILLISECSMINUTE = 60000;
-
     private final UserPreferences userPrefs = UserPreferences.INSTANCE;
 
     private static Logger logger = LogManager.getLogger("Training Display");
@@ -346,9 +344,6 @@ public class TrainingDisplay extends JPanel implements MessageCallback {
                 if (data != null && !data.isEmpty()) {
                     Telemetry lastPoint = data.get(data.size() - 1);
                     long split = lastPoint.getTime() - startTime;
-                    int minutes = userPrefs.getEvalTime();
-                    minutes -= (split / MILLISECSMINUTE);
-                    userPrefs.setEvalTime(minutes);
                     aggregateTime += split;
                 }
                 break;

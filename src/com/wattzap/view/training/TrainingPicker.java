@@ -15,15 +15,16 @@
  */
 package com.wattzap.view.training;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -47,92 +48,93 @@ import com.wattzap.utils.FileName;
  * @date 19 November 2013
  */
 public class TrainingPicker extends JFileChooser implements ActionListener {
-	private static final long serialVersionUID = 1L;
-	JFrame frame;
+    private static final long serialVersionUID = 1L;
+    JFrame frame;
 
-	public TrainingPicker(JFrame panel) {
-		super();
-		this.frame = panel;
-		File cwd = new File(UserPreferences.INSTANCE.getTrainingDir());
-		setCurrentDirectory(cwd);
+    public TrainingPicker(JFrame panel) {
+        super();
+        this.frame = panel;
+        File cwd = new File(UserPreferences.INSTANCE.getTrainingDir());
+        setCurrentDirectory(cwd);
 
-		FileNameExtensionFilter filter = new FileNameExtensionFilter(
-				"Training Files (.trn)", "trn");
-		setFileFilter(filter);
-	}
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Training Files (.trn)", "trn");
+        setFileFilter(filter);
+    }
 
-	public void actionPerformed(ActionEvent e) {
-		int runningTime = 0;
-		int retVal = showOpenDialog(frame);
+    public void actionPerformed(ActionEvent e) {
+        int runningTime = 0;
+        int retVal = showOpenDialog(frame);
 
-		if (retVal == JFileChooser.APPROVE_OPTION) {
-			File file = getSelectedFile();
-			UserPreferences.INSTANCE.setTrainingDir(file.getParent());
+        if (retVal == JFileChooser.APPROVE_OPTION) {
+            File file = getSelectedFile();
+            UserPreferences.INSTANCE.setTrainingDir(file.getParent());
 
-			CSVReader reader = null;
-			TrainingData tData = new TrainingData();
-			tData.setName(FileName.removeExtension(file.getName()));
+            CSVReader reader = null;
+            TrainingData tData = new TrainingData();
+            tData.setName(FileName.removeExtension(file.getName()));
 
-			try {
-				reader = new CSVReader(new FileReader(file));
+            try {
+                reader = new CSVReader(new FileReader(file));
 
-				String[] nextLine;
+                String[] nextLine;
 
-				while ((nextLine = reader.readNext()) != null) {
-					// nextLine[] is an array of values from the line
-					String f1 = nextLine[0];
+                while ((nextLine = reader.readNext()) != null) {
+                    // nextLine[] is an array of values from the line
+                    String f1 = nextLine[0];
 
-					if (f1.trim().isEmpty() || f1.trim().startsWith("#")) {
-						continue;
-					}
-					TrainingItem item = new TrainingItem();
+                    if (f1.trim().isEmpty() || f1.trim().startsWith("#")) {
+                        continue;
+                    }
+                    TrainingItem item = new TrainingItem();
 
-					if (f1.indexOf(':') != -1) {
-						// minutes seconds
-						int minutes = Integer.parseInt(f1.substring(0,
-								f1.indexOf(':')));
-						int seconds = Integer.parseInt(f1.substring(f1
-								.indexOf(':') + 1));
-						runningTime += (minutes * 60) + seconds;
-					} else {
-						runningTime += Integer.parseInt(f1) * 60;
+                    if (f1.indexOf(':') != -1) {
+                        // minutes seconds
+                        int minutes = Integer.parseInt(f1.substring(0,
+                                f1.indexOf(':')));
+                        int seconds = Integer.parseInt(f1.substring(f1
+                                .indexOf(':') + 1));
+                        runningTime += (minutes * 60) + seconds;
+                    } else {
+                        runningTime += Integer.parseInt(f1) * 60;
 
-					}
-					item.setTime(runningTime);
+                    }
+                    item.setTime(runningTime);
 
-					item.setDescription(nextLine[1]);
-					if (!nextLine[2].isEmpty()) {
-						item.setHr(nextLine[2].trim());
-						tData.setHr(true);
-					}
-					if (!nextLine[3].isEmpty()) {
-						item.setPower(nextLine[3]);
-						tData.setPwr(true);
-					}
-					if (!nextLine[4].isEmpty()) {
-						item.setCadence(nextLine[4]);
-						tData.setCdc(true);
-					}
+                    item.setDescription(nextLine[1]);
+                    if (!nextLine[2].isEmpty()) {
+                        item.setHr(nextLine[2].trim());
+                        tData.setHr(true);
+                    }
+                    if (!nextLine[3].isEmpty()) {
+                        item.setPower(nextLine[3]);
+                        tData.setPwr(true);
+                    }
+                    if (!nextLine[4].isEmpty()) {
+                        item.setCadence(nextLine[4]);
+                        tData.setCdc(true);
+                    }
 
-					tData.addItem(item);
-				}// while
-			} catch (Exception ex) {
-				JOptionPane.showMessageDialog(frame, ex.getMessage() + " ",
-						"Error", JOptionPane.ERROR_MESSAGE);
-			} finally {
-				try {
-					if (reader != null) {
-						reader.close();
-					}
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
+                    tData.addItem(item);
+                }// while
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(frame, ex.getMessage() + " ",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            } finally {
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            }
 
-			MessageBus.INSTANCE.send(Messages.TRAINING, tData);
-		} else {
-			// System.out.println("Open command cancelled by user.");
-		}
-	}
+            MessageBus.INSTANCE.send(Messages.TRAINING, tData);
+        } else {
+            // System.out.println("Open command cancelled by user.");
+        }
+    }
 }
+
