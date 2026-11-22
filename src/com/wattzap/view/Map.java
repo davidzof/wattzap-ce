@@ -105,18 +105,6 @@ public class Map extends GPXPanel implements MessageCallback {
 			}
 			break;
 		case GPXLOAD:
-			// code to see if we are registered
-			if (!UserPreferences.INSTANCE.isRegistered()
-					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-				logger.info("Out of time "
-						+ UserPreferences.INSTANCE.getEvalTime());
-				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE.getString("trial_expired"),
-						UserPreferences.INSTANCE.getString("warning"),
-						JOptionPane.WARNING_MESSAGE);
-				UserPreferences.INSTANCE.shutDown();
-				System.exit(0);
-			}
 
 			count = 0;
 			frame.remove(this);

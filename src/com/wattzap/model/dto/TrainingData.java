@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Manages training data. Training data is is a list of Training Items.
+ * Manages training data. Training data is a list of Training Items.
  * 
  * @author David George (c) Copyright 2013
  * @date 19 August 2013
@@ -101,7 +101,7 @@ public class TrainingData {
 	 * Sees if we need to fetch the next training item. The distance covered by
 	 * the rider is greater than the next training item.
 	 * 
-	 * @param distance
+	 * @param distanceMeters
 	 *            Current distance covered
 	 * @return true - ready to fetch next Training Item
 	 */

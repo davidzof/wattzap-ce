@@ -368,17 +368,6 @@ public class Workouts extends JPanel implements ActionListener, MessageCallback 
 		}
 		if (importer.equals(command)) {
 			// Import new workouts
-			if (!UserPreferences.INSTANCE.isRegistered()
-					&& (UserPreferences.INSTANCE.getEvalTime()) <= 0) {
-				logger.info("Out of time "
-						+ UserPreferences.INSTANCE.getEvalTime());
-				JOptionPane.showMessageDialog(this,
-						UserPreferences.INSTANCE.getString("trial_expired"),
-						UserPreferences.INSTANCE.getString("warning"),
-						JOptionPane.WARNING_MESSAGE);
-				return;
-			}
-
 			// All workouts to be imported are dumped into an "Imports"
 			// directory
 			String workoutDir = UserPreferences.INSTANCE.getUserDataDirectory()

@@ -71,10 +71,7 @@ public class AboutPanel extends JFrame implements ActionListener {
 
 		about = new JLabel();
 		about.setFont(font);
-		String key = userPrefs.getRegistrationKey();
-		if (key == null || key.length() == 0) {
-			userPrefs.setRegistrationKey("Community Edition");
-		}
+
 		about.setText(aboutText.toString());
 		add(about,"alignx right, span");
 
